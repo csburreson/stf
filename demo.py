@@ -48,6 +48,9 @@ def test_devices():
     #session = T.get_session()
     session = None
 
+    #def foo(x):
+    #    try:
+
     for device in devices:
         # or could create new session per device here...
 

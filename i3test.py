@@ -1,57 +1,22 @@
 import openhtf as htf
-
-def get_session():
-    import requests
-    import re
-    import json
-    BASE_URL = 'https://hercules.icecube.wisc.edu'
-
-    def url(u):
-        return BASE_URL + u
-
-    def web_login(test=False, port=None):
-        session = requests.session()
-
-        AUTH_URL = BASE_URL + '/auth/'
-        # get authtoken first
-        r = session.get(AUTH_URL)
-        m = re.findall("""csrfmiddlewaretoken' value='(.*)'""", r.text)
-        if m:
-            token = m[0]
-
-        headers = dict(Referer=AUTH_URL)
-        r = session.post(AUTH_URL, dict(
-                username='icecube',
-                password='skua',
-                csrfmiddlewaretoken=token
-                ), headers=headers)
-        return session
-
-    session = web_login()
-
-    return session
-
-    #response = session.get(url('/moni20_single_dom_detail/133255/19-60/'))
-    #data = response.content
+from fake import get_session
+import fake
 
 
+# tests need not be declared within a class; they can be reused
 @htf.measures(htf.Measurement(''))
 def measure_voltage():
     pass
 
-def do_something(test, x):
-    test.logger.info('something')
-    return []
 
 class DOMTest():
-    
     @htf.measures(htf.Measurement('status').equals('OK', type=str))
     def iceboot(test, dom=None, FAKEresults=None):
         # get data from outside the test (including config)
         #test.logger.info('Running iceboot on device: {}'.format(test.test_record.metadata['device']))
 
         test.logger.info('Metadata Keys: {}'.format(test.test_record.metadata.keys()))
-        results = do_something(test, dom)
+        results = fake.do_something(test, dom)
         ### can explicitly STOP this test phase...
         #try:
         #    assert results['status'] == 'OK'

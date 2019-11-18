@@ -1,0 +1,67 @@
+{"devices": [{
+    "id": "181001",
+    "type": "degg_top",
+    "manufacture": "Chiba",
+    "production": "2019-03-21",
+    "pmt_id": {"0": "SQ0300"},
+    "glass_id": "704",
+    "gel_id": "703000"
+}, {
+    "id": "181002",
+    "type": "degg_bot",
+    "manufacture": "Chiba",
+    "production": "2019-03-21",
+    "pmt_id": {"1": "SQ0301"},
+    "glass_id": "705",
+    "gel_id": "703000"
+}, {
+    "id": "703000",
+    "type": "opt_gel",
+    "manufacture": "",
+    "model": "",
+    "production": "2019-03-12"
+}, {
+    "id": "704",
+    "type": "glass",
+    "manufacture": "",
+    "model": "",
+    "production": "2019-03-12"
+}, {
+    "id": "705",
+    "type": "glass",
+    "manufacture": "",
+    "model": "",
+    "production": "2019-03-12"
+}, {
+    "id": "ef54ad29",
+    "type": "mainboard",
+    "manufacture": "",
+    "model": "",
+    "production": "2019-03-12"
+}, {
+    "id": "UP5P0239",
+    "type": "D-Egg",
+    "manufacture": "Chiba",
+    "model": "Pikachu",
+    "production": "2019-03-21",
+    "assembly_id": { "0": "181001", "1": "181002" },
+    "mainboard_id": "ef54ad29"
+}, {
+    "id": "SQ0300",
+    "type": "pmt",
+    "manufacture": "Hamamatsu",
+    "model": "R5912-100",
+    "production": "2018-11-15"
+}, {
+    "id": "SQ0301",
+    "type": "pmt",
+    "manufacture": "Hamamatsu",
+    "model": "R5912-100",
+    "production": "2018-11-15"
+}], 
+"meta": {
+    "OM_NAMES": ["D-Egg", "mDOM", "pDOM"],
+    "HALF_NAMES": ["degg_top", "degg_bot", "mdom_top", "mdom_bot"],
+    "DEVICE_NAMES": ["pmt", "hv_base", "mainboard", "opt_gel", "glass", "led", "acou_sens", "camera"],
+    "TEST_NAMES": ["gain", "dark-noise", "peak-to-valley", "transit-time", "transit-time-spread"]
+}}

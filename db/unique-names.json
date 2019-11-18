@@ -1,0 +1,9 @@
+{
+    "OM_NAMES": ['D-Egg', 'mDOM', 'pDOM'],
+    
+    "HALF_NAMES": ['degg_top', 'degg_bot', 'mdom_top', 'mdom_bot'],
+    
+    "DEVICE_NAMES": ['pmt', 'hv_base', 'mainboard', 'opt_gel', 'glass', 'led', 'acou_sens', 'camera'],
+    
+    "TEST_NAMES": ['gain', 'dark-noise', 'peak-to-valley', 'transit-time', 'transit-time-spread']
+}

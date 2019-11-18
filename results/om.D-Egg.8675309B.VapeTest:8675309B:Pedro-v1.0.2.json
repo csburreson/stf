@@ -9,7 +9,7 @@
             "allow_unset_measurements": false, 
             "capture_source": false, 
             "teardown_timeout_s": 30, 
-            "station_id": "SL61", 
+            "station_id": "tokala", 
             "station_server_port": 0, 
             "i3LiveInTheHaus": "bar"
         }, 
@@ -37,14 +37,14 @@
         "name": "", 
         "sourcecode": ""
     }, 
-    "start_time_millis": 1573842065695, 
+    "start_time_millis": 1573921983636, 
     "log_records": [
         {
             "level": 10, 
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 247, 
-            "timestamp_millis": 1573842065691, 
+            "timestamp_millis": 1573921983633, 
             "message": "Executing phase trigger_phase"
         }, 
         {
@@ -52,7 +52,7 @@
             "logger_name": "openhtf.util.threads", 
             "source": "threads.py", 
             "lineno": 160, 
-            "timestamp_millis": 1573842065693, 
+            "timestamp_millis": 1573921983635, 
             "message": "Thread finished: <PhaseExecutorThread: (trigger_phase)>"
         }, 
         {
@@ -60,15 +60,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 275, 
-            "timestamp_millis": 1573842065694, 
+            "timestamp_millis": 1573921983636, 
             "message": "Phase trigger_phase finished with result PhaseResult.CONTINUE"
         }, 
         {
             "level": 10, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632", 
             "source": "test_executor.py", 
             "lineno": 241, 
-            "timestamp_millis": 1573842065695, 
+            "timestamp_millis": 1573921983636, 
             "message": "Handling phase run_mod"
         }, 
         {
@@ -76,7 +76,7 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 247, 
-            "timestamp_millis": 1573842065696, 
+            "timestamp_millis": 1573921983637, 
             "message": "Executing phase run_mod"
         }, 
         {
@@ -84,7 +84,7 @@
             "logger_name": "openhtf.util.threads", 
             "source": "threads.py", 
             "lineno": 160, 
-            "timestamp_millis": 1573842065697, 
+            "timestamp_millis": 1573921983638, 
             "message": "Thread finished: <PhaseExecutorThread: (run_mod)>"
         }, 
         {
@@ -92,15 +92,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 275, 
-            "timestamp_millis": 1573842065698, 
+            "timestamp_millis": 1573921983639, 
             "message": "Phase run_mod finished with result PhaseResult.CONTINUE"
         }, 
         {
             "level": 10, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632", 
             "source": "test_executor.py", 
             "lineno": 241, 
-            "timestamp_millis": 1573842065698, 
+            "timestamp_millis": 1573921983639, 
             "message": "Handling phase puff"
         }, 
         {
@@ -108,15 +108,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 247, 
-            "timestamp_millis": 1573842065698, 
+            "timestamp_millis": 1573921983640, 
             "message": "Executing phase puff"
         }, 
         {
             "level": 20, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690.phase.puff", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632.phase.puff", 
             "source": "i3test.py", 
             "lineno": 141, 
-            "timestamp_millis": 1573842065698, 
+            "timestamp_millis": 1573921983640, 
             "message": "delectable"
         }, 
         {
@@ -124,7 +124,7 @@
             "logger_name": "openhtf.util.threads", 
             "source": "threads.py", 
             "lineno": 160, 
-            "timestamp_millis": 1573842065699, 
+            "timestamp_millis": 1573921983640, 
             "message": "Thread finished: <PhaseExecutorThread: (puff)>"
         }, 
         {
@@ -132,15 +132,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 275, 
-            "timestamp_millis": 1573842065700, 
+            "timestamp_millis": 1573921983642, 
             "message": "Phase puff finished with result PhaseResult.CONTINUE"
         }, 
         {
             "level": 10, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632", 
             "source": "test_executor.py", 
             "lineno": 241, 
-            "timestamp_millis": 1573842065700, 
+            "timestamp_millis": 1573921983642, 
             "message": "Handling phase coil"
         }, 
         {
@@ -148,15 +148,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 247, 
-            "timestamp_millis": 1573842065700, 
+            "timestamp_millis": 1573921983643, 
             "message": "Executing phase coil"
         }, 
         {
             "level": 20, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690.phase.coil", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632.phase.coil", 
             "source": "i3test.py", 
             "lineno": 135, 
-            "timestamp_millis": 1573842065701, 
+            "timestamp_millis": 1573921983643, 
             "message": "10.0 volts"
         }, 
         {
@@ -164,7 +164,7 @@
             "logger_name": "openhtf.util.threads", 
             "source": "threads.py", 
             "lineno": 160, 
-            "timestamp_millis": 1573842065701, 
+            "timestamp_millis": 1573921983643, 
             "message": "Thread finished: <PhaseExecutorThread: (coil)>"
         }, 
         {
@@ -172,15 +172,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 275, 
-            "timestamp_millis": 1573842065702, 
+            "timestamp_millis": 1573921983645, 
             "message": "Phase coil finished with result PhaseResult.CONTINUE"
         }, 
         {
             "level": 10, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632", 
             "source": "test_executor.py", 
             "lineno": 241, 
-            "timestamp_millis": 1573842065702, 
+            "timestamp_millis": 1573921983645, 
             "message": "Handling phase Checkpoint"
         }, 
         {
@@ -188,15 +188,15 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 247, 
-            "timestamp_millis": 1573842065702, 
+            "timestamp_millis": 1573921983645, 
             "message": "Executing phase Checkpoint"
         }, 
         {
             "level": 40, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690.phase.Checkpoint", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632.phase.Checkpoint", 
             "source": "checkpoints.py", 
             "lineno": 46, 
-            "timestamp_millis": 1573842065702, 
+            "timestamp_millis": 1573921983646, 
             "message": "Stopping execution because phases failed: ['run_mod']"
         }, 
         {
@@ -204,7 +204,7 @@
             "logger_name": "openhtf.util.threads", 
             "source": "threads.py", 
             "lineno": 160, 
-            "timestamp_millis": 1573842065703, 
+            "timestamp_millis": 1573921983646, 
             "message": "Thread finished: <PhaseExecutorThread: (Checkpoint)>"
         }, 
         {
@@ -212,7 +212,7 @@
             "logger_name": "openhtf.core.phase_executor", 
             "source": "phase_executor.py", 
             "lineno": 275, 
-            "timestamp_millis": 1573842065704, 
+            "timestamp_millis": 1573921983646, 
             "message": "Phase Checkpoint finished with result PhaseResult.STOP"
         }, 
         {
@@ -220,15 +220,15 @@
             "logger_name": "openhtf.plugs", 
             "source": "__init__.py", 
             "lineno": 458, 
-            "timestamp_millis": 1573842065704, 
+            "timestamp_millis": 1573921983646, 
             "message": "Tearing down all plugs."
         }, 
         {
             "level": 40, 
-            "logger_name": "openhtf.test_record.2072:df6e005fe1984b11:f6db0cd3da5945ce:1573842065690", 
+            "logger_name": "openhtf.test_record.1527:a5ec6b18f40041b0:2a8b17719e274051:1573921983632", 
             "source": "test_state.py", 
             "lineno": 381, 
-            "timestamp_millis": 1573842065704, 
+            "timestamp_millis": 1573921983646, 
             "message": "Finishing test execution early due to PhaseResult.STOP, outcome FAIL."
         }, 
         {
@@ -236,7 +236,7 @@
             "logger_name": "openhtf.util.threads", 
             "source": "threads.py", 
             "lineno": 160, 
-            "timestamp_millis": 1573842065704, 
+            "timestamp_millis": 1573921983647, 
             "message": "Thread finished: TestExecutorThread"
         }, 
         {
@@ -244,14 +244,14 @@
             "logger_name": "openhtf.core.test_descriptor", 
             "source": "test_descriptor.py", 
             "lineno": 330, 
-            "timestamp_millis": 1573842065709, 
+            "timestamp_millis": 1573921983652, 
             "message": "Test completed for VapeTest:8675309B:Pedro, outputting now."
         }
     ], 
     "phases": [
         {
-            "descriptor_id": 139916737129936, 
-            "start_time_millis": 1573842065691, 
+            "descriptor_id": 140181096246016, 
+            "start_time_millis": 1573921983633, 
             "attachments": {}, 
             "codeinfo": {
                 "docstring": null, 
@@ -259,7 +259,7 @@
                 "sourcecode": ""
             }, 
             "measurements": {}, 
-            "end_time_millis": 1573842065694, 
+            "end_time_millis": 1573921983636, 
             "result": {
                 "phase_result": "CONTINUE"
             }, 
@@ -270,8 +270,8 @@
             "name": "trigger_phase"
         }, 
         {
-            "descriptor_id": 139916730065552, 
-            "start_time_millis": 1573842065696, 
+            "descriptor_id": 140181096247168, 
+            "start_time_millis": 1573921983637, 
             "attachments": {}, 
             "codeinfo": {
                 "docstring": null, 
@@ -286,7 +286,7 @@
                         "suffix": "A"
                     }, 
                     "outcome": "PASS", 
-                    "measured_value": 1.3138987240570936, 
+                    "measured_value": 1.3137133491700739, 
                     "name": "average_current"
                 }, 
                 "power_time_series": {
@@ -295,61 +295,61 @@
                         [
                             0, 
                             10.0, 
-                            0.2387754203716608, 
+                            0.24073224923955475, 
                             0
                         ], 
                         [
                             1, 
                             20.0, 
-                            0.4787994975606636, 
+                            0.4802932290009689, 
                             0
                         ], 
                         [
                             2, 
                             30.0, 
-                            0.7172084858528398, 
+                            0.7210178276973432, 
                             0
                         ], 
                         [
                             3, 
                             40.0, 
-                            0.9595022992948304, 
+                            0.955681855995316, 
                             0
                         ], 
                         [
                             4, 
                             50.0, 
-                            1.1954113519994667, 
+                            1.1910714022524398, 
                             0
                         ], 
                         [
                             5, 
                             60.0, 
-                            1.437008587836658, 
+                            1.4316328302752888, 
                             0
                         ], 
                         [
                             6, 
                             70.0, 
-                            1.6706614306481211, 
+                            1.6721681948247937, 
                             0
                         ], 
                         [
                             7, 
                             80.0, 
-                            1.911748749296147, 
+                            1.9069167178237145, 
                             0
                         ], 
                         [
                             8, 
                             90.0, 
-                            2.1434183460661225, 
+                            2.151071472370772, 
                             0
                         ], 
                         [
                             9, 
                             100.0, 
-                            2.3864530716444268, 
+                            2.386547712220547, 
                             0
                         ]
                     ], 
@@ -382,7 +382,7 @@
                         "suffix": "\u2126"
                     }, 
                     "outcome": "FAIL", 
-                    "measured_value": 41.860151770426754, 
+                    "measured_value": 41.86605855436099, 
                     "name": "resistance", 
                     "validators": [
                         "6 <= x <= 8"
@@ -399,7 +399,7 @@
                     "name": "average_voltage"
                 }
             }, 
-            "end_time_millis": 1573842065698, 
+            "end_time_millis": 1573921983639, 
             "result": {
                 "phase_result": "CONTINUE"
             }, 
@@ -410,8 +410,8 @@
             "name": "run_mod"
         }, 
         {
-            "descriptor_id": 139916730065840, 
-            "start_time_millis": 1573842065698, 
+            "descriptor_id": 140181093552352, 
+            "start_time_millis": 1573921983640, 
             "attachments": {}, 
             "codeinfo": {
                 "docstring": null, 
@@ -425,7 +425,7 @@
                     "name": "taste"
                 }
             }, 
-            "end_time_millis": 1573842065699, 
+            "end_time_millis": 1573921983642, 
             "result": {
                 "phase_result": "CONTINUE"
             }, 
@@ -436,8 +436,8 @@
             "name": "puff"
         }, 
         {
-            "descriptor_id": 139916730066128, 
-            "start_time_millis": 1573842065700, 
+            "descriptor_id": 140181093552640, 
+            "start_time_millis": 1573921983643, 
             "attachments": {}, 
             "codeinfo": {
                 "docstring": null, 
@@ -458,7 +458,7 @@
                     "name": "volts"
                 }
             }, 
-            "end_time_millis": 1573842065702, 
+            "end_time_millis": 1573921983645, 
             "result": {
                 "phase_result": "CONTINUE"
             }, 
@@ -469,8 +469,8 @@
             "name": "coil"
         }, 
         {
-            "descriptor_id": 139916730066416, 
-            "start_time_millis": 1573842065702, 
+            "descriptor_id": 140181093552928, 
+            "start_time_millis": 1573921983645, 
             "attachments": {}, 
             "codeinfo": {
                 "docstring": null, 
@@ -478,7 +478,7 @@
                 "sourcecode": ""
             }, 
             "measurements": {}, 
-            "end_time_millis": 1573842065703, 
+            "end_time_millis": 1573921983646, 
             "result": {
                 "phase_result": "STOP"
             }, 
@@ -497,7 +497,7 @@
             "description": "A phase stopped the test run."
         }
     ], 
-    "end_time_millis": 1573842065704, 
-    "station_id": "SL61", 
+    "end_time_millis": 1573921983647, 
+    "station_id": "tokala", 
     "dut_id": "8675309B"
 }
