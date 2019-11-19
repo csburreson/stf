@@ -61,6 +61,58 @@ class DuperMainboardTest(Test.MainboardTest):
       #Test.CHECKPOINT(),
       MainboardTestPhases.flash,
     ]
+ 
+
+class Common(Test.MainboardTest):
+    @Test.test
+    def set_hv(test, session):
+        test.logger.info('setting HV')
+
+    @Test.measures(Test.M('power_up').equals('OK'))
+    def power_up(test, session):
+        test.logger.info('sending power_up cmd')
+        test.measurements.power_up = session.cmd('power_up')
+
+    @Test.measures(Test.M('power_up').equals('OK'))
+    def power_down(test, session):
+        test.logger.info('setting HV')
+
+    @Test.options(repeat_limit=5)
+    @Test.measures(Test.M('wait_status').equals('OK'))
+    def wait_until(test, session):
+        output = session.cmd('wait')
+        if output != 'OK':
+            return Test.REPEAT
+        test.measuresments.wait_status = 'OK'
+
+    # this will fail since the "wait" command
+    # is rigged to return "OK" only the third time its called
+    @Test.options(repeat_limit=2)
+    @Test.measures(Test.M('wait_status').equals('OK'))
+    def wait_until(test, session):
+        output = session.cmd('wait')
+        if output != 'OK':
+            return 
+
+    @Test.measures(Test.M('baselines'))
+    def check_baselines(test, session, limit=None):
+        test.baselines = 42 / limit
+    
+
+class HighVoltageTest(Test.MainboardTest):
+    '''
+    HivhVoltageTest
+    test description (saved in results JSON)
+    '''
+    VERSION = '1.0'
+    DESC = 'foo'
+    TESTS = [
+        MainboardTestPhases.bootup,
+        Common.set_hv,
+        Common.wait_until,
+        Common.set_hv,
+        Common.check_baselines.with_args(limit=42)
+    ]
 
 
 class CheckpointExampleTest(Test.MainboardTest):
