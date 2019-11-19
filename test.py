@@ -297,7 +297,7 @@ def _run(testClass, device):
 
       test = testClass(
         testClass.VERSION,
-        params=testClass.PARAMS,
+        params=getattr(testClass, 'PARAMS', {}),
         config=getattr(testClass, 'CONFIG', {})
       )
       test.execute(device)

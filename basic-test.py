@@ -32,14 +32,16 @@ class FWVersionTest(I3Test.MainboardTest):
     # use config to override iceboot settings
     # NOTE: not sure if we'll need to keep CONFIG as is...
     # OPTIONAL
+    '''
     CONFIG = {
         'iceboot': {
-            # 'fpgaConfigurationFile': 'xxx.rbf',
-            # 'host': '192.168.0.10',
-            'port': 42
-            # 'debug': False
+            'fpgaConfigurationFile': 'xxx.rbf',
+            'host': '192.168.0.10',
+            'port': 5012
+            'debug': False
         }
     }
+    '''
 
     # REQUIRED: TESTS is a list of callables (functions) 
     TESTS = [
