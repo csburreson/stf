@@ -5,14 +5,15 @@ the test designers should not need to read this
 
 TODO: create module and make this "core" with "Test.Test" (mod.class) an alias for <mod>/core.py:Test
 '''
+import json
 
 import openhtf as htf
 from openhtf import measures, Measurement
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.util.checkpoints import checkpoint as CHECKPOINT
-from iceboot import iceboot_session_cmd
 
-import json
+from iceboot import iceboot_session_cmd
+import db
 
 
 
@@ -45,30 +46,14 @@ DEVICES = []
 META = {}
 
 ### dev symbols
-DEBUG = False
-# XXX: hack for not having a real mainboard to iceboot for dev
-FAKE_ICEBOOT = False
+DEBUG = True
+# XXX: for dev purposes, fake iceboot on my system only
+import os
+FAKE_ICEBOOT = os.environ.get('FAKE_ICEBOOT', False)
   
-    #test = lambda: htf.TestPhase
-
 # XXX: this is gotten from the "database" ;)
 # XXX: part of test db layer (lib/db.py ?)
-class ParamDB:
-    @staticmethod
-    def getTestParam(test_name, param_list):
-        DB_PARAMS = {
-            'fw_vnum_test': {
-                'expected_fw_vnum': '0x6a'
-            },
-            'foo': {
-                'min': 40,
-                'max': 44
-            }
-        }
-        ret = {}
-        for p in param_list:
-            ret[p] = DB_PARAMS[test_name][p]
-        return ret
+ParamDB = db.getParamDB(local=True)
 
 
 ### MAIN CODE
@@ -79,7 +64,6 @@ class Test():
         self.config = config
         self.test_params = params
         self.version = None
-
 
     def addTest(self, testCallable):
         self.tests.append(testCallable)
@@ -93,17 +77,17 @@ class Test():
 
         # lookup param values
         plist = self.test_params[pname]
-        return ParamDB.getTestParam(pname, plist)
+        return ParamDB.getTestParams(pname, plist)
 
     def execute(self, device):
         # test disco?
         try:
             self.tests = self.TESTS
         except AttributeError:
+            print "Error! No TESTS property found"
             # not a Runnable test
             return
 
-        #self.
         #self.test.logger.info('executing test')
         #device = self.config.get('device', {})
         cls = str(self.__class__).split('.')[1]
@@ -113,12 +97,14 @@ class Test():
         desc = getattr(self, 'DESC', self.__doc__)
 
         phases = []
+        test_args = {}
         for x in self.tests:
             # check for params
             try:
                 if hasattr(x, '_checkpoint'):
                     raise AttributeError
                 args = self.getTestParams(x.func)
+                test_args[x.func.__name__] = args
                 phases.append(x.with_args(session=self.session, **args))
             except AttributeError:
                 phases.append(x)
@@ -135,10 +121,15 @@ class Test():
             framework_version=FRAMEWORK_VERSION,
             device=device,
             type=device['type'],
-            testOptions=self.config.get('device', {})
+            testOptions={
+                'params': test_args
+            }
+            #self.config.get('device', {})
         )
 
-        T.add_output_callbacks(JSON(OUTPUT_JSONFILE, indent=4, default=str))
+        T.add_output_callbacks(
+            JSON(OUTPUT_JSONFILE, indent=4, default=str)
+        )
 
         # get session here???
         #T.session = getIcebootSession(fake=FAKE_ICEBOOT,
@@ -248,7 +239,18 @@ def check_attrs(cls, attrs=REQUIRED_ATTRS, required=True):
         return False
     return True
 
-        
+def runall():
+
+    mainboard = getDevices('mainboard')
+    device = mainboard[0]
+    ran = False
+    for testClass in TESTABLE_CLASSES:
+        print "Running {}".format(testClass.__name__)
+        if _run(testClass, device):
+            ran = True
+
+    if not ran:
+        print 'No tests found :('
 
 def run(testClass=None):
     '''
@@ -303,6 +305,12 @@ def _run(testClass, device):
       test.execute(device)
       return True
 
+### DECORATORS
+TESTABLE_CLASSES = []
+def runnable(cls):
+    global TESTABLE_CLASSES
+    TESTABLE_CLASSES.append(cls)
+    return cls
 
 ### VALIDATORS
 
@@ -317,6 +325,9 @@ class EqualsParam(htf.util.validators.ValidatorBase) :
         self.paramValue = pvalue
         self._type = type
         
+    def __str__(self):
+        return 'x == {}'.format(self.paramValue)
+
 
     def with_args(self, **kw):
         return type(self)(

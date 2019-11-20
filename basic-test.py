@@ -15,6 +15,7 @@ class FWVersionTestPhases(I3Test.MainboardTest):
 
 # should inherit from MainboardTest
 # and ALSO requires that "Test" be in the classname
+@I3Test.runnable
 class FWVersionTest(I3Test.MainboardTest):
     # REQUIRED: VERSION field (use in output)
     VERSION = "1.0"
@@ -49,4 +50,4 @@ class FWVersionTest(I3Test.MainboardTest):
         FWVersionTestPhases.foo
     ]
 
-I3Test.run() 
+I3Test.runall() 
