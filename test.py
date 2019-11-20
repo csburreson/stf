@@ -320,14 +320,18 @@ def equalsParam(pname, type=None):
         pname = '{' + pname + '}'
     return EqualsParam(pname, type=type)
 
-class EqualsParam(htf.util.validators.ValidatorBase) :
+
+class EqualsParam(htf.util.validators.ValidatorBase):
     def __init__(self, pvalue, type=None):
         self.paramValue = pvalue
         self._type = type
+
+    def __call__(self, value):
+        return self.paramValue == value
         
     def __str__(self):
+        '''use in output'''
         return 'x == {}'.format(self.paramValue)
-
 
     def with_args(self, **kw):
         return type(self)(
@@ -335,5 +339,3 @@ class EqualsParam(htf.util.validators.ValidatorBase) :
             type=kw.get('type', None),
         )
 
-    def __call__(self, value):
-        return self.paramValue == value

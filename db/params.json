@@ -1,9 +1,21 @@
 {
-    "fw_vnum_test": {
+  "tests": [
+    {
+      "params": {
         "expected_fw_vnum": "0x6a"
-    },
-    "foo": {
-        "min": 40,
-        "max": 44
+      }, 
+      "test_name": "fw_vnum_test"
+    }, 
+    {
+      "test_name": ""
     }
+  ], 
+  "foo": {
+    "max": 44, 
+    "bar": "narf", 
+    "min": 40
+  }, 
+  "fw_vnum_test": {
+    "expected_fw_vnum": "0x6a"
+  }
 }

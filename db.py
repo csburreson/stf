@@ -21,6 +21,10 @@ class ParamDB(object):
             ret[p] = params[p]
         return ret
 
+    def setTestParams(self, test_name, param_map):
+        self._addTest(test_name)
+        self.data[test_name] = param_map
+
     def addTestParams(self, test_name, param_map):
         '''
         add params as a dict of key -> value for test_name
@@ -28,15 +32,24 @@ class ParamDB(object):
         i.e.
         addTestParams('fooTest', {'bar': 42, 'nar': 100})
         '''
-        self.data[test_name] = param_map
+        self._addTest(test_name)
+        for pname, pval in param_map.items():
+            self.data[test_name]
+
+    def _addTest(test_name):
+        if test_name not in self.data:
+            self.data[test_name] = {}
 
     def addTestParam(self, test_name, pname, pval):
-        self.data[test_name].setdefault({})[pname] = pval
+        self.data[test_name][pname] = pval
         self._save()
 
     def _save(self):
-        with open(uri, 'w') as f:
-            json.dump(self.data, f)
+        '''
+        don't call me!
+        '''
+        with open(self.uri, 'w') as f:
+            json.dump(self.data, f, indent=2)
 
     '''
     @staticmethod
