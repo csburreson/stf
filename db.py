@@ -1,14 +1,18 @@
 import json
 
-def getParamDB(local=False):
-    return ParamDB('db/params.json')
+def getParamDB(datafile='db/params.json', test_config=False):
+    return ParamDB(datafile, test_config=test_config)
 
 
 class ParamDB(object):
-    def __init__(self, uri):
+    def __init__(self, uri, test_config=False):
         # for now, treat uri as a file path
         self.uri = uri
         self._load(uri)
+
+        # could use this to support full db file or just
+        # part of a db file
+        self.test_config = test_config
 
     def _load(self, uri):
         with open(uri, 'r') as f:
@@ -34,9 +38,12 @@ class ParamDB(object):
         '''
         self._addTest(test_name)
         for pname, pval in param_map.items():
-            self.data[test_name]
+            self.data[test_name][pname] = pval
 
     def _addTest(test_name):
+        '''
+        adds "test_name" to params if it doesn't exist
+        '''
         if test_name not in self.data:
             self.data[test_name] = {}
 

@@ -13,35 +13,49 @@ class FWVersionTestPhases(I3Test.MainboardTest):
     def foo(test, session, min, max):
         test.measurements.foobar = 42
 
-# should inherit from MainboardTest
-# and ALSO requires that "Test" be in the classname
+
+'''
+a "runnable" I3Test must descend from I3Test.Test
+
+Propertires should include:
+
+VERSION = <str>
+TESTS = <list>
+    list contains callables (functions)
+'''
+# runnable registers this test
 @I3Test.runnable
+# set params
+@I3Test.configure('db/testconfig/fwvars.json')
 class FWVersionTest(I3Test.MainboardTest):
-    # REQUIRED: VERSION field (use in output)
     VERSION = "1.0"
+    DESC = ("optional test description. if not provided, "
+            "fallback to docstring or nothing")
 
     # params field is OPTIONAL
     #   it's a dictionary of 'method_name' => listOfParamNames
     # 
     # if desired... could expand listOfParamNames to include 
     # param type?
+    '''
     PARAMS = {
         'fw_vnum_test': ['expected_fw_vnum'],
         'foo': ['min', 'max']
     }
+    '''
 
     # use config to override iceboot settings
     # NOTE: not sure if we'll need to keep CONFIG as is...
     # OPTIONAL
-    '''
     CONFIG = {
         'iceboot': {
-            'fpgaConfigurationFile': 'xxx.rbf',
-            'host': '192.168.0.10',
-            'port': 5012
-            'debug': False
+            'fpgaConfigurationFile': 'fw_0x6a.rbf',
+            #'host': '192.168.0.10',
+            'port': 5012,
+            'host': 'localhost'
         }
     }
+    '''
     '''
 
     # REQUIRED: TESTS is a list of callables (functions) 
@@ -50,4 +64,4 @@ class FWVersionTest(I3Test.MainboardTest):
         FWVersionTestPhases.foo
     ]
 
-I3Test.runall() 
+I3Test.run() 

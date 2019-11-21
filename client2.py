@@ -131,4 +131,4 @@ class CheckpointExampleTest(Test.MainboardTest):
       MainboardTestPhases.long_test, # this test will not run
     ]
 
-Test.runall() 
+Test.run() 

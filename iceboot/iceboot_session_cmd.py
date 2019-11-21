@@ -335,6 +335,7 @@ def configureOptions(parser):
 
 def init(options, fpgaConfigurationFile=None, host=None, port=None):
     # Default now is socket.  Add interfaces as needed
+    #print str(locals())
     session = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if host is None:
         host = options.host

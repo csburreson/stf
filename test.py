@@ -15,6 +15,8 @@ from openhtf.util.checkpoints import checkpoint as CHECKPOINT
 from iceboot import iceboot_session_cmd
 import db
 
+from colors import termcolor as clr
+
 
 
 ### move to module's __init__ ?
@@ -46,14 +48,31 @@ DEVICES = []
 META = {}
 
 ### dev symbols
-DEBUG = True
-# XXX: for dev purposes, fake iceboot on my system only
 import os
+DEBUG = os.environ.get('I3TEST_DEBUG', False)
+# create "fake" iceboot 
 FAKE_ICEBOOT = os.environ.get('FAKE_ICEBOOT', False)
+
+def dbg(s, trace=5):
+    if DEBUG:
+        import inspect
+        caller = []
+        for x in range(1, trace):
+            try:
+                frame = inspect.stack()[x]
+                caller.append(frame[3])
+            except IndexError:
+                pass
+        caller = reversed(caller)
+        trace = ' -> '.join(caller) if caller else 'n/a'
+        print '{} {} {}'.format(
+            clr('DEBUG >>', 'red'),
+            clr(trace, 'gray'),
+            clr(s, 'aqua')
+        )
   
 # XXX: this is gotten from the "database" ;)
-# XXX: part of test db layer (lib/db.py ?)
-ParamDB = db.getParamDB(local=True)
+ParamDB = db.getParamDB()
 
 
 ### MAIN CODE
@@ -62,16 +81,31 @@ class Test():
     def __init__(self, version, params={}, config={}):
         self.tests = []
         self.config = config
+        # test_params is a map of fn name = list of varnames
         self.test_params = params
         self.version = None
 
     def addTest(self, testCallable):
         self.tests.append(testCallable)
 
-    def getTestParams(self, func):
+    def getTestParams(self, pname):
+        '''
+        pname = "test name" but should probably be thought of as "phase name"
+
+        self._PARAMS is dict of {
+            "test (phase) name": {
+                "varname": "value"
+            }
+        }
+        '''
+        # XXX: this requires @configure deco
+        if self._PARAMS:
+            return self._PARAMS.get(pname, {})
+
         if not getattr(self, 'test_params') or not self.test_params:
             return {} 
-        pname = func.__name__
+
+        #pname = func
         if pname not in self.test_params:
             return {}
 
@@ -103,7 +137,12 @@ class Test():
             try:
                 if hasattr(x, '_checkpoint'):
                     raise AttributeError
-                args = self.getTestParams(x.func)
+                #qualified_testname = '{}.{}'.format(
+                #    self.__class__.__name__, 
+                #    x.func.__name__
+                #)
+                #args = self.getTestParams(qualified_testname)
+                args = self.getTestParams(x.func.__name__)
                 test_args[x.func.__name__] = args
                 phases.append(x.with_args(session=self.session, **args))
             except AttributeError:
@@ -144,13 +183,13 @@ def getIcebootSession(fake=False, **kw):
         class IcebootOpts:
             host = '192.168.0.10'
             port = 5012
-            debug = False
+            debug = True
             fpgaConfigurationFile = 'fw_0x6a.rbf'
             test = []
 
-        print '(framework) Starting iceboot session ...'
+        dbg('(framework) Starting iceboot session ...')
         if kw:
-            print '(framework) using overrides: {}'.format(json.dumps(kw))
+            dbg('(framework) using overrides: {}'.format(json.dumps(kw)))
         return iceboot_session_cmd.init(IcebootOpts, **kw)
 
     class Iceboot:
@@ -222,7 +261,6 @@ class MainboardTest(Test):
         self.session = getIcebootSession(fake=FAKE_ICEBOOT,
             **self.config.get('iceboot', {})
         )
-       # getattr(self, 'FAKE_ICEBOOT', False))
         self.version = self.VERSION
 
 
@@ -239,29 +277,25 @@ def check_attrs(cls, attrs=REQUIRED_ATTRS, required=True):
         return False
     return True
 
-def runall():
+def run():
 
     mainboard = getDevices('mainboard')
     device = mainboard[0]
     ran = False
     for testClass in TESTABLE_CLASSES:
-        print "Running {}".format(testClass.__name__)
+        dbg("Running {}".format(testClass.__name__))
+
         if _run(testClass, device):
             ran = True
 
     if not ran:
-        print 'No tests found :('
+        findAndRun()
 
-def run(testClass=None):
+def findAndRun(testClass=None):
     '''
     This function magically runs either one test or all in a file 
+    XXX: probably we should just use the register decorator
     '''
-    # XXX: for dev purposes, fake iceboot on my system only
-    global FAKE_ICEBOOT
-    import os
-    FAKE_ICEBOOT = os.environ.get('FAKE_ICEBOOT', False)
-
-
     mainboard = getDevices('mainboard')
     device = mainboard[0]
 
@@ -269,8 +303,9 @@ def run(testClass=None):
         testClasses = [testClass]
     else:
         # get class methods
+        # 
         import inspect
-        frame = inspect.stack()[1]
+        frame = inspect.stack()[2]
         mod = inspect.getmodule(frame[0])
 
 
@@ -284,17 +319,13 @@ def run(testClass=None):
 
     if not ran:
         print 'No tests found :('
-    # instantiate class(es)
-
-    # run execute() method
 
 def _run(testClass, device):
       # XXX: for now, we use TESTS to determine whether to run
       # if hasattr(testClass, 'TESTS'):
       # see if this is a runnable test
       if not check_attrs(testClass, required=False):
-          if DEBUG:
-              print 'Skipping {}'.format(testClass.__name__)
+          dbg('Skipping {}'.format(testClass.__name__))
           return False
 
       test = testClass(
@@ -305,12 +336,41 @@ def _run(testClass, device):
       test.execute(device)
       return True
 
+### Exceptions?
+
+class ExitWithFail(Exception):
+    pass
+
+class ExitWithContinue(Exception):
+    pass
+
 ### DECORATORS
 TESTABLE_CLASSES = []
 def runnable(cls):
     global TESTABLE_CLASSES
     TESTABLE_CLASSES.append(cls)
     return cls
+
+
+def configure(config_file, **kw):
+    '''
+    this decorator is applied to a runnable I3Test
+    and specifies the location of a JSON file containing
+    expected parameters for the test
+
+    in the future, this could be replaced with a database
+    call using the test class name (__class__.__name__)
+    and test/phase name (cls.TESTS[:].__name__) and 
+    possibly the version or something to
+    return a document containing the test params
+    '''
+    def wrap(cls):
+        with open(config_file, 'r') as f:
+            dbg("(@configure) loaded {}".format(config_file))
+            cls._PARAMS = json.load(f)
+            cls._PARAM_CONF_FILE = config_file
+        return cls
+    return wrap
 
 ### VALIDATORS
 
@@ -338,4 +398,3 @@ class EqualsParam(htf.util.validators.ValidatorBase):
             pvalue=htf.util.format_string(self.paramValue, kw),
             type=kw.get('type', None),
         )
-
