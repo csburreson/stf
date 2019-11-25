@@ -7,10 +7,11 @@ class FWVersionTestPhases(I3Test.MainboardTest):
     def fw_vnum_test(test, session, expected_fw_vnum):
         test.measurements.fw_vnum = hex(session.fpgaVersion())
 
+    # collapse this into a single decorator? 
     @I3Test.measures(
-        I3Test.M('foobar').in_range('{min}', '{max}', type=int)
+        I3Test.M('foobar').in_range('{foo_min}', '{foo_max}', type=int)
     )
-    def foo(test, session, min, max):
+    def foo(test, session, foo_min, foo_max):
         test.measurements.foobar = 42
 
 
@@ -22,6 +23,15 @@ Propertires should include:
 VERSION = <str>
 TESTS = <list>
     list contains callables (functions)
+'''
+# XXX: collapse runnable and configure into a single decorator?
+'''
+@I3Test.runnable(  # or just "register(" ?
+    # in the future, we can automatically query
+    varFile='path/to/vars.json',
+    version='1.0.0',
+    desc='optional; fallback to docstring',
+)
 '''
 # runnable registers this test
 @I3Test.runnable

@@ -1,5 +1,41 @@
 import json
 
+'''
+QUESTION XXX: Do we want vars to be global? or based on a testClass or based on a testName? or a mix?
+
+
+Params
+{
+    // or maybe this is TestSet (testset)
+    test_class: 'FWVersion',
+    params: {
+        '_global': [
+            {'name': 'xxx', 'value': 42}
+        ],
+        'some_test_phase': {
+            'x': 42,
+            'y': 100
+        },
+        'version': {
+
+        }
+
+    }
+
+}
+
+or
+
+{
+    test_class: 'FWVersion',
+    params: {
+        'fw_vnum_test': 42,
+        'xxx': 'yyy',
+        'foo_min': 0,
+        'foo_max': 100
+    }
+}
+'''
 def getParamDB(datafile='db/params.json', test_config=False):
     return ParamDB(datafile, test_config=test_config)
 

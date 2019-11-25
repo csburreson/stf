@@ -192,6 +192,7 @@ def getIcebootSession(fake=False, **kw):
             dbg('(framework) using overrides: {}'.format(json.dumps(kw)))
         return iceboot_session_cmd.init(IcebootOpts, **kw)
 
+    dbg('(framework) Starting FAKE iceboot session')
     class Iceboot:
         def __init__(self, **kw):
             self.status = 'OK' if not 'status' in kw else 'Error'
