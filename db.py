@@ -36,7 +36,7 @@ or
     }
 }
 '''
-def getParamDB(datafile='db/params.json', test_config=False):
+def getParamDB(datafile='dbdata/params.json', test_config=False):
     return ParamDB(datafile, test_config=test_config)
 
 

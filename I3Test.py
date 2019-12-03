@@ -227,7 +227,7 @@ def getDevices(device_type=None):
     global META 
     # pretend to be a db interface...
     if not DEVICES:
-        with open('db/all.json', 'r') as f:
+        with open('dbdata/all.json', 'r') as f:
             DB = json.load(f)
         DEVICES = DB['devices']
         META = DB['meta']
@@ -279,7 +279,6 @@ def check_attrs(cls, attrs=REQUIRED_ATTRS, required=True):
     return True
 
 def run():
-
     mainboard = getDevices('mainboard')
     device = mainboard[0]
     ran = False

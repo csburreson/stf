@@ -1,4 +1,4 @@
-import test as I3Test
+import I3Test
 
 class FWVersionTestPhases(I3Test.MainboardTest):
     @I3Test.measures(
@@ -36,7 +36,7 @@ TESTS = <list>
 # runnable registers this test
 @I3Test.runnable
 # set params
-@I3Test.configure('db/testconfig/fwvars.json')
+@I3Test.configure('dbdata/testconfig/fwvars.json')
 class FWVersionTest(I3Test.MainboardTest):
     VERSION = "1.0"
     DESC = ("optional test description. if not provided, "

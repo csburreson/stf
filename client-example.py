@@ -1,5 +1,5 @@
 # import custom test lib
-import Test
+import I3Test as Test
 import openhtf as htf
 
 

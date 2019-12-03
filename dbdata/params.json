@@ -11,9 +11,9 @@
     }
   ], 
   "foo": {
-    "max": 44, 
+    "foo_max": 44, 
     "bar": "narf", 
-    "min": 40
+    "foo_min": 40
   }, 
   "fw_vnum_test": {
     "expected_fw_vnum": "0x6a"
