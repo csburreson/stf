@@ -1,0 +1,9 @@
+{
+    "fw_vnum_test": {
+        "expected_fw_vnum": "0x6a"
+    },
+    "foo": {
+        "foo_min": 40,
+        "foo_max": 44
+    }
+}
