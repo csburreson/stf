@@ -1,4 +1,5 @@
-import I3Test
+import teflon as I3Test
+from os.path import join
 
 class FWVersionTestPhases(I3Test.MainboardTest):
     @I3Test.measures(
@@ -34,9 +35,12 @@ TESTS = <list>
 )
 '''
 # runnable registers this test
-@I3Test.runnable
+@I3Test.register(
+    config_file=join(I3Test.DB_DIR, 'testconf/fwvars.json'),
+    version='1.0'
+)
 # set params
-@I3Test.configure('dbdata/testconf/fwvars.json')
+#@I3Test.configure(join(I3Test.DB_DIR, 'testconf/fwvars.json'))
 class FWVersionTest(I3Test.MainboardTest):
     VERSION = "1.0"
     DESC = ("optional test description. if not provided, "

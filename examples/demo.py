@@ -1,5 +1,5 @@
 import openhtf as htf
-import i3test as T
+import test as T
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.output.callbacks import console_summary
 

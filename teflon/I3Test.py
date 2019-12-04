@@ -6,6 +6,7 @@ the test designers should not need to read this
 TODO: create module and make this "core" with "Test.Test" (mod.class) an alias for <mod>/core.py:Test
 '''
 import json
+from os.path import join
 
 import openhtf as htf
 from openhtf import measures, Measurement
@@ -15,18 +16,20 @@ from openhtf.util.checkpoints import checkpoint as CHECKPOINT
 from iceboot import iceboot_session_cmd
 import db
 
-from colors import termcolor as clr
+from util.colors import termcolor as clr
 
 
 
-### move to module's __init__ ?
-FRAMEWORK_VERSION = '1.0'
+FRAMEWORK_VERSION = '0.2'
 # aliases
 M = Measurement
 STOP = htf.PhaseResult.STOP
 CONTINUE = htf.PhaseResult.CONTINUE
 REPEAT = htf.PhaseResult.STOP
 options = htf.PhaseOptions
+
+DB_DIR = 'data/'
+ParamDB = None
 
 REQUIRED_ATTRS = ['VERSION', 'TESTS']
 
@@ -39,7 +42,7 @@ def test(f):
 
 ### JSON output stuff
 # move to output lib file
-OUTPUT_DIR = './results/'
+OUTPUT_DIR = 'results/'
 OUTPUT_FMT_STRING = '{metadata[type]}.{dut_id}.{metadata[test_name]}-v{metadata[test_version]}.json'
 OUTPUT_JSONFILE = '{}{}'.format(OUTPUT_DIR, OUTPUT_FMT_STRING)
 
@@ -72,7 +75,12 @@ def dbg(s, trace=5):
         )
   
 # XXX: this is gotten from the "database" ;)
-ParamDB = db.getParamDB()
+def get_db():
+    global ParamDB
+    if not ParamDB:
+        ParamDB = db.getParamDB()
+    return ParamDB
+
 
 
 ### MAIN CODE
@@ -99,7 +107,7 @@ class Test():
         }
         '''
         # XXX: this requires @configure deco
-        if self._PARAMS:
+        if hasattr(self, '_PARAMS'):
             return self._PARAMS.get(pname, {})
 
         if not getattr(self, 'test_params') or not self.test_params:
@@ -111,6 +119,7 @@ class Test():
 
         # lookup param values
         plist = self.test_params[pname]
+        get_db()
         return ParamDB.getTestParams(pname, plist)
 
     def execute(self, device):
@@ -146,6 +155,9 @@ class Test():
                 test_args[x.func.__name__] = args
                 phases.append(x.with_args(session=self.session, **args))
             except AttributeError:
+                # XXX
+                dbg('AttrErr')
+                raise
                 phases.append(x)
 
 #.with_args(T, T.meta, T.measurements, {}),
@@ -223,11 +235,14 @@ def getIcebootSession(fake=False, **kw):
     return Iceboot()
 
 def getDevices(device_type=None):
+    '''
+    pretend to be a db interface...
+    '''
     global DEVICES
     global META 
-    # pretend to be a db interface...
+    devices = join(DB_DIR, 'all.json')
     if not DEVICES:
-        with open('dbdata/all.json', 'r') as f:
+        with open(devices, 'r') as f:
             DB = json.load(f)
         DEVICES = DB['devices']
         META = DB['meta']
@@ -325,8 +340,8 @@ def _run(testClass, device):
       # if hasattr(testClass, 'TESTS'):
       # see if this is a runnable test
       if not check_attrs(testClass, required=False):
-          dbg('Skipping {}'.format(testClass.__name__))
-          return False
+          dbg('Warn: {} is missing attributes'.format(testClass.__name__))
+          #return False
 
       test = testClass(
         testClass.VERSION,
@@ -351,6 +366,20 @@ def runnable(cls):
     TESTABLE_CLASSES.append(cls)
     return cls
 
+def register(**kw):
+    def wrap(cls):
+        conf_file = kw.get('config_file')
+        if conf_file:
+            with open(conf_file, 'r') as f:
+                dbg("(@configure) loaded {}".format(conf_file))
+                cls._PARAMS = json.load(f)
+                cls._PARAM_CONF_FILE = conf_file
+        version = kw.get('version')
+        if not version:
+            raise Exception('Misconfigured test, missing version')
+        cls.VERSION = version
+        return runnable(cls)
+    return wrap
 
 def configure(config_file, **kw):
     '''

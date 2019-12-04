@@ -1,4 +1,4 @@
-import Test
+import teflon as Test
 
 class MainboardTestPhases(Test.MainboardTest):
     @Test.measures(Test.M('bootup_status').equals('OK'))

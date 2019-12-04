@@ -36,8 +36,12 @@ or
     }
 }
 '''
+global __DB
 def getParamDB(datafile='dbdata/params.json', test_config=False):
-    return ParamDB(datafile, test_config=test_config)
+    global __DB
+    if not __DB:
+        __DB = ParamDB(datafile, test_config=test_config)
+    return __DB
 
 
 class ParamDB(object):
