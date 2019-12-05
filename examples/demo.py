@@ -1,3 +1,6 @@
+'''
+demonstrates openhtf framework
+'''
 import openhtf as htf
 import test as T
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
@@ -13,7 +16,6 @@ from openhtf.plugs import user_input
 def main():
     test_devices()
 
-  
 def get_all_devices():
     '''
     Placeholder for some sort of discovery function for finding hardware
