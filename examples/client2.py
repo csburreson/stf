@@ -53,6 +53,7 @@ class SuperMainboardTest(Test.MainboardTest):
     VERSION = '1'
 
     TESTS = [
+      MainboardTestPhases.cause_an_error,
       MainboardTestPhases.bootup,
       MainboardTestPhases.flash,
       # this test throws an error
