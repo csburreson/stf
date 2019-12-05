@@ -214,6 +214,9 @@ def getIcebootSession(fake=False, **kw):
             return 'iceboot'
         __str__ = __repr__
 
+        def fpgaWrite(self, *args):
+            pass
+
         def fpgaVersion(self):
             return 0x6a
 
@@ -374,6 +377,7 @@ def register(**kw):
                 dbg("(@configure) loaded {}".format(conf_file))
                 cls._PARAMS = json.load(f)
                 cls._PARAM_CONF_FILE = conf_file
+                dbg("(@configure) {}".format(cls._PARAMS))
         version = kw.get('version')
         if not version:
             raise Exception('Misconfigured test, missing version')

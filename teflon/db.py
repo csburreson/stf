@@ -36,7 +36,7 @@ or
     }
 }
 '''
-global __DB
+__DB = None
 def getParamDB(datafile='dbdata/params.json', test_config=False):
     global __DB
     if not __DB:

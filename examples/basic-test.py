@@ -78,4 +78,5 @@ class FWVersionTest(I3Test.MainboardTest):
         FWVersionTestPhases.foo
     ]
 
-I3Test.run() 
+if __name__ == '__main__':
+    I3Test.run() 
