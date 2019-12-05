@@ -13,10 +13,22 @@ class MainboardTestPhases(Test.MainboardTest):
     def funkItUp(test, session):
         test.measurements.funkItUp = session.cmd('funkItUp')
 
+    @Test.test
     def stopTest(test, session):
         # do something with session...
         # you can halt text execution:
         return Test.STOP
+
+    @Test.test
+    def failTest(test, session):
+        # do something with session...
+        # you can FAIL a test and CONTINUE
+        return Test.FAIL
+
+    @Test.options(run_if=lambda: False)
+    def skipped(test, session):
+        '''this test is skipped with run_if option'''
+        pass
 
     @Test.test
     def cause_an_error(test, session):
@@ -25,11 +37,13 @@ class MainboardTestPhases(Test.MainboardTest):
 
     @Test.test
     def long_test(test, session):
+        Test.dbg('LONG TEST...sleeping for 5')
         test.logger.info('long_test... sleeping')
         import time
         time.sleep(5)
 
 
+@Test.register()
 class SuperMainboardTest(Test.MainboardTest):
     '''
     This is a docstring comment
@@ -46,6 +60,7 @@ class SuperMainboardTest(Test.MainboardTest):
       MainboardTestPhases.flash,
     ]
 
+@Test.register()
 class DuperMainboardTest(Test.MainboardTest):
     '''
     This is a docstring comment
@@ -80,16 +95,17 @@ class Common(Test.MainboardTest):
     @Test.options(repeat_limit=5)
     @Test.measures(Test.M('wait_status').equals('OK'))
     def wait_until(test, session):
+        Test.dbg('wait until...')
         output = session.cmd('wait')
         if output != 'OK':
             return Test.REPEAT
-        test.measuresments.wait_status = 'OK'
+        test.measurements.wait_status = output
 
     # this will fail since the "wait" command
     # is rigged to return "OK" only the third time its called
     @Test.options(repeat_limit=2)
     @Test.measures(Test.M('wait_status').equals('OK'))
-    def wait_until(test, session):
+    def wait_untilx(test, session):
         output = session.cmd('wait')
         if output != 'OK':
             return 
@@ -99,6 +115,7 @@ class Common(Test.MainboardTest):
         test.baselines = 42 / limit
     
 
+@Test.register()
 class HighVoltageTest(Test.MainboardTest):
     '''
     HivhVoltageTest
@@ -114,7 +131,11 @@ class HighVoltageTest(Test.MainboardTest):
         Common.check_baselines.with_args(limit=42)
     ]
 
+# undecorated example (doesn't get iceboot session var)
+def foo(test):
+    pass
 
+@Test.register()
 class CheckpointExampleTest(Test.MainboardTest):
     '''
     This is a docstring comment
@@ -126,9 +147,22 @@ class CheckpointExampleTest(Test.MainboardTest):
       MainboardTestPhases.bootup,
       MainboardTestPhases.flash,
       #lambda t, s: t.logger.info('CHECKPOINT'),
-      MainboardTestPhases.cause_an_error,
-      Test.CHECKPOINT(),
+      #MainboardTestPhases.cause_an_error,
+      MainboardTestPhases.skipped,
+      MainboardTestPhases.failTest,
+      foo,
+      Test.CHECKPOINT('my_checkpoint_name'),
       MainboardTestPhases.long_test, # this test will not run
     ]
+
+@Test.register(version='1.0')
+class RepeatExample(Test.MainboardTest):
+    '''test repeat'''
+    TESTS = [
+        # this test phase will try to complete 3 times, and only on the third
+        # time will it be successful (due to a hacked Iceboot)
+        Common.wait_until
+    ]
+
 
 Test.run() 

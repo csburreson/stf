@@ -25,7 +25,8 @@ FRAMEWORK_VERSION = '0.2'
 M = Measurement
 STOP = htf.PhaseResult.STOP
 CONTINUE = htf.PhaseResult.CONTINUE
-REPEAT = htf.PhaseResult.STOP
+REPEAT = htf.PhaseResult.REPEAT
+FAIL = htf.PhaseResult.FAIL_AND_CONTINUE
 options = htf.PhaseOptions
 
 DB_DIR = 'data/'
@@ -37,7 +38,10 @@ REQUIRED_ATTRS = ['VERSION', 'TESTS']
 def test(f):
     @htf.TestPhase()
     def deco(*args, **kw):
-        f(*args, **kw)
+        return f(*args, **kw)
+    # preserve original test name
+    deco.func.__name__ = f.__name__
+    deco.options.name = f.__name__
     return deco
 
 ### JSON output stuff
@@ -144,20 +148,27 @@ class Test():
         for x in self.tests:
             # check for params
             try:
-                if hasattr(x, '_checkpoint'):
-                    raise AttributeError
                 #qualified_testname = '{}.{}'.format(
                 #    self.__class__.__name__, 
                 #    x.func.__name__
                 #)
                 #args = self.getTestParams(qualified_testname)
-                args = self.getTestParams(x.func.__name__)
-                test_args[x.func.__name__] = args
+                fn_name = x.func.__name__
+                if fn_name == '_checkpoint':
+                    dbg('CHECKPOINT')
+                    phases.append(x)
+                    continue
+                args = self.getTestParams(fn_name)
+                test_args[fn_name] = args
+
+                dbg(fn_name)
+                #dbg('{}.{}'.format(self.__class__.name, fn_name))
+                dbg('optname: {}'.format(x.options.name))
                 phases.append(x.with_args(session=self.session, **args))
             except AttributeError:
                 # XXX
                 dbg('AttrErr')
-                raise
+                #x = test(x)
                 phases.append(x)
 
 #.with_args(T, T.meta, T.measurements, {}),
@@ -379,7 +390,7 @@ def register(**kw):
                 cls._PARAM_CONF_FILE = conf_file
                 dbg("(@configure) {}".format(cls._PARAMS))
         version = kw.get('version')
-        if not version:
+        if not version and not cls.VERSION:
             raise Exception('Misconfigured test, missing version')
         cls.VERSION = version
         return runnable(cls)
