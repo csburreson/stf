@@ -77,6 +77,7 @@ def dbg(s, trace=5):
             clr(trace, 'gray'),
             clr(s, 'aqua')
         )
+debug = dbg
   
 # XXX: this is gotten from the "database" ;)
 def get_db():
