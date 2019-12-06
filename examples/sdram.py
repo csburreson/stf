@@ -1,4 +1,4 @@
-import teflon
+import stf
 from fpga_reg import *
 import numpy as np
 #from dpram import *
@@ -11,7 +11,7 @@ def fpga_write(*args):
     pass
 sleep = 1
 def fpga_read(*args):
-    teflon.dbg('reading...')
+    stf.dbg('reading...')
     global sleep
     import time
     time.sleep(0.5)
@@ -30,7 +30,7 @@ def sdram_write(test, session, dpram_num=0):
         pass
 
 
-@teflon.options(timeout_s=10)
+@stf.options(timeout_s=10)
 def sdram_read(session, dpram_num):
     # read from sdram
     fpga_write(session, 'sdram_task', 1 << (4 + 2*dpram_num))
@@ -45,8 +45,8 @@ def set_sdram_adr(session, adr, dpram_num):
     fpga_write(session, 'sdram_adr_high[%d]' % dpram_num, adr >> 16)
 
 
-@teflon.options(timeout_s=10)
-@teflon.test
+@stf.options(timeout_s=10)
+@stf.test
 def run_test(test, session, dpram_nums):
     for dpram_num in [0, 1]:
         print('\n---Testing SDRAM lane %d---\n' % dpram_num)
@@ -121,19 +121,19 @@ def run_test(test, session, dpram_nums):
 
         
         if not all_match:
-            teflon.debug('Failure! Mismatch found.')
+            stf.debug('Failure! Mismatch found.')
             # fail and continue
-            return teflon.FAIL
+            return stf.FAIL
         else:
-            teflon.debug('Success! All read values are as expected.')
+            stf.debug('Success! All read values are as expected.')
             # no need for explicit continue here, but why not?
-            return teflon.CONTINUE
+            return stf.CONTINUE
 
 
 # register decorator accepts version and config file
 #   
-@teflon.register(version='1.0', config_file='data/testconfig/sdram.json')
-class SDRAMTest(teflon.MainboardTest):
+@stf.register(version='1.0', config_file='data/testconfig/sdram.json')
+class SDRAMTest(stf.MainboardTest):
     '''
     Docstring is included in test results as the test description
     '''
@@ -142,4 +142,4 @@ class SDRAMTest(teflon.MainboardTest):
 
 # this allows us to easily define tests
 if __name__ == '__main__':
-    teflon.run()
+    stf.run()

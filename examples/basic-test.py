@@ -1,4 +1,4 @@
-import teflon as I3Test
+import stf as I3Test
 from os.path import join
 
 class FWVersionTestPhases(I3Test.MainboardTest):

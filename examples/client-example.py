@@ -1,7 +1,7 @@
 ### DELETE? or update...
 
 # import custom test lib
-import I3Test as Test
+import stf as Test
 import openhtf as htf
 
 # random function which will not be executed as a test

@@ -1,14 +1,14 @@
-import teflon
+import stf
 
-@teflon.register(
+@stf.register(
     version='1.0'
 )
-class TimeoutExample(teflon.MainboardTest):
+class TimeoutExample(stf.MainboardTest):
     '''
     This example test set demonstrates a failure due to a test timeout
     '''
     # options with timeout_s=n allows tests to be halted after n seconds
-    @teflon.options(timeout_s=2)
+    @stf.options(timeout_s=2)
     def bar(test, session):
         '''this test will fail with TIMEOUT'''
         import time
@@ -20,4 +20,4 @@ class TimeoutExample(teflon.MainboardTest):
 
 
 if __name__ == '__main__':
-    teflon.run()
+    stf.run()

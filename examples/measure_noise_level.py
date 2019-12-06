@@ -1,4 +1,4 @@
-import teflon
+import stf
 import numpy as np
 
 ### made up fns run this "example"
@@ -8,7 +8,7 @@ def parseTestWaveform(x, channel):
 def fpga_write(*args):
     pass
 
-@teflon.measures(teflon.Measurement('noise'))
+@stf.measures(stf.Measurement('noise'))
 def measure_noise_level(test, session, channel=None, n_waveforms=None):
     #session.startDEggSWTrigStream(channel, 5)
 
@@ -29,23 +29,23 @@ def measure_noise_level(test, session, channel=None, n_waveforms=None):
     test.measurements.noise = np.sqrt(var_sum/n_samps)
 
     if test.measurements.noise is np.nan:
-        return teflon.STOP
+        return stf.STOP
 
     if test.measurements.noise == 42:
         # fail test, but continue
-        return teflon.FAIL
+        return stf.FAIL
 
-    return teflon.CONTINUE
+    return stf.CONTINUE
 
 
-@teflon.test
+@stf.test
 def setup(test, session):
     fpga_write(session, 'wvb_reader_enable', 1)
     fpga_write(session, 'dpram_select', 4)
 
 
-@teflon.register(version='1.0', config_file='data/testconfig/measure_noise_level.json')
-class MeasureNoiseLevel(teflon.MainboardTest):
+@stf.register(version='1.0', config_file='data/testconfig/measure_noise_level.json')
+class MeasureNoiseLevel(stf.MainboardTest):
     '''measure the noise level'''
     TESTS = [
         setup,
@@ -56,4 +56,4 @@ class MeasureNoiseLevel(teflon.MainboardTest):
     
 
 if __name__ == '__main__':
-    teflon.run()
+    stf.run()
