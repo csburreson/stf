@@ -6,10 +6,17 @@ from openhtf import measures, Measurement
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.util.checkpoints import checkpoint as CHECKPOINT
 
-from iceboot import iceboot_session_cmd
-import db
+# first is for local dev setup 
+try:
+    from .iceboot import iceboot_session_cmd
+except ModuleNotFoundError:
+    from iceboot import iceboot_session_cmd
+from . import db
 
-from util.colors import termcolor as clr
+import stf
+#from stf import env
+
+from .util.colors import termcolor as clr
 
 
 FRAMEWORK_VERSION = '0.2'
@@ -54,11 +61,11 @@ def dbg(s, trace=5):
                 pass
         caller = reversed(caller)
         trace = ' -> '.join(caller) if caller else 'n/a'
-        print '{} {} {}'.format(
+        print('{} {} {}'.format(
             clr('DEBUG >>', 'red'),
             clr(trace, 'gray'),
             clr(s, 'aqua')
-        )
+        ))
 debug = dbg
 
 
@@ -68,7 +75,7 @@ def getIcebootSession(fake=False, **kw):
         host = '192.168.0.10'
         port = 5012
         debug = True
-        fpgaConfigurationFile = 'fw_0x6a.rbf'
+        fpgaConfigurationFile = join(stf.ENV.DATA_DIR, 'fw_0x6a.rbf')
         test = []
 
     dbg('(framework) Starting iceboot session ...')
@@ -83,7 +90,7 @@ def getDevices(device_type=None):
     '''
     global DEVICES
     global META 
-    devices = join(DB_DIR, 'all.json')
+    devices = join(stf.env.DB_DIR, 'all.json')
     if not DEVICES:
         with open(devices, 'r') as f:
             DB = json.load(f)
@@ -105,8 +112,8 @@ def run():
     mainboard = getDevices('mainboard')
     device = mainboard[0]
     ran = False
-    for testClass in TESTABLE_CLASSES:
-        dbg("Running {}".format(testClass.__name__))
+    for testClass in stf.TESTABLE_CLASSES:
+        dbg("Running {}".format(testClass.test_name))
 
         if _run(testClass, device):
             ran = True
@@ -115,3 +122,14 @@ def run():
         #findAndRun()
         dbg('Nothing ran :(')
         pass
+
+def _run(testClass, device):
+      # XXX: for now, we use TESTS to determine whether to run
+      # if hasattr(testClass, 'TESTS'):
+      # see if this is a runnable test
+      #if not check_attrs(testClass, required=False):
+      #    dbg('Warn: {} is missing attributes'.format(testClass.__name__))
+          #return False
+
+      testClass.execute(device)
+      return True

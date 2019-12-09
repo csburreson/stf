@@ -1,3 +1,11 @@
+import json
+import openhtf as htf
+from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
+from .core import dbg, getIcebootSession
+from . import FRAMEWORK_VERSION, decorators
+import stf
+FAKE_ICEBOOT = False
+
 class TestSet(object):
     def __init(self, version):
         pass
@@ -11,12 +19,19 @@ class Common:
     def checkCommsAndFirmware(test, session):
         pass
 
+
+    def setupIceboot(test, session):
+        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
+            **self.config.get('iceboot', {})
+        )
+
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
+        dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
 
-
         # not needed? 
+        # used for connecting to device
         self.config = kw.get('config', {})
 
         # test_params is a map of fn name = list of varnames
@@ -32,25 +47,29 @@ class MainboardTest(object):
         # XXX: move to init or "configure" step or something
         conf_file = kw['conf_file']
         with open(conf_file, 'r') as f:
-            #dbg("(@configure) loaded {}".format(conf_file))
-            cls._PARAMS = json.load(f)
-            cls._PARAM_CONF_FILE = conf_file
-            #dbg("(@configure) {}".format(cls._PARAMS))
-            raise Exception('Misconfigured test, missing version')
+            dbg("(@configure) loaded {}".format(conf_file))
+            self._PARAMS = json.load(f)
+            self._PARAM_CONF_FILE = conf_file
+            dbg("(@configure) {}".format(self._PARAMS))
+
+        self.session = None
 
         # XXX:
         # create iceboot session here?
         # or as a test phase?
-    def setupIceboot(self):
+    def setupIceboot(self, test):
         self.session = stf.getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {})
+            **self.config.get('iceboot', {
+                'host': 'localhost',
+                'port': 5012
+            })
         )
 
     # DEPRECATED
     def addTest(self, testCallable):
         self.tests.append(testCallable)
 
-    def getTestParams(self, pname):
+    def getTestParams(self):
         '''
         pname = "test name" but should probably be thought of as "phase name"
 
@@ -62,8 +81,9 @@ class MainboardTest(object):
         '''
         # XXX: this requires @configure deco
         if hasattr(self, '_PARAMS'):
-            return self._PARAMS.get(pname, {})
+            return self._PARAMS
 
+        # deprecated (bwloe)
         if not getattr(self, 'test_params') or not self.test_params:
             return {} 
 
@@ -80,7 +100,7 @@ class MainboardTest(object):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
-        self._PARAMS = ps = self.getTestParams(self.test_name)
+        ps = self.getTestParams()
 
         # could get device config here:
         # dev_conf = getDeviceConfig(device)
@@ -90,20 +110,26 @@ class MainboardTest(object):
 
         # get test arguments (from json file)
         test_args = ps.get('args', {})
+        dbg('test args: {}'.format(test_args))
+        test_args.update(ps.get('expectedValues', {}))
+        dbg('test args: {}'.format(test_args))
 
         # get test configuration options (defaults hardcoded, override in test config file
         # with "conf" top-level key
-        defaults = testclasses.Common.TEST_CONFIG
+        #defaults = testclasses.Common.TEST_CONFIG
+        defaults = Common.TEST_CONFIG
         test_conf = defaults.update(ps.get('conf', {}))
 
         phases = [
-            setup_iceboot.with_args(session=self.session),
-            Common.checkCommsAndFirmware.with_args(session=self.session),
-            run_test.with_args(session=self.session).with_args(**test_args)
+            decorators.test(self.setupIceboot),
+            #setup_iceboot.with_args(session=self.session),
+            decorators.test(Common.checkCommsAndFirmware).with_args(session=self.session),
+            self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
 
         T = htf.Test(
+            setup = [self.setupIceboot],
             *phases,
             # openhtf fields
             test_name=self.test_name,
@@ -118,7 +144,7 @@ class MainboardTest(object):
         )
 
         T.add_output_callbacks(
-            JSON(OUTPUT_JSONFILE, indent=4, default=str)
+            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
         )
 
         # get session here???
@@ -133,7 +159,7 @@ class MainboardTest(object):
         try:
             self.tests = self.TESTS
         except AttributeError:
-            print "Error! No TESTS property found"
+            print( "Error! No TESTS property found")
             # not a Runnable test
             return
 
@@ -160,7 +186,7 @@ class MainboardTest(object):
                     dbg('CHECKPOINT')
                     phases.append(x)
                     continue
-                args = self.getTestParams(fn_name)
+                args = self.getTestParams()
                 test_args[fn_name] = args
 
                 dbg(fn_name)
@@ -175,7 +201,7 @@ class MainboardTest(object):
 
 #.with_args(T, T.meta, T.measurements, {}),
 
-        phases = [test_fn]
+        #phases = [test_fn]
         T = htf.Test(
             *phases,
             # openhtf fields

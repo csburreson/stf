@@ -1,0 +1,5 @@
+{
+    "env": {},
+    "args": {"arg1": "test"},
+    "expectedValues": {"foo": "bar"}
+}

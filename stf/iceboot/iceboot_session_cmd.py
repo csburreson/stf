@@ -1,7 +1,7 @@
 
 from .test_waveform import parseTestWaveform
 from optparse import OptionParser
-import ymodem
+from . import ymodem
 import socket
 import fcntl
 import os
@@ -334,6 +334,8 @@ def configureOptions(parser):
 
 
 def init(options, fpgaConfigurationFile=None, host=None, port=None):
+    print(host)
+    print(port)
     # Default now is socket.  Add interfaces as needed
     session = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if host is None:
