@@ -158,7 +158,7 @@ class MainboardTest(object):
         else:
             fw_file = stf.ENV.FIRMWARE_FILE_PATH
         
-        self.session = stf.getIcebootSession(fake=FAKE_ICEBOOT,
+        self.session = stf.getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT,
             **self.config.get('iceboot', {
                 'host': 'localhost',
                 'port': 5012,
@@ -199,6 +199,9 @@ class MainboardTest(object):
         #T.session = getIcebootSession(fake=FAKE_ICEBOOT,
         #    self.CONFIG.get)
         T.execute(test_start=lambda: device['id'])
+
+        stf.dbg("finished execute for test: {}".format(self.test_name))
+
 
 
 

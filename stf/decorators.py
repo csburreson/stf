@@ -10,8 +10,8 @@ def register(**kw):
     if not name:
         import inspect
         frame = inspect.stack()[1]
-        name = frame[0].f_code.co_filename.split('.')[0]
-        dbg('test_name not provided, using: {}'.format(name))
+        name = frame[0].f_code.co_filename.split('.')[0].split('/')[-1]
+        stf.dbg('test_name not provided, using: {}'.format(name))
     if not __valid_test_name(name):
         raise Exception('Misconfigured test, invalid or missing `test_name`. Can not run')
 

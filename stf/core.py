@@ -71,15 +71,32 @@ def dbg(s, trace=5):
         ))
 debug = dbg
 
+class FakeIceboot(object):
+    '''
+    placeholder class for development which accepts any method call
+    and returns nothing
+    '''
+    def __init__(self, *args, **kw):
+        stf.dbg('Creating FAKE iceboot class with (unused) kwargs: {}'.format(kw))
 
+    def __getattr__(self, attr):
+        def fake(*args, **kw):
+            pass
+        if attr == 'fpgaVersion':
+            return lambda: 0x6a
+        return fake
 
 def getIcebootSession(fake=False, **kw):
+    if fake:
+        return FakeIceboot()
+
     class IcebootOpts:
         host = '192.168.0.10'
         port = 5012
         debug = True
         fpgaConfigurationFile = None
         test = []
+
 
     dbg('(framework) Starting iceboot session ...')
     if kw:
