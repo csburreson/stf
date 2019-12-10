@@ -14,7 +14,6 @@ except ModuleNotFoundError:
 from . import db
 
 import stf
-#from stf import env
 
 from .util.colors import termcolor as clr
 
@@ -75,7 +74,8 @@ def getIcebootSession(fake=False, **kw):
         host = '192.168.0.10'
         port = 5012
         debug = True
-        fpgaConfigurationFile = join(stf.ENV.DATA_DIR, 'fw_0x6a.rbf')
+        #fpgaConfigurationFile = join(stf.ENV.DATA_DIR, 'fw_0x6a.rbf')
+        fpgaConfigurationFile = None
         test = []
 
     dbg('(framework) Starting iceboot session ...')

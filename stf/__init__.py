@@ -2,7 +2,9 @@ __version__ = '0.2'
 
 #from I3Test import *
 from .core import *
-from .decorators import register, equalsParam
+from .decorators import *
+#register, equalsParam
+#from .decorators import *
 from . import testclasses
 
 global TESTABLE_CLASSES
@@ -30,5 +32,3 @@ class env():
     JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
 
 ENV = env
-
-

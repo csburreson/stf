@@ -2,7 +2,8 @@ import json
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from .core import dbg, getIcebootSession
-from . import FRAMEWORK_VERSION, decorators
+from .core import FRAMEWORK_VERSION
+#from .decorators test as testify
 import stf
 FAKE_ICEBOOT = False
 
@@ -10,14 +11,42 @@ class TestSet(object):
     def __init(self, version):
         pass
 
-class Common:
+@htf.util.validators.register
+def equalsParam(pname, type=None):
+    if not (pname.startswith('{') and pname.endswith('}')):
+        pname = '{' + pname + '}'
+    return EqualsParam(pname, type=type)
+
+
+class EqualsParam(htf.util.validators.ValidatorBase):
+    def __init__(self, pvalue, type=None):
+        self.paramValue = pvalue
+        self._type = type
+
+    def __call__(self, value):
+        return self.paramValue == value
+        
+    def __str__(self):
+        '''use in output'''
+        return 'x == {}'.format(self.paramValue)
+
+    def with_args(self, **kw):
+        return type(self)(
+            pvalue=htf.util.format_string(self.paramValue, kw),
+            type=kw.get('type', None),
+        )
+
+class Common(object):
     # default test config options
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    # decorate this as a test?
-    def checkCommsAndFirmware(test, session):
-        pass
+    @stf.measures(stf.M('fw_vnum').equalsParam('expected_fw_vnum'))
+    def checkCommsAndFirmware(test, session, **kw):
+        stf.dbg('running framework FW test')
+        test.logger.debug('FOO')
+
+        test.measurements.fw_vnum = hex(session.fpgaVersion())
 
 
     def setupIceboot(test, session):
@@ -96,6 +125,9 @@ class MainboardTest(object):
         get_db()
         return ParamDB.getTestParams(pname, plist)
     
+    def get_session(self):
+        return self.session
+
     def execute(self, device):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
@@ -119,19 +151,28 @@ class MainboardTest(object):
         #defaults = testclasses.Common.TEST_CONFIG
         defaults = Common.TEST_CONFIG
         test_conf = defaults.update(ps.get('conf', {}))
+        
+        self.session = stf.getIcebootSession(fake=FAKE_ICEBOOT,
+            **self.config.get('iceboot', {
+                'host': 'localhost',
+                'port': 5012
+            })
+        )
 
+        #ib_session = self.setupIceboot(None)
         phases = [
-            decorators.test(self.setupIceboot),
+            #stf.test(self.setupIceboot),
             #setup_iceboot.with_args(session=self.session),
-            decorators.test(Common.checkCommsAndFirmware).with_args(session=self.session),
+            Common.checkCommsAndFirmware.with_args(session=self.session, expected_fw_vnum='0x6a'),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
 
-        T = htf.Test(
-            setup = [self.setupIceboot],
-            *phases,
-            # openhtf fields
+        T = htf.Test(htf.PhaseGroup(
+                #setup = [self.setupIceboot],
+                main=phases,
+                # openhtf fields
+            ),
             test_name=self.test_name,
             test_version=self.version,
             test_desc=desc or 'no description',

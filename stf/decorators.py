@@ -7,12 +7,18 @@ def __valid_test_name(x):
 
 def register(**kw):
     name = kw.get('test_name')
+    if not name:
+        import inspect
+        frame = inspect.stack()[1]
+        name = frame[0].f_code.co_filename.split('.')[0]
+        dbg('test_name not provided, using: {}'.format(name))
     if not __valid_test_name(name):
         raise Exception('Misconfigured test, invalid or missing `test_name`. Can not run')
 
     conf_file = kw.get('config_file')
     if not conf_file:
-        conf_file = '{}/{}.json'.format(stf.env.TEST_CONFIG_DIR, name)
+        stf.dbg('test name: ' + name)
+        conf_file = '{}/{}.json'.format(stf.ENV.TEST_CONFIG_DIR, name)
         #conf_file = 'data/testconfig/{}.json'.format(kw['test_name'])
 
     version = kw.get('version')
@@ -36,32 +42,12 @@ def test(f):
     def deco(*args, **kw):
         return f(*args, **kw)
     # preserve original test name
-    deco.func.__name__ = f.__name__
-    deco.options.name = f.__name__
+    # XXX: functools here?
+    try:
+        deco.func.__name__ = f.__name__
+        #deco.options.name = f.__name__
+    except AttributeError:
+        pass
     return deco
 
 
-@htf.util.validators.register
-def equalsParam(pname, type=None):
-    if not (pname.startswith('{') and pname.endswith('}')):
-        pname = '{' + pname + '}'
-    return EqualsParam(pname, type=type)
-
-
-class EqualsParam(htf.util.validators.ValidatorBase):
-    def __init__(self, pvalue, type=None):
-        self.paramValue = pvalue
-        self._type = type
-
-    def __call__(self, value):
-        return self.paramValue == value
-        
-    def __str__(self):
-        '''use in output'''
-        return 'x == {}'.format(self.paramValue)
-
-    def with_args(self, **kw):
-        return type(self)(
-            pvalue=htf.util.format_string(self.paramValue, kw),
-            type=kw.get('type', None),
-        )
