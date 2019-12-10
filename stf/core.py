@@ -43,13 +43,17 @@ META = {}
 
 ### dev symbols
 import os
-DEBUG = os.environ.get('I3TEST_DEBUG', False)
-# create "fake" iceboot 
-FAKE_ICEBOOT = os.environ.get('FAKE_ICEBOOT', False)
+class DEBUG:
+    LOG = os.environ.get('STF_DEBUG', False)
+    # create "fake" iceboot 
+    FAKE_ICEBOOT = os.environ.get('STF_FAKEICEBOOT', False)
+    # skip loading of FW file
+    SKIP_FW = os.environ.get('STF_SKIPFW', False)
+    
 
 
 def dbg(s, trace=5):
-    if DEBUG:
+    if DEBUG.LOG:
         import inspect
         caller = []
         for x in range(1, trace):
@@ -74,7 +78,6 @@ def getIcebootSession(fake=False, **kw):
         host = '192.168.0.10'
         port = 5012
         debug = True
-        #fpgaConfigurationFile = join(stf.ENV.DATA_DIR, 'fw_0x6a.rbf')
         fpgaConfigurationFile = None
         test = []
 

@@ -151,11 +151,18 @@ class MainboardTest(object):
         #defaults = testclasses.Common.TEST_CONFIG
         defaults = Common.TEST_CONFIG
         test_conf = defaults.update(ps.get('conf', {}))
+
+        # XXX: debug flag
+        if stf.DEBUG.SKIP_FW:
+            fw_file = None
+        else:
+            fw_file = stf.ENV.FIRMWARE_FILE_PATH
         
         self.session = stf.getIcebootSession(fake=FAKE_ICEBOOT,
             **self.config.get('iceboot', {
                 'host': 'localhost',
-                'port': 5012
+                'port': 5012,
+                'fpgaConfigurationFile': fw_file
             })
         )
 

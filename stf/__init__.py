@@ -31,4 +31,6 @@ class env():
     __FMT_STRING = '{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
     JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
 
+    FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_0x6a.rbf')
+
 ENV = env
