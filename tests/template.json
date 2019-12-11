@@ -1,0 +1,9 @@
+{
+    "__comment__": "base config for template.py",
+    "args": {
+        "arg1": 42
+    }, 
+    "expectedValues": {
+        "foo": "bar"
+    }
+}

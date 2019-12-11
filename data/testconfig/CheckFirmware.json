@@ -1,0 +1,7 @@
+{
+    "conf": {},
+    "args": {},
+    "expectedValues": {
+        "expected_fw_vnum": "0x6a"
+    }
+}
