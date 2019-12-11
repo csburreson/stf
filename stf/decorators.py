@@ -3,9 +3,37 @@ import openhtf as htf
 import stf
 
 def __valid_test_name(x):
+    # XXX: define valid test name (a-zA-Z0-9 and "-", ".", "_")
     return x is not None
 
 def register(**kw):
+    '''
+    this decorator registers a given test with the framework
+
+    required kwargs:
+        version 
+            string denoting the version of this test (in case it's run in
+            production and then modified)
+
+        run 
+            pass in the test function here.
+    
+    optional kwargs:
+        test_name 
+            by default, the framework will attempt to use the name of
+            the file from which register was called.
+
+        config_file 
+            by default, the framework will look for a a "testconfig"
+            directory containing the tests config file:
+            i.e. os.join(stf.ENV.DATA_DIR, 'testconfig', '<test_name>.json')
+            or "$STF_HOME/data/testconfig/test_name.json" where STF_HOME
+            is the location of the stf package
+
+        test_class
+            by default, the framework will use 'stf.tests.MainboardTest' as the
+            testClass
+    '''
     name = kw.get('test_name')
     if not name:
         import inspect
@@ -17,9 +45,9 @@ def register(**kw):
 
     conf_file = kw.get('config_file')
     if not conf_file:
-        stf.dbg('test name: ' + name)
+        stf.dbg('config_file not provided for test: ' + name)
         conf_file = '{}/{}.json'.format(stf.ENV.TEST_CONFIG_DIR, name)
-        #conf_file = 'data/testconfig/{}.json'.format(kw['test_name'])
+        stf.dbg('trying {}'.format(conf_file))
 
     version = kw.get('version')
     if not version:

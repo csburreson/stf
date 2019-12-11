@@ -94,6 +94,14 @@ class MainboardTest(object):
             })
         )
 
+    def setup(self, test):
+        # placeholder for OpenHTF setup phase
+        pass
+
+    def tearDown(self, test):
+        # placeholder for OpenHTF tearDown phase
+        pass
+
     # DEPRECATED
     def addTest(self, testCallable):
         self.tests.append(testCallable)
@@ -176,8 +184,10 @@ class MainboardTest(object):
         ]
 
         T = htf.Test(htf.PhaseGroup(
-                #setup = [self.setupIceboot],
+                #setup=[self.setupIceboot],
+                setup=[self.setup]
                 main=phases,
+                teardown=[self.tearDown]
                 # openhtf fields
             ),
             test_name=self.test_name,

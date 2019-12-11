@@ -144,12 +144,9 @@ def run():
         pass
 
 def _run(testClass, device):
-      # XXX: for now, we use TESTS to determine whether to run
-      # if hasattr(testClass, 'TESTS'):
-      # see if this is a runnable test
       #if not check_attrs(testClass, required=False):
       #    dbg('Warn: {} is missing attributes'.format(testClass.__name__))
-          #return False
+      #    return False
 
       testClass.execute(device)
       return True
