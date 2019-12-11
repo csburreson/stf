@@ -185,7 +185,7 @@ class MainboardTest(object):
 
         T = htf.Test(htf.PhaseGroup(
                 #setup=[self.setupIceboot],
-                setup=[self.setup]
+                setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
                 # openhtf fields
