@@ -7,10 +7,7 @@ from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.util.checkpoints import checkpoint as CHECKPOINT
 
 # first is for local dev setup 
-try:
-    from .iceboot import iceboot_session_cmd
-except ModuleNotFoundError:
-    from iceboot import iceboot_session_cmd
+from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 import stf
