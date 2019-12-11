@@ -72,7 +72,10 @@ For now, they should be placed in `STF_HOME/data/testconfig/<test_name>.json`
 
 ### running a test
 
-First, one must add the stf library directory to python path (TODO: instructions)
+First, one must add the stf library directory to python path. STF_HOME is used to denote the location of this repository on your system
+
+Then also add the stf module's `tools/python` directory
+`export PYTHONPATH=$PYTHONPATH:<STF_HOME_PATH>:<STF_HOME_PATH>/stf/tools/python`
 
 Then, one can simply run `python <test_file.py>` where test_file is the name of the test you have written.
 
