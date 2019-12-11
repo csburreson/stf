@@ -11,7 +11,8 @@ stf.register(
     # been used in production)
     version='1.0',
     # just use this file's filename
-    #test_name=__file__.split('.')[0].split('/')[-1],
+    test_name='CheckFirmware',
+    #__file__.split('.')[0].split('/')[-1],
     run=run_test,
     #testClass=stf.testclasses.MainboardTest,
 )
