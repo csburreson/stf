@@ -1,5 +1,12 @@
 __version__ = '0.2'
 
+import sys
+import os
+
+# directories:
+STF_HOME = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
+
 #from I3Test import *
 from .core import *
 from .decorators import *
@@ -14,9 +21,6 @@ def addTestClass(cls):
     global TESTABLE_CLASSES
     TESTABLE_CLASSES.append(cls)
 
-import os
-# directories:
-STF_HOME = os.path.dirname(os.path.realpath(__file__))
 
 class env():
     def __dir(*args):
