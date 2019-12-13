@@ -41,6 +41,7 @@ Additional arguments can be specified in the test config.
 ```
 import stf
 
+@stf.test
 def test_function(test, session, **kw):
   pass
   
@@ -87,3 +88,64 @@ The framework will automatically name the test after the filename referenced, st
 Alternatively you can specify `test_name` to the `stf.register` function.
 
 Test configuration files are located in `STF_HOME/data/testconfig/<test_name>.json`, though one can also manually specify a `test_config='path/to/file'` argument for the register function.
+
+### measuring values
+
+If a test declares that it is measuring a value, the test will fail if the measurement is not recorded in `test.measurements`
+
+You can declare a measurement as such:
+```
+import stf
+
+@stf.measures(stf.Measurement('foo'))
+def test_function(test, session, **kw):
+  test.measurements.foo = 'bar'
+  
+stf.register(
+  version='1.0',
+  run=test_function
+)
+
+if __name__ == '__main__':
+  stf.run()
+```
+
+#### validators
+
+Here's an example of measuring a value and requiring it be in a range; this test would pass:
+
+```
+@stf.measures(stf.Measurement('foo').in_range(0, 100))
+def test_function(test, session, **kw):
+    test.measurement.foo = 42
+```
+
+Here's an example of measuring a value and requiring it equal a particular value; this test would pass if `blah()` returns 42:
+```
+@stf.measures(stf.Measurement('foo').equals(42))
+def test_function(test, session, **kw):
+    x = blah()
+    test.measurement.foo = x
+```
+
+#### validating with arguments (expected values)
+
+For validating measurements with an argument provided in a testconfig, specify the name of the parameter with the `equalsParam` decorator:
+```
+@stf.measures(stf.Measurement('foo').equalsParam('{bar}'))
+def test_function(test, session, **kw):
+    test.measurement.foo = 42
+```
+
+```
+{
+  "args": {},
+  "expectedValues": {
+    "bar": 42
+  }
+}
+```
+
+The above test would pass since the `test.measurement.foo` value equals the `expectedValues.bar` config value.
+
+Similarly, one can use a range validator as such: **XXX TODO**
