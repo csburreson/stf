@@ -60,16 +60,20 @@ The framework code all lives in the **library directory** as a python module: `S
 
 ** Test Config **
 
+A test config file is **required** for all tests even if it's empty
+
 Test config files are JSON documents like this:
 
 ```
 {
-  "args": { ... },
-  "expectedValues": { ... },
+  "args": {},
+  "expectedValues": {},
 }
 ```
 
 For now, they should be placed in `STF_HOME/data/testconfig/<test_name>.json`
+
+`args` and `expectedValues` are passed to tests as python keyword args; one can mention them by name in the test definition or use the `**kw` dictionary.
 
 ### running a test
 
