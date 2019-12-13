@@ -134,7 +134,7 @@ def test_function(test, session, **kw):
 
 #### validating with arguments (expected values)
 
-For validating measurements with an argument provided in a testconfig, specify the name of the parameter with the `equalsParam` decorator:
+For validating measurements with an argument provided in a testconfig, specify the name of the parameter with the `equalsParam` function as such:
 ```
 @stf.measures(stf.Measurement('foo').equalsParam('{bar}'))
 def test_function(test, session, **kw):
@@ -152,4 +152,22 @@ def test_function(test, session, **kw):
 
 The above test would pass since the `test.measurement.foo` value equals the `expectedValues.bar` config value.
 
-Similarly, one can use a range validator as such: **XXX TODO**
+Similarly, one can use a range validator as such: 
+
+```
+@stf.measures(stf.Measurement('foo').in_range('{bar_low}'. '{bar_high}'))
+def test_function(test, session, **kw):
+    test.measurement.foo = 42
+```
+
+```
+{
+  "args": {},
+  "expectedValues": {
+    "bar_low": 40,
+    "bar_high": 44
+  }
+}
+```
+
+`in_range` is inclusive, meaning in the above example `foo` must be equal to or between the `bar_high` and `bar_low` values
