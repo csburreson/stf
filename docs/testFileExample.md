@@ -52,11 +52,61 @@ example empty file:
 }
 ```
 
+## Passing a test
+
+A test will pass if it successfully completes with no errors and has made any (optional) declared measurements.
+
+One can explicitly return `stf.FAIL` or `stf.PASS` though the latter will only be valid if the test has no measurements or has made any that it declared
+
+Note that returning stf.PASS will not result in a pass if declared measurements were not made.
+
+examples:
+
+```
+def test_fn(test, session, **k):
+    ... # do some stuff...
+
+    if something.isBad:
+        return stf.FAIL
+
+    return stf.PASS
+```
+
+
+explicit pass return value not required:
+```
+def test_fn(test, session, **k):
+    ... # do some stuff...
+
+    if something.isBad:
+        return stf.FAIL
+```
+
+measurements (more on that below)
+```
+@stf.measures(stf.Measurement('foo'))
+def test_fn(test, session, **k):
+    ... # do some stuff...
+
+    test.measurements.foo = something()
+```
+
+All the above tests would pass
 
 ## Measurements
 
-todo...
+Decorate your test with `@stf.measures(...)` to declare measurements.
 
+The `measures` decorator accepts stf.Measurement (or stf.M for short) objects.
+
+You can record measurements you have declared by using the *test* argument:
+`test.measurements.<name-of-declared-measurement>`
+
+Measurements can be validated with the following validators:
+  * `.equals(val)` compares recorded measurement against val (usually a literal)
+  * `.equalsParam('{expectedValueKey}')` compares the value of an item in the "expectedValue" of the test config JSON file
+  * `.in_range(x, y)` valid if measurement if equal to or between x and y
+  * `.in_range('{exp_x}', {exp_y})` same, but uses "expectedValue" from testConfig
 ```
 import stf
 
