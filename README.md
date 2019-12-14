@@ -28,6 +28,10 @@ for more information, or installing in non-linux envs.
 
 ### creating a test
 
+See the docs:
+https://wipacrepo.github.io/stf/
+
+
 more here soon... but basically a test file only needs to call `register` and `run`
 
 The register function minimally needs a "version" string and a "run" function as arguments.
