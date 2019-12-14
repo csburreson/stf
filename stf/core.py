@@ -1,6 +1,4 @@
 import json
-from os.path import join
-
 import openhtf as htf
 from openhtf import measures, Measurement
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
@@ -10,63 +8,14 @@ from openhtf.util.checkpoints import checkpoint as CHECKPOINT
 from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
-import stf
+from stf.debug import dbg
+from stf import ENV, getRegisteredClasses
 
-from .util.colors import termcolor as clr
-
-
-FRAMEWORK_VERSION = '0.2'
-# aliases
-M = Measurement
-STOP = htf.PhaseResult.STOP
-CONTINUE = htf.PhaseResult.CONTINUE
-REPEAT = htf.PhaseResult.REPEAT
-FAIL = htf.PhaseResult.FAIL_AND_CONTINUE
-options = htf.PhaseOptions
-
-# defined in __init__
-global DB_DIR
-ParamDB = None
-
-### JSON output stuff
-# move to output lib file
-OUTPUT_DIR = 'results/'
-OUTPUT_FMT_STRING = '{metadata[type]}.{dut_id}.{metadata[test_name]}-v{metadata[test_version]}.json'
-OUTPUT_JSONFILE = '{}{}'.format(OUTPUT_DIR, OUTPUT_FMT_STRING)
 
 ### fake DB stuff
 DEVICES = []
 META = {}
 
-### dev symbols
-import os
-class DEBUG:
-    LOG = os.environ.get('STF_DEBUG', False)
-    # create "fake" iceboot 
-    FAKE_ICEBOOT = os.environ.get('STF_FAKEICEBOOT', False)
-    # skip loading of FW file
-    SKIP_FW = os.environ.get('STF_SKIPFW', False)
-    
-
-
-def dbg(s, trace=5):
-    if DEBUG.LOG:
-        import inspect
-        caller = []
-        for x in range(1, trace):
-            try:
-                frame = inspect.stack()[x]
-                caller.append(frame[3])
-            except IndexError:
-                pass
-        caller = reversed(caller)
-        trace = ' -> '.join(caller) if caller else 'n/a'
-        print('{} {} {}'.format(
-            clr('DEBUG >>', 'red'),
-            clr(trace, 'gray'),
-            clr(s, 'aqua')
-        ))
-debug = dbg
 
 class FakeIceboot(object):
     '''
@@ -74,7 +23,7 @@ class FakeIceboot(object):
     and returns nothing
     '''
     def __init__(self, *args, **kw):
-        stf.dbg('Creating FAKE iceboot class with (unused) kwargs: {}'.format(kw))
+        dbg('Creating FAKE iceboot class with (unused) kwargs: {}'.format(kw))
 
     def __getattr__(self, attr):
         def fake(*args, **kw):
@@ -107,9 +56,8 @@ def getDevices(device_type=None):
     '''
     global DEVICES
     global META 
-    devices = join(stf.env.DB_DIR, 'all.json')
     if not DEVICES:
-        with open(devices, 'r') as f:
+        with open(ENV.DEVICES_JSON_FILE, 'r') as f:
             DB = json.load(f)
         DEVICES = DB['devices']
         META = DB['meta']
@@ -129,7 +77,7 @@ def run():
     mainboard = getDevices('mainboard')
     device = mainboard[0]
     ran = False
-    for testClass in stf.TESTABLE_CLASSES:
+    for testClass in getRegisteredClasses():
         dbg("Running {}".format(testClass.test_name))
 
         if _run(testClass, device):

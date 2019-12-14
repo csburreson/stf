@@ -3,12 +3,13 @@ import openhtf as htf
 import stf
 
 def __valid_test_name(x):
-    # XXX: define valid test name (a-zA-Z0-9 and "-", ".", "_")
+    # XXX: define valid test name (a-zA-Z0-9 and "-", ".", "_")?
     return x is not None
 
+# XXX: no longer a decorator... should be in core?
 def register(**kw):
     '''
-    this decorator registers a given test with the framework
+    this function registers a given test with the framework
 
     required kwargs:
         version 
@@ -48,6 +49,7 @@ def register(**kw):
         stf.dbg('config_file not provided for test: ' + name)
         conf_file = '{}/{}.json'.format(stf.ENV.TEST_CONFIG_DIR, name)
         stf.dbg('trying {}'.format(conf_file))
+        # XXX: validate config here, raise Exception
 
     version = kw.get('version')
     if not version:
@@ -58,14 +60,20 @@ def register(**kw):
     _cls = kw.get('test_class', testclasses.MainboardTest)
     # test_function? or just run?
     func = kw.get('run')
-    cls = _cls(version, name, test_fn=func, conf_file=conf_file)
+    if not hasattr(func, 'measurements'):
+        func = make_test(func)
+
+    desc = kw.get('test_desc')
+    # get test description from the function's docstring if test_desc is not present
+    #desc = desc or func.__doc__
+    cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc)
 
     stf.addTestClass(cls)
 
     return True
 
 # allows @stf.test decorator
-def test(f):
+def make_test(f):
     @htf.TestPhase()
     def deco(*args, **kw):
         return f(*args, **kw)
@@ -73,9 +81,9 @@ def test(f):
     # XXX: functools here?
     try:
         deco.func.__name__ = f.__name__
+        deco.func.__doc__ = f.__doc__
+        deco.registered = True
         #deco.options.name = f.__name__
     except AttributeError:
         pass
     return deco
-
-
