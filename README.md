@@ -42,6 +42,9 @@ This assumes you are in the root directory of this repository.
 ### creating a test
 
 See the docs:
+https://wipacrepo.github.io/stf/test-writing-guide.html
+
+(this is mainly a skeleton... will fill in soon)
 https://wipacrepo.github.io/stf/
 
 ### debug environment variables
