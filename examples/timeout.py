@@ -3,6 +3,7 @@ import stf
 @stf.options(timeout_s=1)
 def run_test(test, session):
     import time
+    print("HERE")
     test.logger.info('Doing "long running" operation...')
     time.sleep(2)
     test.logger.info('This line is never reached')

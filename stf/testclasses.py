@@ -184,7 +184,7 @@ class MainboardTest(object):
         if iceboot_conf and stf.DEBUG.SKIP_FW:
             # XXX: debug (this will go away or be ignored some day)
             iceboot_conf['fpgaConfigurationFile'] = None
-        
+
         # XXX: move this to seutp function or re-implement this as a plug?
         self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
 

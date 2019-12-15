@@ -19,6 +19,38 @@ import os
 STF_HOME = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
 
+try:
+    import builtins as __builtins__
+except ImportError:
+    pass
+
+# save ref to original print fn
+_PRINT = __builtins__.print
+
+# hack to redirect print statements to test logger.info
+'''
+#XXX: print_smasher?
+def print_smash(*args):
+    pass
+__builtins__.print = print_smash
+
+'''
+from .debug import dbg, DEBUG
+
+def printToInfo(*args):
+    try:
+        # get test object
+        #... hmm, maybe something like?
+        test = sys._getframe(1).f_locals["test"]
+        s = 'print: ' + ' '.join([str(a) for a in args])
+        test.logger.info(s)
+    except:
+        #from .debug import dbg
+        dbg('Error! BAD PRINT {}'.format(args))
+        # _PRINT(*args) here? or ignore?
+        if DEBUG.ALLOW_PRINT:
+            _PRINT(*args)
+__builtins__.print = printToInfo
 
 # XXX: todo -- create JSON based config file for STF itself
 class ENV():
@@ -41,7 +73,6 @@ class ENV():
     DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
 
 #from I3Test import *
-from .debug import dbg, DEBUG
 debug = dbg
 from .core import run
 

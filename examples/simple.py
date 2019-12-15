@@ -1,5 +1,6 @@
 import stf
 
+print( "HERE")
 def run_test(test, session, **kw):
     return stf.PASS
 
