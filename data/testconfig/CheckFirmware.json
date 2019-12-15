@@ -1,5 +1,9 @@
 {
-    "conf": {},
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
     "args": {},
     "expectedValues": {
         "expected_fw_vnum": "0x6a"

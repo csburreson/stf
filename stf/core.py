@@ -27,20 +27,26 @@ class FakeIceboot(object):
 
     def __getattr__(self, attr):
         def fake(*args, **kw):
-            pass
+            f = kw.get('retval')
+            if f:
+                if callable(f):
+                    return f
+                return lambda: f
+            return None
         if attr == 'fpgaVersion':
-            return lambda: 0x6a
+            return lambda: ENV.FIRMWARE_VERSION
         return fake
 
 def getIcebootSession(fake=False, **kw):
     if fake:
-        return FakeIceboot()
+        return FakeIceboot(**kw)
 
     class IcebootOpts:
-        host = '192.168.0.10'
+        #host = '192.168.0.10'
+        host = 'localhost'
         port = 5012
         debug = True
-        fpgaConfigurationFile = None
+        fpgaConfigurationFile = stf.ENV.FIRMWARE_FILE_PATH
         test = []
 
 

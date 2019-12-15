@@ -34,7 +34,8 @@ class ENV():
     __FMT_STRING = '{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
     JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
 
-    FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_0x6a.rbf')
+    FIRMWARE_VERSION = 0x6a
+    FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_{}.rbf'.format(hex(FIRMWARE_VERSION)))
 
     # this is a db placeholder hackjob (i.e. this will be removed someday)
     DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')

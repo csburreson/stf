@@ -1,6 +1,7 @@
 import json
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
+from openhtf.output.callbacks import console_summary
 from .core import getIcebootSession
 import stf
 FAKE_ICEBOOT = False
@@ -29,10 +30,13 @@ class EqualsParam(htf.util.validators.ValidatorBase):
         return 'x == {}'.format(self.paramValue)
 
     def with_args(self, **kw):
-        return type(self)(
-            pvalue=htf.util.format_string(self.paramValue, kw),
-            type=kw.get('type', None),
-        )
+        try:
+            return type(self)(
+                pvalue=htf.util.format_string(self.paramValue, kw['expectedValues']),
+                type=kw.get('type', None),
+            )
+        except KeyError:
+            raise Exception('Framework Error. Contact maintainer')
 
 class Common(object):
     # default test config options
@@ -62,7 +66,6 @@ class MainboardTest(object):
 
         # not needed? 
         # used for connecting to device
-        self.config = kw.get('config', {})
 
         # test_params is a map of fn name = list of varnames
         self.test_params = kw.get('params', {})
@@ -75,12 +78,20 @@ class MainboardTest(object):
         self.instance = kw.get('instance')
 
         # XXX: move to init or "configure" step or something
+        self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
         with open(conf_file, 'r') as f:
             stf.dbg("(@configure) loaded {}".format(conf_file))
             self._PARAMS = json.load(f)
             self._PARAM_CONF_FILE = conf_file
             stf.dbg("(@configure) {}".format(self._PARAMS))
+            if 'config' in self._PARAMS:
+                cfg = self._PARAMS['config']
+                stf.dbg('@configure: config overrides: {}'.format(cfg))
+                self.config.update(cfg)
+
+            #if 'expectedValues' in self._PARAMS:
+
 
         self.session = None
 
@@ -152,34 +163,29 @@ class MainboardTest(object):
         # get test arguments (from json file)
         test_args = ps.get('args', {})
         stf.dbg('test args: {}'.format(test_args))
-        test_args.update(ps.get('expectedValues', {}))
-        stf.dbg('test args: {}'.format(test_args))
+        expected_values = ps.get('expectedValues', {})
+        stf.dbg('expected values: {}'.format(expected_values))
 
         # get test configuration options (defaults hardcoded, override in test config file
         # with "conf" top-level key
         #defaults = testclasses.Common.TEST_CONFIG
-        defaults = Common.TEST_CONFIG
-        test_conf = defaults.update(ps.get('conf', {}))
 
-        # XXX: debug flag
-        if stf.DEBUG.SKIP_FW:
-            fw_file = None
-        else:
-            fw_file = stf.ENV.FIRMWARE_FILE_PATH
+        # by default fpgaConfigurationFile is set in getIcebootSession
+        # if a key is provided and the value is None/null, it will be
+        # skipped
+        iceboot_conf = self.config.get('iceboot', {})
+        if iceboot_conf and stf.DEBUG.SKIP_FW:
+            # XXX: debug (this will go away or be ignored some day)
+            iceboot_conf['fpgaConfigurationFile'] = None
         
-        self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT,
-            **self.config.get('iceboot', {
-                'host': 'localhost',
-                'port': 5012,
-                'fpgaConfigurationFile': fw_file
-            })
-        )
+        # XXX: move this to seutp function or re-implement this as a plug?
+        self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
 
-        #ib_session = self.setupIceboot(None)
+        if expected_values:
+            test_args['expectedValues'] = expected_values
+
         phases = [
-            #stf.test(self.setupIceboot),
-            #setup_iceboot.with_args(session=self.session),
-            Common.checkCommsAndFirmware.with_args(session=self.session, expected_fw_vnum='0x6a'),
+            Common.checkCommsAndFirmware.with_args(session=self.session, expectedValues={'expected_fw_vnum':hex(stf.ENV.FIRMWARE_VERSION)}),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
@@ -189,8 +195,8 @@ class MainboardTest(object):
                 setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
-                # openhtf fields
             ),
+            # openhtf fields
             test_name=self.test_name,
             test_version=self.version,
             test_desc=self.desc,
@@ -202,17 +208,19 @@ class MainboardTest(object):
             }
         )
 
+        # XXX: how to deal with output options?
         T.add_output_callbacks(
             JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
         )
 
-        # get session here???
-        #T.session = getIcebootSession(fake=FAKE_ICEBOOT,
-        #    self.CONFIG.get)
+        # XXX: add DEBUG flag?
+        T.add_output_callbacks(
+            console_summary.ConsoleSummary()
+        )
+
         T.execute(test_start=lambda: device['id'])
 
         stf.dbg("finished execute for test: {}".format(self.test_name))
-
 
 
 
@@ -261,7 +269,6 @@ class MainboardTest(object):
                 #x = test(x)
                 phases.append(x)
 
-#.with_args(T, T.meta, T.measurements, {}),
 
         #phases = [test_fn]
         T = htf.Test(
