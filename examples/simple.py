@@ -1,7 +1,7 @@
 import stf
 
 print( "HERE")
-def run_test(test, session, **kw):
+def run_test(test, session):
     return stf.PASS
 
 # register decorator accepts version and config file

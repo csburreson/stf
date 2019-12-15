@@ -1,12 +1,9 @@
 {
     "config": {
         "iceboot": {
-            "host": "localhost",
-            "port": 420,
-            "fpgaConfigurationFile": null
+            "host": "localhost"
         }
     },
-    "args": {},
     "expectedValues": {
         "expected_fw_vnum": "0x6a"
     }
