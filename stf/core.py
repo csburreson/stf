@@ -8,7 +8,7 @@ from openhtf.util.checkpoints import checkpoint as CHECKPOINT
 from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
-from stf.debug import dbg
+from stf.debug import dbg, DEBUG
 from stf import ENV, getRegisteredClasses
 
 
@@ -46,7 +46,7 @@ def getIcebootSession(fake=False, **kw):
         host = 'localhost'
         port = 5012
         debug = True
-        fpgaConfigurationFile = stf.ENV.FIRMWARE_FILE_PATH
+        fpgaConfigurationFile = None if DEBUG.SKIP_FW else ENV.FIRMWARE_FILE_PATH
         test = []
 
 

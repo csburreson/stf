@@ -46,10 +46,11 @@ def printToInfo(*args):
         test.logger.info(s)
     except:
         #from .debug import dbg
-        dbg('Error! BAD PRINT {}'.format(args))
         # _PRINT(*args) here? or ignore?
         if DEBUG.ALLOW_PRINT:
             _PRINT(*args)
+        else:
+            dbg('Error! BAD PRINT {}'.format(args))
 __builtins__.print = printToInfo
 
 # XXX: todo -- create JSON based config file for STF itself
