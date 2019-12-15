@@ -220,6 +220,10 @@ Measurements can be validated with the following validators:
   * `.in_range(x, y)` valid if measurement if equal to or between x and y
   * `.in_range('{exp_x}', {exp_y})` same, but uses "expectedValue" from testConfig
   * TODO: match?
+
+
+Example:
+
 ```
 import stf
 
