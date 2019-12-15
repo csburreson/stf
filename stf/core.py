@@ -41,18 +41,35 @@ def getIcebootSession(fake=False, **kw):
     if fake:
         return FakeIceboot(**kw)
 
+    # default firmware path
+    fw_file = ENV.FIRMWARE_FILE_PATH
+    
+    # this value can be null/None and that means DON'T send a fw file
+    if 'fpgaConfigurationFile' in kw:
+        # get this, eve
+        fw_file = kw['fpgaConfigurationFile']
+
+    # SKIP_FW debug symbol overrides testconfig
+    if DEBUG.SKIP_FW:
+        fw_file = None
+
     class IcebootOpts:
         #host = '192.168.0.10'
         host = 'localhost'
         port = 5012
         debug = True
-        fpgaConfigurationFile = None if DEBUG.SKIP_FW else ENV.FIRMWARE_FILE_PATH
+        # always make this None for now, and override with testconfig
+        # "Defaults" and overide THAT with testconfig "config.iceboot"
+        # if provided by test writer
+        fpgaConfigurationFile = fw_file
         test = []
 
 
     dbg('(framework) Starting iceboot session ...')
     if kw:
-        dbg('(framework) using overrides: {}'.format(json.dumps(kw)))
+        dbg('  using overrides: {}'.format(json.dumps(kw)))
+    if fw_file is None:
+        dbg('  NOT sending Firmware file')
     return iceboot_session_cmd.init(IcebootOpts, **kw)
 
 

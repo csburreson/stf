@@ -1,7 +1,9 @@
 {
     "config": {
         "iceboot": {
-            "host": "localhost"
+            "host": "localhost",
+            "port": 420,
+            "fpgaConfigurationFile": null
         }
     },
     "args": {},
