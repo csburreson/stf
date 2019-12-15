@@ -1,6 +1,11 @@
 # STF: Simple Testing Framework
 
-This is the testing framework for the IceCube Upgrade hardware
+This is the testing framework workspace for the IceCube Upgrade hardware
+
+The stf module lives in `stf/` and includes all the core code that test writers shouldn't have to worry about.
+
+*NOTE*: Currently the included submodule (specifically `python/tools/iceboot`) requires a python2 print statement to be changed to python3. I've modified this in my local env but am not very experienced with submodules and don't think that I should be committing from it... will update soon.
+
 
 ## using the framework
 
@@ -26,152 +31,32 @@ http://google.github.io/proto-lens/installing-protoc.html
 
 for more information, or installing in non-linux envs.
 
+After that, set your python path to the stf workspace home -- this will be referred to as `STF_HOME` in the docs -- as such:
+
+```
+export PYTHONPATH=$PYTHONPATH:`pwd`
+```
+
+This assumes you are in the root directory of this repository.
+
 ### creating a test
 
 See the docs:
 https://wipacrepo.github.io/stf/
 
+### debug environment variables
 
-more here soon... but basically a test file only needs to call `register` and `run`
+Until STF gets a config, you can override the behaviors of some things with environment variables.
 
-The register function minimally needs a "version" string and a "run" function as arguments.
+The following variables must be either set (on) or unset (off)
+* `STF_DEBUG` - if set, enables `stf.debug` print statements (regardless of -v args)
+* `STF_SKIPFW` - if set, skips copying of firmware (for development)
+* `STF_FAKEICEBOOT` - if set, creates a fake iceboot object... mainly for framework development
+* `STF_ALLOWPRINT=false` - if *SET TO False or 0*, disables printing outside of test functions
 
-The function passed to run *MUST* take **test** and **session** as its first two positional arguments.
+Note that the framework will convert any "print" statements within a test into `test.logger.info` statements.
 
-Additional arguments can be specified in the test config.
+Any print statements outside of your test function (or from iceboot) will show up unless ALLOWPRINT is disabled
 
-**XXX: for now, the test_function must also accept `**kwargs`**
 
-```
-import stf
 
-@stf.test
-def test_function(test, session, **kw):
-  pass
-  
-stf.register(
-  version='1.0',
-  run=test_function
-)
-
-if __name__ == '__main__':
-  stf.run()
-```
-
-For now, place tests in STF_HOME/tests where stf home is the root of this repository.
-
-The framework code all lives in the **library directory** as a python module: `STF_HOME/stf/`
-
-** Test Config **
-
-A test config file is **required** for all tests even if it's empty
-
-Test config files are JSON documents like this:
-
-```
-{
-  "args": {},
-  "expectedValues": {},
-}
-```
-
-For now, they should be placed in `STF_HOME/data/testconfig/<test_name>.json`
-
-`args` and `expectedValues` are passed to tests as python keyword args; one can mention them by name in the test definition or use the `**kw` dictionary.
-
-### running a test
-
-First, one must add the stf library directory to python path. 
-
-STF_HOME is used to denote the location of this repository on your system
-
-You must also add the stf module's `tools/python` directory:
-
-`export PYTHONPATH=$PYTHONPATH:<STF_HOME_PATH>:<STF_HOME_PATH>/stf/tools/python`
-
-Then, one can simply run `python <test_file.py>` where test_file is the name of the test you have written.
-
-The framework will automatically name the test after the filename referenced, stripping out the extension and any leading directories
-
-Alternatively you can specify `test_name` to the `stf.register` function.
-
-Test configuration files are located in `STF_HOME/data/testconfig/<test_name>.json`, though one can also manually specify a `test_config='path/to/file'` argument for the register function.
-
-### measuring values
-
-If a test declares that it is measuring a value, the test will fail if the measurement is not recorded in `test.measurements`
-
-You can declare a measurement as such:
-```
-import stf
-
-@stf.measures(stf.Measurement('foo'))
-def test_function(test, session, **kw):
-  test.measurements.foo = 'bar'
-  
-stf.register(
-  version='1.0',
-  run=test_function
-)
-
-if __name__ == '__main__':
-  stf.run()
-```
-
-#### validators
-
-Here's an example of measuring a value and requiring it be in a range; this test would pass:
-
-```
-@stf.measures(stf.Measurement('foo').in_range(0, 100))
-def test_function(test, session, **kw):
-    test.measurement.foo = 42
-```
-
-Here's an example of measuring a value and requiring it equal a particular value; this test would pass if `blah()` returns 42:
-```
-@stf.measures(stf.Measurement('foo').equals(42))
-def test_function(test, session, **kw):
-    x = blah()
-    test.measurement.foo = x
-```
-
-#### validating with arguments (expected values)
-
-For validating measurements with an argument provided in a testconfig, specify the name of the parameter with the `equalsParam` function as such:
-```
-@stf.measures(stf.Measurement('foo').equalsParam('{bar}'))
-def test_function(test, session, **kw):
-    test.measurement.foo = 42
-```
-
-```
-{
-  "args": {},
-  "expectedValues": {
-    "bar": 42
-  }
-}
-```
-
-The above test would pass since the `test.measurement.foo` value equals the `expectedValues.bar` config value.
-
-Similarly, one can use a range validator as such: 
-
-```
-@stf.measures(stf.Measurement('foo').in_range('{bar_low}'. '{bar_high}'))
-def test_function(test, session, **kw):
-    test.measurement.foo = 42
-```
-
-```
-{
-  "args": {},
-  "expectedValues": {
-    "bar_low": 40,
-    "bar_high": 44
-  }
-}
-```
-
-`in_range` is inclusive, meaning in the above example `foo` must be equal to or between the `bar_high` and `bar_low` values
