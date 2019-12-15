@@ -1,6 +1,6 @@
 import stf
 
-def run_test(test, session):
+def run_test(test, session, **kw):
     return stf.PASS
 
 # register decorator accepts version and config file

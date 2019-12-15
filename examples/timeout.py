@@ -1,23 +1,21 @@
 import stf
 
-@stf.register(
-    version='1.0'
+@stf.options(timeout_s=1)
+def run_test(test, session):
+    import time
+    test.logger.info('Doing "long running" operation...')
+    time.sleep(2)
+    test.logger.info('This line is never reached')
+
+    x = 1/0  # neither is this line
+
+stf.register(
+    version='1.0',
+    name='timeout',
+    test_desc='This is a demonstration of a test that times out',
+    config_file=stf.NOCONFIG,
+    run=run_test
 )
-class TimeoutExample(stf.MainboardTest):
-    '''
-    This example test set demonstrates a failure due to a test timeout
-    '''
-    # options with timeout_s=n allows tests to be halted after n seconds
-    @stf.options(timeout_s=2)
-    def bar(test, session):
-        '''this test will fail with TIMEOUT'''
-        import time
-        time.sleep(4)
-
-    # hoping to eliminate the need for this by just "discovering" all the
-    # functions in a class
-    TESTS = [bar]
-
 
 if __name__ == '__main__':
     stf.run()

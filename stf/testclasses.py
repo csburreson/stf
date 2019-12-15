@@ -77,9 +77,17 @@ class MainboardTest(object):
         # instance can be none
         self.instance = kw.get('instance')
 
+        self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
+
+        # skip loading config
+        if conf_file == stf.NOCONFIG:
+            self._PARAMS = {'args': {}, 'expectedValues': {}}
+            self._PARAM_CONF_FILE = None
+            return
+
         with open(conf_file, 'r') as f:
             stf.dbg("(@configure) loaded {}".format(conf_file))
             self._PARAMS = json.load(f)
@@ -93,7 +101,6 @@ class MainboardTest(object):
             #if 'expectedValues' in self._PARAMS:
 
 
-        self.session = None
 
         # XXX:
         # create iceboot session here?

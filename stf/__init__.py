@@ -60,6 +60,10 @@ REPEAT = core.htf.PhaseResult.REPEAT
 options = core.htf.PhaseOptions
 measures = core.htf.measures
 
+# just an option to explicitly state you won't be loading a config
+# (this should probably be discouraged)
+NOCONFIG = '__skip_stf_config__'
+
 from .decorators import register
 # for stf.test decorator
 from .decorators import make_test as test
