@@ -1,7 +1,7 @@
 # Aaron Fienberg
 #
 # Creates an ADC noise histogram
-# records the full histogram and the RMS
+# records the full histogram and some summary statistics
 #
 
 import stf
@@ -13,6 +13,8 @@ from DEggTest.fpga_reg import fpga_write
 
 
 @stf.measures(stf.M('noise_histogram'),
+              stf.M('one_pct_quantile'),
+              stf.M('ninetynine_pct_quantile'),
               stf.M('noise_std').in_range('{noise_min}', '{noise_max}',
                                           type=float))
 def run_test(test, session, channel, dac_val,
@@ -23,12 +25,21 @@ def run_test(test, session, channel, dac_val,
     adc_hist = make_sw_trig_histogram(session, channel,
                                       wfm_period, n_waveforms)
 
-    test.measurements.noise_histogram = adc_hist
-
     noise_std = hist_std(adc_hist)
-    test.logger.info(f'Noise level from channel {channel}: '
-                     f'{noise_std}')
+    one_pct_q, ninetynine_pct_q = calculate_quantiles(adc_hist)
+
+    test.logger.info(f'Baseline from channel {channel}: '
+                     f'{hist_mean(adc_hist)}')
+    test.logger.info(f'Noise level: {noise_std}')
+    test.logger.info(f'low extreme: {adc_hist["min"]}')
+    test.logger.info(f'1% quantile: {one_pct_q}')
+    test.logger.info(f'high extreme: {adc_hist["max"]}')
+    test.logger.info(f'99% quantile: {ninetynine_pct_q}')
+
+    test.measurements.noise_histogram = adc_hist
     test.measurements.noise_std = noise_std
+    test.measurements.one_pct_quantile = one_pct_q
+    test.measurements.ninetynine_pct_quantile = ninetynine_pct_q
 
 
 stf.register(
@@ -51,6 +62,19 @@ def configure_mainboard(session, channel, dac_val, wfm_len):
 
     # set the wfm len
     fpga_write(session, f'test_conf[{channel}]', int(wfm_len//4))
+
+
+def calculate_quantiles(hist):
+    ''' calculates the one percent and 99 percent quantiles '''
+    cdf = np.cumsum(hist['counts'])/np.sum(hist['counts'])
+
+    # smallest x where p(ADC <= x) >= 0.01
+    one_pct_q = hist['min'] + np.argwhere(cdf >= 0.01)[0][0]
+
+    # smallest x where p(ADC <= x) >= 0.99
+    ninetynine_pct_q = hist['min'] + np.argwhere(cdf >= 0.99)[0][0]
+
+    return one_pct_q, ninetynine_pct_q
 
 
 if __name__ == '__main__':
