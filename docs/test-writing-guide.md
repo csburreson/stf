@@ -8,11 +8,16 @@ Minimally, you need a test function, a few lines of boilerplate code, and an opt
 
 ## Test File
 
-A test file must import the stf framework, define a test function, and call `stf.register` on the test.
+A test file must import the stf framework, define a test function, and call `stf.register` on the test and **should** have a config file.
 
 Calling stf.run() in a test file will allow you to execute the test at the command line.
 
-...please stick to the convention of using `if __name__ == '__main__': \n    stf.run()` as you're writing tests
+...please stick to the convention of using 
+
+```if __name__ == '__main__': 
+    stf.run()```
+    
+as you're writing tests
 
 Here's an example test file:
 
@@ -25,7 +30,11 @@ def test_fn(test, session):
 stf.register(
     version='1.0',
     run=run_test,
-    config_file=stf.NOCONFIG
+    # NOCONFIG is useful for writing example tests and perhaps development, but
+    # your test should probably include a config file... eventually
+    config_file=stf.NOCONFIG,  # the test won't run without a config setting
+    test_name='FluxCapacitor',
+    test_desc='Test the foo flux'
 )
 
 # use "python <this-file.py>" to run
@@ -41,6 +50,10 @@ Register also accepts other arguments, like `test_name` and `test_desc` which yo
 If not provided, the framework will try to use the name of your testfile (minus the path and extension) as the `test_name` value.
 
 The framework will assume a test config with the same name exists here: `data/testconfig/<test_name>.json`
+
+Place your tests in the workspace's `tests/` folder.
+
+For reference, here is the full spread of `register` function keyword arguments:
 
 ```
 stf.register(
@@ -124,7 +137,9 @@ def test_fn(test, session, arg1=None, expectedValues=None):
 def test_fn(test, session, **kwargs):
     pass
 ```
-*example tests are located in `STF_HOME/tests/`*
+*example tests are located in the `examples/` and `tests/` directories*
+
+
 
 ## Test Config
 
