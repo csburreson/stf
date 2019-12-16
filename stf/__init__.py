@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 __version__ = '0.2'
 FRAMEWORK_VERSION = __version__
 
@@ -25,7 +27,15 @@ except ImportError:
     pass
 
 # save ref to original print fn
-_PRINT = __builtins__.print
+try:
+    _PRINT = __builtins__.print
+except AttributeError:
+    _PRINT = __builtins__['print']
+    PYTHON2 = True
+    PYTHON3 = False
+else:
+    PYTHON3 = True
+    PYTHON2 = False
 
 # hack to redirect print statements to test logger.info
 '''
@@ -33,25 +43,26 @@ _PRINT = __builtins__.print
 def print_smash(*args):
     pass
 __builtins__.print = print_smash
-
 '''
+
 from .debug import dbg, DEBUG
 
-def printToInfo(*args):
-    try:
-        # get test object
-        #... hmm, maybe something like?
-        test = sys._getframe(1).f_locals["test"]
-        s = 'print: ' + ' '.join([str(a) for a in args])
-        test.logger.info(s)
-    except:
-        #from .debug import dbg
-        # _PRINT(*args) here? or ignore?
-        if DEBUG.ALLOW_PRINT:
-            _PRINT(*args)
-        else:
-            dbg('Error! BAD PRINT {}'.format(args))
-__builtins__.print = printToInfo
+if PYTHON3:
+    def printToInfo(*args):
+        try:
+            # get test object
+            #... hmm, maybe something like?
+            test = sys._getframe(1).f_locals["test"]
+            s = 'print: ' + ' '.join([str(a) for a in args])
+            test.logger.info(s)
+        except:
+            #from .debug import dbg
+            # _PRINT(*args) here? or ignore?
+            if DEBUG.ALLOW_PRINT:
+                _PRINT(*args)
+            else:
+                dbg('Error! BAD PRINT {}'.format(args))
+    __builtins__.print = printToInfo
 
 # XXX: todo -- create JSON based config file for STF itself
 class ENV():

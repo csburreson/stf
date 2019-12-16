@@ -1,6 +1,7 @@
 import os
 from .util.colors import termcolor as clr
-from . import _PRINT as print
+from . import PYTHON3
+from . import _PRINT as prnt
 
 ### dev symbols
 class DEBUG:
@@ -27,7 +28,7 @@ def dbg(s, trace=5):
                 pass
         caller = reversed(caller)
         trace = ' -> '.join(caller) if caller else 'n/a'
-        print('{} {} {}'.format(
+        prnt('{} {} {}'.format(
             clr('DEBUG >>', 'red'),
             clr(trace, 'gray'),
             clr(s, 'aqua')

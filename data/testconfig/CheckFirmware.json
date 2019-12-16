@@ -1,7 +1,8 @@
 {
     "config": {
         "iceboot": {
-            "host": "localhost"
+            "host": "localhost",
+            "xfpgaConfigurationFile": "/livebox/scratch/stf/data/fw_0xb0.rbf"
         }
     },
     "expectedValues": {

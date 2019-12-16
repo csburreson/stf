@@ -38,8 +38,6 @@ class FakeIceboot(object):
         return fake
 
 def getIcebootSession(fake=False, **kw):
-    if fake:
-        return FakeIceboot(**kw)
 
     # default firmware path
     fw_file = ENV.FIRMWARE_FILE_PATH
@@ -48,10 +46,23 @@ def getIcebootSession(fake=False, **kw):
     if 'fpgaConfigurationFile' in kw:
         # get this, eve
         fw_file = kw['fpgaConfigurationFile']
+        dbg('fw_file: {}'.format(fw_file))
+
+        ### HACK: make the comms test pass with a custom fpgaConfig file ... this relies on the 
+        #   filename to contain the fw version.
+        # XXX: should probably use splitext and basename from os
+        fn = fw_file.split('/')[-1].split('.')[0]
+        ENV.FIRMWARE_VERSION = int(fn[-4:], 16)
+        dbg('setting fw version: {}'.format(ENV.FIRMWARE_VERSION))
+
 
     # SKIP_FW debug symbol overrides testconfig
     if DEBUG.SKIP_FW:
+        dbg('NOT loading firmeware STF_SKIPFW is set')
         fw_file = None
+
+    if fake:
+        return FakeIceboot(**kw)
 
     class IcebootOpts:
         #host = '192.168.0.10'

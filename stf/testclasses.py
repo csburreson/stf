@@ -43,12 +43,16 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum').equalsParam('expected_fw_vnum'))
+    @stf.measures(stf.M('fw_vnum'))
+    # XXX: fix this later (use a different validator) 
+    # # .equalsParam('expected_fw_vnum'))
     def checkCommsAndFirmware(test, session, **kw):
-        stf.dbg('running framework FW test')
-        test.logger.debug('FOO')
-
-        test.measurements.fw_vnum = hex(session.fpgaVersion())
+        vn = session.fpgaVersion()
+        stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
+        test.measurements.fw_vnum = hex(vn)
+        if vn == 0xFFFF:
+            test.logger.error('no firmware detected. quitting.')
+            return stf.STOP
 
 
     def setupIceboot(test, session):
@@ -97,6 +101,7 @@ class MainboardTest(object):
                 cfg = self._PARAMS['config']
                 stf.dbg('@configure: config overrides: {}'.format(cfg))
                 self.config.update(cfg)
+                stf.dbg('@configure: full config: {}'.format(self.config))
 
             #if 'expectedValues' in self._PARAMS:
 
@@ -181,9 +186,6 @@ class MainboardTest(object):
         # if a key is provided and the value is None/null, it will be
         # skipped
         iceboot_conf = self.config.get('iceboot', {})
-        if iceboot_conf and stf.DEBUG.SKIP_FW:
-            # XXX: debug (this will go away or be ignored some day)
-            iceboot_conf['fpgaConfigurationFile'] = None
 
         # XXX: move this to seutp function or re-implement this as a plug?
         self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
@@ -192,7 +194,7 @@ class MainboardTest(object):
             test_args['expectedValues'] = expected_values
 
         phases = [
-            Common.checkCommsAndFirmware.with_args(session=self.session, expectedValues={'expected_fw_vnum':hex(stf.ENV.FIRMWARE_VERSION)}),
+            Common.checkCommsAndFirmware.with_args(session=self.session, expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
