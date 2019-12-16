@@ -5,6 +5,13 @@ An stf test is a normal python function which receives special arguments and is 
 
 Minimally, you need a test function, a few lines of boilerplate code, and an optional test config file to write a valid test.
 
+Also check out some of the example tests (will update with more):
+
+https://github.com/WIPACrepo/stf/blob/master/examples/simple.py
+
+https://github.com/WIPACrepo/stf/blob/master/examples/timeout.py
+
+https://github.com/WIPACrepo/stf/blob/master/examples/measurements.py
 
 ## Test File
 
@@ -29,7 +36,7 @@ def test_fn(test, session):
 
 stf.register(
     version='1.0',
-    run=run_test,
+    run=test_fn,
     # NOCONFIG is useful for writing example tests and perhaps development, but
     # your test should probably include a config file... eventually
     config_file=stf.NOCONFIG,  # the test won't run without a config setting

@@ -64,9 +64,6 @@ class MainboardTest(object):
         # optional description
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
 
-        # not needed? 
-        # used for connecting to device
-
         # test_params is a map of fn name = list of varnames
         self.test_params = kw.get('params', {})
         self.test_name = test_name
