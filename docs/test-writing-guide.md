@@ -88,6 +88,8 @@ If your test has `expectedValue` paramaters defined in its test config, it will 
 
 ### test functions with args and expectedValues:
 
+Arguments and expected values are sent to a test_fn via the config file (more below)
+
 Test function with arguments:
 ```
 def test_fn(test, session, arg1=None, arg2=None):
@@ -122,23 +124,21 @@ def test_fn(test, session, arg1=None, expectedValues=None):
 def test_fn(test, session, **kwargs):
     pass
 ```
-
-
-Test function with expected values
 *example tests are located in `STF_HOME/tests/`*
 
 ## Test Config
 
-A test config is a JSON file. Your test should use a config for inputting
-parameters that may change depending on when and where your test is run.
+A test config is a JSON file which consists of an outer object (dictionary) with three keys: `args`, `expectedValues` and `config`.
 
-Config files are used to pass parameters into a test or validate measurements
-made during testing or set test configuration options (timeout_s, iceboot
-settings)
+Each of these keys holds another object/dict of keys pointing to any valid JSON type.
+
+Config files are used to pass parameters into a test (`args`), validate measurements 
+made during testing (`expectedValues`) or set test configuration options
+(`config`) like test timeouts with `timeout_s` or iceboot settings with `iceboot`, etc.
 
 You *should* use a config file, even if it's blank.
 
-If your test really really does not need a config, use the `stf.NOCONFIG` option.
+If your test really really does not need a config, use the `stf.NOCONFIG` option for the `config_file` parameter to `.register`.
 
 *NOTE* Currently a config also allows you to override iceboot options, but this feature may go away
 
