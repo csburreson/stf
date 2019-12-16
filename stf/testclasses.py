@@ -1,10 +1,13 @@
 import json
 import openhtf as htf
-from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
+#from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.output.callbacks import console_summary
 from .core import getIcebootSession
+from .output import OutputToJSON as JSON
 import stf
 FAKE_ICEBOOT = False
+
+#JSON.json_encoder = STFJSONEncoder
 
 class TestSet(object):
     def __init(self, version):
@@ -217,9 +220,17 @@ class MainboardTest(object):
             }
         )
 
+        def try_list(x):
+            try:
+                return x.tolist()
+            except AttributeError:
+                return str(x)
+
         # XXX: how to deal with output options?
         T.add_output_callbacks(
-            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
+            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=try_list)
+            #, default=str)
+                #cls=STFJSONEncoder)
         )
 
         # XXX: add DEBUG flag?
