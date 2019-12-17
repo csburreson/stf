@@ -8,15 +8,11 @@ import stf
 
 class EqualsParam(htf.util.validators.ValidatorBase):
     def __init__(self, pvalue, type=None):
-        stf.debug('EP init {}'.format(pvalue))
         self.paramValue = pvalue
         self._type = type
 
     def __call__(self, value):
-        stf.debug('here {}'.format(type(value)))
-        stf.debug('here {}'.format(type(self.paramValue)))
         if self._type:
-            stf.debug("TYPE")
             return self._type(self.paramValue) == value
         return self.paramValue == value
         
@@ -26,8 +22,6 @@ class EqualsParam(htf.util.validators.ValidatorBase):
 
     def with_args(self, **kw):
         try:
-            stf.debug('kw keys: {}'.format(kw.keys()))
-            stf.debug('type: {}'.format(dir(self)))
             return type(self)(
                 pvalue=htf.util.format_string(self.paramValue, self.expectedValues),
                 type=self._type
@@ -89,8 +83,8 @@ class InRange(htf.util.validators.RangeValidatorBase):
     if value is None:
       return False
     import math
-    # Check for nan
-    if math.isnan(value):
+    # Check for nan (but allow strings)
+    if not isinstance(value, six.string_types) and math.isnan(value):
       return False
     if self.minimum is not None and value < self.minimum:
       return False
@@ -130,17 +124,12 @@ class RegexMatcher(htf.util.validators.ValidatorBase):
 
   def __call__(self, value):
     #value = htf.util.format_string(value, self.expectedValues) 
-    stf.debug('CALL')
-    stf.debug(dir(self))
     return self._compiled.match(str(value)) is not None
   
   def with_args(self, **kw):
     r = htf.util.format_string(self.regex, self.expectedValues)
     self.regex = r
     self._compiled = re.compile(r)
-    stf.debug('HERE')
-    stf.debug(dir(self))
-    stf.debug(self.regex)
     return type(self)(self.regex, self._compiled)
 
   def __deepcopy__(self, dummy_memo):
