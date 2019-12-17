@@ -1,13 +1,10 @@
 import json
 import openhtf as htf
-#from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
+from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.output.callbacks import console_summary
 from .core import getIcebootSession
-from .output import OutputToJSON as JSON
 import stf
 FAKE_ICEBOOT = False
-
-#JSON.json_encoder = STFJSONEncoder
 
 class TestSet(object):
     def __init(self, version):
@@ -215,20 +212,13 @@ class MainboardTest(object):
             # custom metadata fields
             framework_version=stf.FRAMEWORK_VERSION,
             device=device,
-            testOptions={
-                'params': test_args
-            }
+            # XXX: make sure to include entire config eventually
+            test_args_tmp=test_args
         )
-
-        def try_list(x):
-            try:
-                return x.tolist()
-            except AttributeError:
-                return str(x)
 
         # XXX: how to deal with output options?
         T.add_output_callbacks(
-            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=try_list)
+            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
         )
 
         # XXX: add DEBUG flag?
@@ -239,90 +229,3 @@ class MainboardTest(object):
         T.execute(test_start=lambda: device['id'])
 
         stf.dbg("finished execute for test: {}".format(self.test_name))
-
-
-
-    def executeOLD(self, device):
-        # test disco?
-        try:
-            self.tests = self.TESTS
-        except AttributeError:
-            print( "Error! No TESTS property found")
-            # not a Runnable test
-            return
-
-        #self.test.logger.info('executing test')
-        #device = self.config.get('device', {})
-        cls = str(self.__class__).split('.')[1]
-        #test_name = '{}-v{}'.format(cls, self.version)
-        test_name = cls
-
-        desc = getattr(self, 'DESC', self.__doc__)
-
-        phases = []
-        test_args = {}
-        for x in self.tests:
-            # check for params
-            try:
-                #qualified_testname = '{}.{}'.format(
-                #    self.__class__.__name__, 
-                #    x.func.__name__
-                #)
-                #args = self.getTestParams(qualified_testname)
-                fn_name = x.func.__name__
-                if fn_name == '_checkpoint':
-                    stf.dbg('CHECKPOINT')
-                    phases.append(x)
-                    continue
-                args = self.getTestParams()
-                test_args[fn_name] = args
-
-                stf.dbg(fn_name)
-                #dbg('{}.{}'.format(self.__class__.name, fn_name))
-                stf.dbg('optname: {}'.format(x.options.name))
-                phases.append(x.with_args(session=self.session, **args))
-            except AttributeError:
-                # XXX
-                stf.dbg('AttrErr')
-                #x = test(x)
-                phases.append(x)
-
-
-        #phases = [test_fn]
-        T = htf.Test(
-            *phases,
-            # openhtf fields
-            test_name=self.test_name,
-            test_version=self.version,
-            test_desc=desc or 'no description',
-            # custom metadata fields
-            framework_version=FRAMEWORK_VERSION,
-            device=device,
-            type=device['type'],
-            testOptions={
-                'params': test_args
-            }
-            #self.config.get('device', {})
-        )
-
-        T.add_output_callbacks(
-            JSON(OUTPUT_JSONFILE, indent=4, default=str)
-        )
-
-        # get session here???
-        #T.session = getIcebootSession(fake=FAKE_ICEBOOT,
-        #    self.CONFIG.get)
-        T.execute(test_start=lambda: device['id'])
-        
-
-'''
-class MainboardTestOLD(Test):
-    def __init__(self, version, **kw):
-        Test.__init__(self, version, **kw)
-        self.config['test'] = {}
-        self.config['device'] = {}
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {})
-        )
-        self.version = self.VERSION
-'''
