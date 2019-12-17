@@ -3,11 +3,13 @@ import numpy as np
 
 @stf.measures(
     stf.M('foo'),
-    stf.M('bar')
+    stf.M('nar').expect('{foo}', type=int),
+    #stf.M('bar').in_range('{foo}', '{bar}', type=int)
 )
 def run_test(test, session):
     test.measurements.foo = [1,2,3]
-    test.measurements.bar = np.array([1,2,3])
+    test.measurements.nar = 42
+    #test.measurements.bar = 42
 
     return stf.PASS
 

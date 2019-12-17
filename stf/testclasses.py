@@ -3,6 +3,7 @@ import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.output.callbacks import console_summary
 from .core import getIcebootSession
+from .validators import *
 import stf
 FAKE_ICEBOOT = False
 
@@ -10,33 +11,8 @@ class TestSet(object):
     def __init(self, version):
         pass
 
-@htf.util.validators.register
-def equalsParam(pname, type=None):
-    if not (pname.startswith('{') and pname.endswith('}')):
-        pname = '{' + pname + '}'
-    return EqualsParam(pname, type=type)
 
 
-class EqualsParam(htf.util.validators.ValidatorBase):
-    def __init__(self, pvalue, type=None):
-        self.paramValue = pvalue
-        self._type = type
-
-    def __call__(self, value):
-        return self.paramValue == value
-        
-    def __str__(self):
-        '''use in output'''
-        return 'x == {}'.format(self.paramValue)
-
-    def with_args(self, **kw):
-        try:
-            return type(self)(
-                pvalue=htf.util.format_string(self.paramValue, kw['expectedValues']),
-                type=kw.get('type', None),
-            )
-        except KeyError:
-            raise Exception('Framework Error. Contact maintainer')
 
 class Common(object):
     # default test config options
@@ -190,11 +166,17 @@ class MainboardTest(object):
         # XXX: move this to seutp function or re-implement this as a plug?
         self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
 
-        if expected_values:
-            test_args['expectedValues'] = expected_values
+        #if expected_values:
+            #test_args['expectedValues'] = expected_values
+
+        for m in self.test_fn.measurements:
+            for v in m.validators:
+                stf.debug('added ev to {}'.format(type(v)))
+                setattr(v, 'expectedValues', expected_values)
 
         phases = [
-            Common.checkCommsAndFirmware.with_args(session=self.session, expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
+            Common.checkCommsAndFirmware.with_args(session=self.session, 
+                expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
@@ -213,7 +195,8 @@ class MainboardTest(object):
             framework_version=stf.FRAMEWORK_VERSION,
             device=device,
             # XXX: make sure to include entire config eventually
-            test_args_tmp=test_args
+            test_config=self._PARAMS,
+            framework_override_config=self.config
         )
 
         # XXX: how to deal with output options?

@@ -18,6 +18,8 @@ class DEBUG:
 
 def dbg(s, trace=5):
     if DEBUG.LOG:
+        if not isinstance(s, str):
+            s = str(s)
         import inspect
         caller = []
         for x in range(1, trace):

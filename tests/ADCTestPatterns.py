@@ -14,6 +14,7 @@ from DEggTest.fpga_reg import fpga_write
 import numpy as np
 
 
+# use .expect('{param}', type=int)  for expectedValues
 @stf.measures(stf.M('n_sample_errors').equals(0))
 def run_test(test, session, channel,
              wfm_period=2, wfm_len=1000, n_waveforms=1000, **kwargs):

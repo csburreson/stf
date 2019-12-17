@@ -1,0 +1,11 @@
+{
+    "config": {},
+    "args": {},
+    "expectedValues": {
+        "foo": 42,
+        "bar": 44,
+        "somepattern": "^deadbeef$",
+        "expectedVal": 1000,
+        "percent": 10
+    }
+}

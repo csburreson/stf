@@ -5,12 +5,11 @@
         }
     },
     "expectedValues": {
-        "dummy": "nothing"
+        "noise_min": 0.5,
+        "noise_max": 3.0
     },
     "args": {
     	"channel" : 0,
-        "dac_val" : 31000,
-        "noise_min": 0.5,
-        "noise_max": 3.0
+        "dac_val" : 31000
     }
 }
