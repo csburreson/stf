@@ -1,5 +1,15 @@
 import json
 import openhtf as htf
+# XXX: this monkey-patch fixes JSON serialization problems with numpy arrays in
+# test.measurements
+x = htf.data.convert_to_base_types
+def foo(*a, **k):
+  try:
+    return a[0].tolist()
+  except AttributeError:
+    return x(*a, **k)
+htf.data.convert_to_base_types = foo
+# XXX end hack
 from openhtf import measures, Measurement
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.util.checkpoints import checkpoint as CHECKPOINT
@@ -38,7 +48,6 @@ class FakeIceboot(object):
         return fake
 
 def getIcebootSession(fake=False, **kw):
-
     # default firmware path
     fw_file = ENV.FIRMWARE_FILE_PATH
     

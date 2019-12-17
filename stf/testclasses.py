@@ -229,8 +229,6 @@ class MainboardTest(object):
         # XXX: how to deal with output options?
         T.add_output_callbacks(
             JSON(stf.ENV.JSONFILE_NAME, indent=4, default=try_list)
-            #, default=str)
-                #cls=STFJSONEncoder)
         )
 
         # XXX: add DEBUG flag?
