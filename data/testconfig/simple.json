@@ -1,5 +1,5 @@
 {
     "config":{},
     "args":{},
-    "expectedValues":{}
+    "expectedValues":{"foo": 42, "bar": 44}
 }

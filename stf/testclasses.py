@@ -29,10 +29,13 @@ class EqualsParam(htf.util.validators.ValidatorBase):
         '''use in output'''
         return 'x == {}'.format(self.paramValue)
 
+
     def with_args(self, **kw):
         try:
+            stf.debug('kw keys: {}'.format(kw.keys()))
+            stf.debug('type: {}'.format(dir(self)))
             return type(self)(
-                pvalue=htf.util.format_string(self.paramValue, kw['expectedValues']),
+                pvalue=htf.util.format_string(self.paramValue, self.expectedValues),
                 type=kw.get('type', None),
             )
         except KeyError:
@@ -190,11 +193,16 @@ class MainboardTest(object):
         # XXX: move this to seutp function or re-implement this as a plug?
         self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
 
-        if expected_values:
-            test_args['expectedValues'] = expected_values
+        #if expected_values:
+            #test_args['expectedValues'] = expected_values
+
+        for m in self.test_fn.measurements:
+            for v in m.validators:
+                setattr(v, 'expectedValues', expected_values)
 
         phases = [
-            Common.checkCommsAndFirmware.with_args(session=self.session, expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
+            Common.checkCommsAndFirmware.with_args(session=self.session, 
+                expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
@@ -213,7 +221,8 @@ class MainboardTest(object):
             framework_version=stf.FRAMEWORK_VERSION,
             device=device,
             # XXX: make sure to include entire config eventually
-            test_args_tmp=test_args
+            test_config=self._PARAMS,
+            framework_override_config=self.config
         )
 
         # XXX: how to deal with output options?
