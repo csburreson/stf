@@ -2,7 +2,7 @@ import stf
 import time
 import numpy as np
 
-@stf.measures(stf.M('feph').in_range('{exp_x}', '{exp_y}'))
+@stf.measures(stf.M('feph').expectRange('{exp_x}', '{exp_y}', type=float))
 def run_test(test, session, channel, dac_val,
              dac_val_fepulser, nsamples=128, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
@@ -17,14 +17,16 @@ def run_test(test, session, channel, dac_val,
     time.sleep(0.1)
     session.testDEggCPUTrig(channel)
     readout = session.testDEggWaveformReadout()
-    baseline = np.mean(readout['waveform'])
+    wv = readout['waveform']
+    baseline = np.mean(wv)
+    std = np.std(wv)
     
     test.logger.info('Enabling FEPulser for channel {}'.format(channel))
     session.enableFEPulser(channel,2)
     session.setDAC('D', dac_val_fepulser)
     time.sleep(0.1)
 
-    thres = baseline+20
+    thres = baseline+std*4
     session.testDEggThresholdTrig(channel, int(thres))
     readout = session.testDEggWaveformReadout()
     wf = np.asarray(readout["waveform"])-baseline
