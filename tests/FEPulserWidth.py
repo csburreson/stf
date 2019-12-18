@@ -2,7 +2,7 @@ import stf
 import time
 import numpy as np
 
-@stf.measures(stf.M('meas').expect('{exp}'))
+@stf.measures(stf.M('meas').expect('{exp}', type=int))
 def run_test(test, session, channel, dac_val,
              dac_val_fepulser, nsamples=128, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
