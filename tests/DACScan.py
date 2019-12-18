@@ -12,14 +12,15 @@ from DEggTest.fpga_reg import fpga_write
 
 
 @stf.measures(stf.M('dac_scan_results'),
-              stf.M('fit_Rsq').in_range('{Rsq_min}', '{Rsq_max}', type=float),
+              stf.M('fit_Rsq').expectRange(
+                  '{Rsq_min}', '{Rsq_max}', type=float),
               stf.M('fit_y_intercept'),
-              stf.M('fit_x_intercept').in_range(
+              stf.M('fit_x_intercept').expectRange(
                   '{intercept_min}', '{intercept_max}', type=float),
-              stf.M('fit_slope').in_range('{slope_min}', '{slope_max}',
-                                          type=float))
+              stf.M('fit_slope').expectRange('{slope_min}', '{slope_max}',
+                                             type=float))
 def run_test(test, session, channel, n_settings,
-             wfm_period=3, wfm_len=1000, wfms_per_setting=10, **kwargs):
+             wfm_period=3, wfm_len=1000, wfms_per_setting=10):
     scan_results = do_dac_scan(session, channel, wfm_period,
                                wfm_len, n_settings, wfms_per_setting)
 

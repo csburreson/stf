@@ -1,0 +1,16 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "192.168.0.10"
+        }
+    },
+    "expectedValues": {    
+        "clockdiff_min" : 0,
+        "clockdiff_max" : 2,
+        "perioddiff_min": -0.0005,
+        "perioddiff_max": 0.0005
+    },
+    "args": {
+    	"channel" : 0       
+    }
+}

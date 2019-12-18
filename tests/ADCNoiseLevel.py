@@ -18,7 +18,7 @@ from DEggTest.fpga_reg import fpga_write
               stf.M('noise_std').expectRange('{noise_min}', '{noise_max}',
                                           type=float))
 def run_test(test, session, channel, dac_val,
-             wfm_period=3, wfm_len=1000, n_waveforms=1000, **kwargs):
+             wfm_period=3, wfm_len=1000, n_waveforms=1000):
     ''' acquires an ADC noise histogram '''
     configure_mainboard(session, channel, dac_val, wfm_len)
 
