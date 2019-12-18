@@ -2,7 +2,7 @@ import stf
 import time
 import numpy as np
 
-@stf.measures(stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
+@stf.measures(stf.M('meas').expect('{exp}'))
 def run_test(test, session, channel, dac_val,
              dac_val_fepulser, nsamples=128, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
@@ -31,11 +31,12 @@ def run_test(test, session, channel, dac_val,
     readout = session.testDEggWaveformReadout()
     wf = np.asarray(readout["waveform"])-baseline
     # see tests/template.json for testconfig
-    test.measurements.meas = wf.max()
+    half_max = wf.max()/2
+    test.measurements.meas = len(wf[wf>wf.max()/2])
 
     test.logger.info(f'Baseline from channel {channel}: {baseline}')
     test.logger.info(f'Trigger threshold: {thres}')
-    test.logger.info(f'FEPulser height over baseline: {test.measurements.meas}')
+    test.logger.info(f'FEPulser width: {test.measurements.meas}')
 
 
 stf.register(
@@ -49,9 +50,9 @@ stf.register(
     ##########
 
     # optional: test name is generated from filename if not provided
-    test_name='FEPulserHeight',
+    test_name='FEPulserWidth',
     # optional: test_desc is a description of your test which will appear in the output
-    test_desc='Inject pulses into FE at a high DAC setting, measure height',
+    test_desc='Inject pulses into FE at a high DAC setting, measure width',
     # optional: defaults to std.testclasses.MainboardTest
     test_class=stf.testclasses.MainboardTest,
     # override: use 'config_file' to point to a different location for config
