@@ -1,0 +1,13 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "192.168.0.10"
+        }
+    },
+    "expectedValues": {
+        "flashIOSuccessValue": True
+    },
+    "args": {
+        “testFileName”: “FLASH_TEST_FILE”
+    }
+}

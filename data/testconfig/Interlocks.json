@@ -1,0 +1,15 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "192.168.0.10"
+        }
+    },
+    "expectedValues": {
+        "flashInterlockValue": True,
+        "configInterlockValue": True,
+        "hvInterlockValue": True,
+        "lidInterlockValue": True
+    },
+    "args": {
+    }
+}
