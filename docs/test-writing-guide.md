@@ -7,11 +7,13 @@ Minimally, you need a test function, a few lines of boilerplate code, and an opt
 
 Also check out some of the example tests (will update with more):
 
-https://github.com/WIPACrepo/stf/blob/master/examples/simple.py
+[exampples/simple.py](https://github.com/WIPACrepo/stf/blob/master/examples/simple.py)
 
-https://github.com/WIPACrepo/stf/blob/master/examples/timeout.py
+[examples/timeout.py](https://github.com/WIPACrepo/stf/blob/master/examples/timeout.py)
 
-https://github.com/WIPACrepo/stf/blob/master/examples/measurements.py
+[examples/measurements.py](https://github.com/WIPACrepo/stf/blob/master/examples/measurements.py)
+
+[examples/validators.py](https://github.com/WIPACrepo/stf/blob/master/examples/validators.py)
 
 ## Test File
 
