@@ -5,13 +5,15 @@
         }
     },
     "expectedValues": {
-      "exp_x": 120,
-      "exp_y": 180
+      "exp_x": 0.8,
+      "exp_y": 1
     },
     "args": {
     	"channel" : 0,
       "dac_val" : 30000,
-      "dac_val_fepulser" : 30000,
+      "dac_val_fepulser_start" : 20000,
+      "dac_val_fepulser_step" : 5000,
+      "dac_val_fepulser_nstep" : 5,
       "bins_before_peak" : 1,
       "bins_after_peak" : 2
     }

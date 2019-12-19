@@ -3,7 +3,7 @@ from DEggTest.fepulser import get_pulser_charge
 
 @stf.measures(stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
 def run_test(test, session, channel, dac_val,
-             dac_val_fepulser, bins_before_peak=1, bins_after_peak=2,
+             dac_val_fepulser, bins_before_peak, bins_after_peak,
              nsamples=128, n_waveforms=10, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
         test.logger.error('Number of samples must be at least 16 and divisible by 4')

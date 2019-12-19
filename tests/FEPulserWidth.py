@@ -1,41 +1,20 @@
 import stf
-import time
-import numpy as np
+from DEggTest.fepulser import get_waveform
 
 @stf.measures(stf.M('meas').expect('{exp}', type=int))
 def run_test(test, session, channel, dac_val,
-             dac_val_fepulser, nsamples=128, **kw):
+             dac_val_fepulser, nsamples=128, n_waveforms=10, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
         test.logger.error('Number of samples must be at least 16 and divisible by 4')
         return stf.FAIL
 
-    session.setDEggConstReadout(channel, 1, nsamples)
+    half_width = []
+    for _ in range(n_waveforms):
+        wf = get_waveform(session, channel, nsamples, dac_val, dac_val_fepulser)
+        # see tests/template.json for testconfig
+        half_width.append(len(wf[wf>wf.max()/2]))
+    test.measurements.meas = sum(half_width)/len(half_width)
 
-    # measure baseline
-    dac_channel_dict = {0:'A', 1:'B'}
-    session.setDAC(dac_channel_dict[channel], dac_val)
-    time.sleep(0.1)
-    session.testDEggCPUTrig(channel)
-    readout = session.testDEggWaveformReadout()
-    wv = readout['waveform']
-    baseline = np.mean(wv)
-    std = np.std(wv)
-    
-    test.logger.info('Enabling FEPulser for channel {}'.format(channel))
-    session.enableFEPulser(channel,2)
-    session.setDAC('D', dac_val_fepulser)
-    time.sleep(0.1)
-
-    thres = baseline+std*4
-    session.testDEggThresholdTrig(channel, int(thres))
-    readout = session.testDEggWaveformReadout()
-    wf = np.asarray(readout["waveform"])-baseline
-    # see tests/template.json for testconfig
-    half_max = wf.max()/2
-    test.measurements.meas = len(wf[wf>wf.max()/2])
-
-    test.logger.info(f'Baseline from channel {channel}: {baseline}')
-    test.logger.info(f'Trigger threshold: {thres}')
     test.logger.info(f'FEPulser width: {test.measurements.meas}')
 
 
