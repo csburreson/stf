@@ -10,7 +10,7 @@ import os
 FLASH_STR = "FLASH_TEST_STRING"
 
 
-@stf.measures(stf.M('flashIOSuccess').equals('flashIOSuccessValue}'))
+@stf.measures(stf.M('flashIOSuccess').equalsParam('flashIOSuccessValue}', type=bool))
 def run_test(test, session, testFileName):
     test.measurements.flashIOSuccess = False
     
@@ -27,8 +27,8 @@ def run_test(test, session, testFileName):
     
     try:
         test.measurements.flashIOSuccess = perform_test(session, testFileName)
-    except:
-        pass
+    except Exception as e:
+        raise e
     finally:
         os.remove(testFileName)
 
@@ -44,7 +44,7 @@ def perform_test(session, testFileName):
     if len(fileEntries) == 0:
         return False
     
-    if fileEntries[0]["Size"] != len(FLASH_STR):
+    if int(fileEntries[0]["Size"]) != len(FLASH_STR):
         session.flashRemove(testFileName)
         return False
     

@@ -1,13 +1,17 @@
 # Jim Braun
 #
-# Test that we can read/write the FPGA DPRAM
+# Tests that interlocks have the expected values
 #
 
 import stf
+import os
 
-# DPRAM is 4kB, or 2 kwords, or 1k 2-word patterns
-TEST_PATTERNS = [[0x5555, 0xAAAA] * 1024,
-                 [0xAAAA, 0x5555] * 1024]
+
+# DPRAM is 4kB or 2 kwords, or 1k 2-word patterns
+CNT = 16
+WCNT = 2 * CNT
+TEST_PATTERNS = [[0x5555, 0xAAAA] * CNT,
+                 [0xAAAA, 0x5555] * CNT]
 
 
 @stf.measures(stf.M('DPRAMIOSuccess').equals(True))
@@ -16,9 +20,11 @@ def run_test(test, session):
     test.measurements.DPRAMIOSuccess = False
     
     for pattern in TEST_PATTERNS:
-        session.fpgaWrite(addr, pattern)
-        if session.fpgaRead(addr, len(pattern)) != pattern:
-            return
+        for addr in range(0, 2048, WCNT):
+            session.fpgaWrite(addr, pattern)
+        for addr in range(0, 2048, WCNT):
+            if session.fpgaRead(addr, WCNT) != pattern:
+                return
 
     test.measurements.DPRAMIOSuccess = True
 

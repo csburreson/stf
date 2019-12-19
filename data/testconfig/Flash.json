@@ -5,9 +5,9 @@
         }
     },
     "expectedValues": {
-        "flashIOSuccessValue": True
+        "flashIOSuccessValue": true
     },
     "args": {
-        “testFileName”: “FLASH_TEST_FILE”
+        "testFileName": "FLASH_TEST_FILE"
     }
 }

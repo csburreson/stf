@@ -7,7 +7,7 @@
 import stf
 
 
-@stf.measures(stf.M('registerValue').equals('expectedRegisterValue}'))
+@stf.measures(stf.M('registerValue').equalsParam('expectedRegisterValue}', type=int))
 def run_test(test, session, register):
     test.measurements.registerValue = session.fpgaRead(register, 1)
 

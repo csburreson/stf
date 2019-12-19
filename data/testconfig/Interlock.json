@@ -5,10 +5,10 @@
         }
     },
     "expectedValues": {
-        "flashInterlockValue": True,
-        "configInterlockValue": True,
-        "hvInterlockValue": True,
-        "lidInterlockValue": True
+        "flashInterlockValue": true,
+        "configInterlockValue": false,
+        "hvInterlockValue": true,
+        "lidInterlockValue": true
     },
     "args": {
     }

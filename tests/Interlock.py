@@ -6,14 +6,14 @@
 import stf
 
 
-@stf.measures(stf.M('flashInterlock').equals('flashInterlockValue}'),
-              stf.M('configInterlock').equals('configInterlockValue}'),
-              stf.M('hvInterlock').equals('hvInterlockValue}'),
-              stf.M('lidInterlock').equals('lidInterlockValue}'))
+@stf.measures(stf.M('flashInterlock').equalsParam('flashInterlockValue}', type=bool),
+              stf.M('configInterlock').equalsParam('configInterlockValue}', type=int),
+              stf.M('hvInterlock').equalsParam('hvInterlockValue}', type=bool),
+              stf.M('lidInterlock').equalsParam('lidInterlockValue}', type=bool))
 def run_test(test, session):
     test.measurements.flashInterlock = session.readFlashInterlock()
     test.measurements.configInterlock = session.readFPGAConfigInterlock()
-    test.measurements.hvInterlock = session.eadHVInterlock()
+    test.measurements.hvInterlock = session.readHVInterlock()
     test.measurements.lidInterlock = session.readLIDInterlock()
 
 
