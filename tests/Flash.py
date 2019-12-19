@@ -10,7 +10,7 @@ import os
 FLASH_STR = "FLASH_TEST_STRING"
 
 
-@stf.measures(stf.M('flashIOSuccess').equalsParam('flashIOSuccessValue}', type=bool))
+@stf.measures(stf.M('flashIOSuccess').equalsParam('flashIOSuccessValue', type=bool))
 def run_test(test, session, testFileName):
     test.measurements.flashIOSuccess = False
     
