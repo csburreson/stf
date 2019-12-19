@@ -19,10 +19,13 @@ A test file must import the stf framework, define a test function, and call `stf
 
 Calling stf.run() in a test file will allow you to execute the test at the command line.
 
-...please stick to the convention of using 
+please stick to the convention of using 
 
-```if __name__ == '__main__': 
-    stf.run()```
+
+```
+if __name__ == '__main__': 
+    stf.run()
+```
     
 as you're writing tests
 
@@ -179,11 +182,13 @@ or
 ```
 *the default location for test config files is `STF_HOME/data/testconfig/<test-name>.json`*
 
-For now, test writers will provide configuration files to inject arguments or expectedValues into the test.
+Test writers will provide configuration files to inject arguments or expectedValues into the test.
 
 Arguments can be accessed from the kwargs keyword or mentioned as explicit kw args.
 
-`expectedValues` are put into the **reserved keyword** `expectedValues`
+`expectedValues` are used by validators and aren't accessible directly from the test function.
+
+The **config** keyword is used to override framework-level config settings and possibly to specify test timeouts eventually (config based timeout settings are broken, so use `@stf.options(timeout_s=<int>)`. Currently the only override is for `iceboot` settings to specify host and port settings. 
 
 
 ## Passing a test
@@ -236,15 +241,20 @@ The `measures` decorator accepts stf.Measurement (or stf.M for short) objects.
 You can record measurements you have declared by using the *test* argument:
 `test.measurements.<name-of-declared-measurement>`
 
+### measurement validators
+
+See `examples/validators.py` for examples.
+
 Measurements can be validated with the following validators:
-  * `.equals(val)` compares recorded measurement against val (usually a literal)
-  * `.equalsParam('{expectedValueKey}')` compares the value of an item in the "expectedValue" of the test config JSON file
-  * `.in_range(x, y)` valid if measurement if equal to or between x and y
-  * `.in_range('{exp_x}', {exp_y})` same, but uses "expectedValue" from testConfig
-  * TODO: match?
+  * `.expect('{key}')` compares recorded measurement against val
+  * `.expectRange('{key1}', '{key2}')` inclusive range check on measurement
+  * `.expectRegex('{key}')` use a regular expression 
+  * `.expectPercent('{value}', '{percent}')` expect "value" to be within "percent" where percent is expressed as an integer/float (0-100)
+
+**Dev Note**: the old validators (in_range, equals, etc) all still exist, but those are native OpenHTF validators that don't use the STF Config files so they cannot compare to expectedValues (they were meant to work off of function arguments). They could still be useful but you should stick to the `expect` ones as they will use `expectedValues` and ensure this is all recorded in the config. 
 
 
-Example:
+Full Example:
 
 ```
 import stf
