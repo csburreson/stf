@@ -108,10 +108,11 @@ If your test has `expectedValue` paramaters defined in its test config, it will 
   
   while developing tests, one can set the `STF_SKIPFW` flag to skip the uploading of FW.
 
-**kwargs** contains all test config values as defined in the JSON files
-    **it also contains the reserved keyword arg** `expectedValues` if (and only if) it is present in your config
+**kwargs** contains config values from the `arguments` section of a test config 
 
 ### test functions with args and expectedValues:
+
+**DEV NOTE** RECENT CHANGE: The `expectedValues` argument is no longer provided as an argument to the test_fn. Instead it is hidden inside the framework guts and works with `measurements` only. You will not be able to access exepctedValues *except* by using `measurements` and associated validators.
 
 Arguments and expected values are sent to a test_fn via the config file (more below)
 
@@ -128,11 +129,11 @@ def test_fn(test, session, **kwargs):
 
 Test function with expected values:
 ```
-def test_fn(test, session, expectedValues):
+def test_fn(test, session):
     pass
 ```
 ```
-def test_fn(test, session, expectedValues=None):
+def test_fn(test, session):
     pass
 ```
 ```
@@ -142,7 +143,7 @@ def test_fn(test, session, **kwargs):
 
 Test function with both:
 ```
-def test_fn(test, session, arg1=None, expectedValues=None):
+def test_fn(test, session, arg1=None):
     pass
 ```
 ```
