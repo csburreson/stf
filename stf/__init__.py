@@ -87,6 +87,7 @@ class ENV():
 #from I3Test import *
 debug = dbg
 from .core import run
+from . import parse
 
 # core aliases
 Measurement = M = core.htf.Measurement

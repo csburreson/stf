@@ -16,6 +16,9 @@ class DEBUG:
     if p in ['false', 'False', '0', 0]:
         ALLOW_PRINT = False
 
+    # don't call json_minify on json (use this in case of problems)
+    NOSTRIPJSON = os.environ.get('STF_NOSTRIPJSON', False)
+
 def dbg(s, trace=5):
     if DEBUG.LOG:
         if not isinstance(s, str):
