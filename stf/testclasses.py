@@ -169,9 +169,9 @@ class MainboardTest(object):
         #if expected_values:
             #test_args['expectedValues'] = expected_values
 
+        # add expectedValues directly to the measurement validator class
         for m in self.test_fn.measurements:
             for v in m.validators:
-                stf.debug('added ev to {}'.format(type(v)))
                 setattr(v, 'expectedValues', expected_values)
 
         phases = [
