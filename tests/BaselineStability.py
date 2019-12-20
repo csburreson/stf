@@ -19,6 +19,8 @@ def run_test(test, session, channel, dac_val,
     start = time.time()
     means = []
     rmss = []
+    # skip first readout
+    readout = parseTestWaveform(session.readWFMFromStream())
     while time.time() - start < interval:
         try:
             readout = parseTestWaveform(session.readWFMFromStream())
@@ -40,9 +42,10 @@ def run_test(test, session, channel, dac_val,
     session.endStream()
     _ = len(means)
     stf.debug(f'length {_}')
+    stf.debug(f'means {means[:10]}')
     means = np.asarray(means)
     rmss = np.asarray(rmss)
-    test.measurements.reducedChi2 = np.sum((means-means.mean())**2/rmss**2)/(len(means)-1)
+    test.measurements.reducedChi2 = np.sum((means[1:]-means[0])**2/rmss[1:]**2)/len(means[1:])
 
     test.logger.info(f'Baseline Chi2/NDOF: {test.measurements.reducedChi2}')
 
@@ -58,7 +61,7 @@ stf.register(
     ##########
 
     # optional: test_desc is a description of your test which will appear in the output
-    test_desc='Inject pulses into FE at a high DAC setting, measure height',
+    test_desc='Test baseline stability over 60 s',
     # optional: defaults to std.testclasses.MainboardTest
     test_class=stf.testclasses.MainboardTest,
     # override: use 'config_file' to point to a different location for config
