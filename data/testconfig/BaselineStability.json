@@ -1,0 +1,15 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+      "exp_x": 0,
+      "exp_y": 0.3
+    },
+    "args": {
+    	"channel" : 0,
+      "dac_val" : 30000
+    }
+}
