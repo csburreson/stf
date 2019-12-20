@@ -5,9 +5,9 @@
         }
     },
     "expectedValues": {
-        "expectedRegisterValue": 176
+        "expectedRegisterValue": 3
     },
     "args": {
-        "register": 4095
+        "register": 3527
     }
 }
