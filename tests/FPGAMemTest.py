@@ -14,7 +14,7 @@ def run_test(test, session, register):
 
 stf.register(
     version='1.0',
-    test_name='FPGARegisterValueCheck',
+    test_name='FPGAMemTest',
     run=run_test,
 )
 
