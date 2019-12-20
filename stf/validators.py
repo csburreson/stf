@@ -8,22 +8,26 @@ import stf
 
 class EqualsParam(htf.util.validators.ValidatorBase):
     def __init__(self, pvalue, type=None):
-        self.paramValue = pvalue
+        self.expectedValueKey = pvalue
         self._type = type
 
     def __call__(self, value):
         if self._type:
-            return self._type(self.paramValue) == value
-        return self.paramValue == value
+            if self._type == bool:
+                return eval(self.expectedValueKey) == value
+            return self._type(self.expectedValueKey) == value
+        return self.expectedValueKey == value
+
         
     def __str__(self):
         '''use in output'''
-        return 'x == {}'.format(self.paramValue)
+        return 'x == {}'.format(self.expectedValueKey)
 
     def with_args(self, **kw):
         try:
+            stf.debug('EqualsParam: newVal: {}'.format( htf.util.format_string(self.expectedValueKey, self.expectedValues)))
             return type(self)(
-                pvalue=htf.util.format_string(self.paramValue, self.expectedValues),
+                htf.util.format_string(self.expectedValueKey, self.expectedValues),
                 type=self._type
             )
         except KeyError:
@@ -31,7 +35,6 @@ class EqualsParam(htf.util.validators.ValidatorBase):
 
 @htf.util.validators.register
 def equalsParam(pname, type=None):
-    stf.debug('use "expect" instead of equalsParam')
     if not (pname.startswith('{') and pname.endswith('}')):
         pname = '{' + pname + '}'
     return EqualsParam(pname, type=type)

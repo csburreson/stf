@@ -37,11 +37,11 @@ class FakeIceboot(object):
 
     def __getattr__(self, attr):
         def fake(*args, **kw):
-            f = kw.get('retval')
-            if f:
+            f = kw.get('retval', '')
+            if f is not None:
                 if callable(f):
-                    return f
-                return lambda: f
+                    return f()
+                return f
             return None
         if attr == 'fpgaVersion':
             return lambda: ENV.FIRMWARE_VERSION
