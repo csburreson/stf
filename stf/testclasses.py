@@ -68,7 +68,7 @@ class MainboardTest(object):
         with open(conf_file, 'r') as f:
             stf.dbg("(@configure) loaded {}".format(conf_file))
             try:
-                self._PARAMS = json.load(f)
+                self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
                 raise Exception('Invalid test configuration file! Is this valid JSON?')
             self._PARAM_CONF_FILE = conf_file
