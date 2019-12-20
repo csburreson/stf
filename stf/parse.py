@@ -1,6 +1,7 @@
 """
 Shamelessly stolen from: https://github.com/getify/JSON.minify/
-XXX: check license!
+
+https://getify.mit-license.org/
 
 A port of the `JSON-minify` utility to the Python language.
 
@@ -22,6 +23,7 @@ import json
 from .debug import DEBUG
 
 
+# stf code
 def json_loads(s):
 	if not DEBUG.NOSTRIPJSON:
 		s = json_minify(s)	
@@ -31,7 +33,7 @@ def json_loads(s):
 def json_load(f):
 	return json_loads(f.read())
 
-
+# Shamelessly stolen from: https://github.com/getify/JSON.minify/
 def json_minify(string, strip_space=True):
     tokenizer = re.compile('"|(/\*)|(\*/)|(//)|\n|\r')
     end_slashes_re = re.compile(r'(\\)*$')
