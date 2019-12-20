@@ -176,6 +176,11 @@ class WithinPercent(htf.util.validators.RangeValidatorBase):
 
   def __call__(self, value):
     #value = float(htf.util.format_string(value, self.expectedValue))
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        stf.debug('measured value: {} cannot be compared to float'.format(value))
+        return False
     return self.minimum <= value <= self.maximum
 
   def __str__(self):

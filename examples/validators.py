@@ -11,7 +11,8 @@ import stf
     stf.M('str').expectRegex('{somepattern}'),
     # no type required for percentages (int/float assumed)
     stf.M('percent').expectPercent('{expectedVal}', '{percent}'),
-    stf.M('percentFail').expectPercent('{expectedVal}', '{percent}')
+    stf.M('percentFail').expectPercent('{expectedVal}', '{percent}'),
+    stf.M('percentFailNone').expectPercent('{expectedVal}', '{percent}')
 )
 def run_test(test, session):
     test.measurements.flux = 42
@@ -24,6 +25,9 @@ def run_test(test, session):
 
     # THIS measurement fails:
     test.measurements.percentFail = 899
+
+    # THIS measurement fails (but does not raise exception)
+    test.measurements.percentFailNone = None
 
 
 # register decorator accepts version and config file
