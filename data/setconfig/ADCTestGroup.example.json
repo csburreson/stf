@@ -1,0 +1,43 @@
+{
+    "tests": {
+        // instance order is preserved (will execute ADCComms:fooInstance, followed by ADCComms:barInstance)
+        "ADCComms": [{
+                "instance": "fooInstance",
+                "args": {
+                    "channel": 42
+                },
+                "expectedValues": {}
+            }, {
+                "instance": "barInstance",
+                "args": { "channel": 0 },
+                "expectedValues": {}
+            }
+        ],
+        "ADCNoiseLevel": [{
+            "instance": "noisyEnvironment",
+            "desc": "describe something about this instance override",
+            "expectedValues": {
+                "noise_min": 42.5,
+                "noise_max": 45.2
+            }
+        }, {
+            "instance": "tweakDacVal",
+            "desc": "different DAC val because Colin wrote this and doesn't know what DAC means",
+            "args": {
+                "dac_val" : 42 
+            }
+        }]
+    }, 
+    // end tests
+    "config": {
+        /* Config is reserved for framework-level configuration and subject to change. Eventually the framework will have its own config... but here we might specify connection settings for setting up iceboot for a device, or giving output settings which could potentially vary by location run */
+        "iceboot": {
+            /* custom iceboot settings here for now... in the future we might use Framework Configs for this */
+        },
+
+        "output": {
+            /* this could be used for example to instruct the framework output settings: jsonFiles database consoleoutput */
+
+        }
+    }
+}
