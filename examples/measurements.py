@@ -31,8 +31,10 @@ def fail_after_measure(test, session):
     return stf.FAIL
 
 
-for f in [pass_measure, pass_measure_none, pass_measure_many,
-    fail_nomeasure, fail_after_measure]:
+#for f in [pass_measure, pass_measure_none, pass_measure_many,
+#    fail_nomeasure, fail_after_measure]:
+for f in [pass_measure, pass_measure_none, pass_measure_many]:
+
 
     stf.register(
         version='1.0',
@@ -70,6 +72,7 @@ def fail_foo_bar(test, session, fooVal=None, **kw):
     test.measurements.fooVal = fooVal 
 
 
+'''
 for f in [ pass_foo_bar_literal,
            pass_foo_bar_arg,
            pass_foo_bar_arg2,
@@ -80,6 +83,7 @@ for f in [ pass_foo_bar_literal,
         test_name=f.func.__name__,
         config_file=CONFIG_FILE,
     )
-
+'''
 if __name__ == '__main__':
     stf.run()
+

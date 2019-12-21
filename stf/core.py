@@ -19,7 +19,8 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import ENV, getRegisteredClasses
+from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass
+from .parse import SetConfig
 
 
 ### fake DB stuff
@@ -138,3 +139,76 @@ def _run(testClass, device):
 
       testClass.execute(device)
       return True
+
+def run_set(set_name=None, config_file=None):
+    # 
+    import os
+    if set_name:
+       config_file = ENV.SETCONFIG_PTN.format(set_name)
+       if not os.path.exists(config_file):
+           raise Exception('Cannot find {}'.format(config_file))
+
+    if not config_file:
+       raise Exception('Must provide config file')
+
+    #setConfig = stf.parse.json_load(config_file)
+    setConfig = SetConfig(config_file)
+    '''
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from tests.Interlock import run_test
+    from tests import Interlock
+    from tests import ADCNoiseLevel
+    dbg('HER HER HER')
+    dbg(dir(Interlock))
+    Interlock.STF_RUN_TEST()
+    '''
+
+    ### VERIFY CONFIG
+    for test in setConfig.tests:
+        testFile = '{}/{}.py'.format(ENV.TEST_DIR, test)
+        dbg('verifying testfile {} ...'.format(testFile))
+        try:
+            testCode = """__STF_TEST_OVERRIDES = {}\n""" + open(testFile).read()
+            exec(testCode)
+        except:
+            dbg('exception when running {}'.format(testFile))
+            raise
+        #from .. import tests as definedTests
+        #dbg(dir(definedTests[test]))
+    setConfig.configure()
+
+    
+    dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
+    dbg(setConfig.instances)
+
+
+    for test in setConfig.instances:
+    #for name, testClass in getRegisteredClassesByName().items():
+        testName = test['test_name']
+        dbg('running: {}'.format(test['testinstance_name']))
+        dbg('   with: {}'.format(test))
+        #exec(testClass.execute, *getClassContext(name))
+        #exec(*getClassContext(name))
+        testFile = '{}/{}.py'.format(ENV.TEST_DIR, testName)
+
+        testCode = open(testFile).read()
+        code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", {test['args']}, {test['expectedValues']})"""
+        dbg(testCode + code)
+
+        cc = getClassContext(testName)
+        exec(testCode + code, cc[2])
+
+    # get tests:
+
+    # apply overrides? 
+
+#def get_set
+
+def run_single_test(name, instance, args, evs):
+    test = getRegisteredClass(name)
+
+    test.reconfigure(instance, args, evs)
+
+    test.execute({'id': 'deadbeef'})

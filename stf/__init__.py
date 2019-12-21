@@ -1,18 +1,33 @@
 from __future__ import print_function
+from collections import OrderedDict
 
 __version__ = '0.2'
 FRAMEWORK_VERSION = __version__
 
 
 global TESTABLE_CLASSES
-TESTABLE_CLASSES = []
+TESTABLE_CLASSES = OrderedDict() 
+global CLASS_CONTEXT 
+CLASS_CONTEXT = {}
 
-def addTestClass(cls):
+def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
     global TESTABLE_CLASSES
-    TESTABLE_CLASSES.append(cls)
+    TESTABLE_CLASSES[name] = cls
+    CLASS_CONTEXT[name] = (code_obj, test_globals, test_locals)
+
+
+def getClassContext(name):
+    return CLASS_CONTEXT[name]
+#def delTestClass
 
 def getRegisteredClasses():
+    return TESTABLE_CLASSES.values()
+
+def getRegisteredClassesByName():
     return TESTABLE_CLASSES
+
+def getRegisteredClass(name):
+    return TESTABLE_CLASSES[name]
 
 import sys
 import os
@@ -84,9 +99,11 @@ class ENV():
     # this is a db placeholder hackjob (i.e. this will be removed someday)
     DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
 
+    SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
+
 #from I3Test import *
 debug = dbg
-from .core import run
+from .core import run, run_set
 from . import parse
 
 # core aliases

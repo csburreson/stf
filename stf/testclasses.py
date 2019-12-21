@@ -79,9 +79,10 @@ class MainboardTest(object):
                 self.config.update(cfg)
                 stf.dbg('@configure: full config: {}'.format(self.config))
 
-            #if 'expectedValues' in self._PARAMS:
-
-
+        if not 'args' in self._PARAMS:
+            self._PARAMS['args'] = {}
+        if not 'expectedValues' in self._PARAMS:
+            self._PARAMS['expectedValues'] = {}
 
         # XXX:
         # create iceboot session here?
@@ -100,11 +101,17 @@ class MainboardTest(object):
 
     def tearDown(self, test):
         # placeholder for OpenHTF tearDown phase
-        pass
+        del self.session
 
     # DEPRECATED
     def addTest(self, testCallable):
         self.tests.append(testCallable)
+
+    # used for test sets
+    def reconfigure(self, name, args, evs):
+        self.test_name = name
+        self._PARAMS['args'] = args
+        self._PARAMS['expectedValues'] = evs
 
     def getTestParams(self):
         '''
@@ -164,6 +171,7 @@ class MainboardTest(object):
         iceboot_conf = self.config.get('iceboot', {})
 
         # XXX: move this to seutp function or re-implement this as a plug?
+        # hack for non-standard multiple tests run with single class
         self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
 
         #if expected_values:
