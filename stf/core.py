@@ -151,8 +151,11 @@ def run_set(set_name=None, config_file=None):
     if not config_file:
        raise Exception('Must provide config file')
 
+    if not set_name:
+        set_name = os.path.splitext(os.path.split(config_file)[-1])[0]
+
     #setConfig = stf.parse.json_load(config_file)
-    setConfig = SetConfig(config_file)
+    setConfig = SetConfig(config_file, set_name)
     '''
     import sys
     import os
@@ -170,7 +173,7 @@ def run_set(set_name=None, config_file=None):
         testFile = '{}/{}.py'.format(ENV.TEST_DIR, test)
         dbg('verifying testfile {} ...'.format(testFile))
         try:
-            testCode = """__STF_TEST_OVERRIDES = {}\n""" + open(testFile).read()
+            testCode = """__STF_CONFIG = {}\n""" + open(testFile).read()
             exec(testCode)
         except:
             dbg('exception when running {}'.format(testFile))
@@ -194,7 +197,7 @@ def run_set(set_name=None, config_file=None):
         testFile = '{}/{}.py'.format(ENV.TEST_DIR, testName)
 
         testCode = open(testFile).read()
-        code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", {test['args']}, {test['expectedValues']})"""
+        code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
         dbg(testCode + code)
 
         cc = getClassContext(testName)
@@ -206,9 +209,14 @@ def run_set(set_name=None, config_file=None):
 
 #def get_set
 
-def run_single_test(name, instance, args, evs):
+def run_single_test(name, instance, group, args, evs):
     test = getRegisteredClass(name)
 
-    test.reconfigure(instance, args, evs)
+    # XXX: reconfigure should use framework config settings here 
+    # to erase test override settings used in development
+    # or just have a hardcoded default
+    test.reconfigure(instance, group, args, evs, {
+        'iceboot': { 'host': 'localhost' }
+    })
 
     test.execute({'id': 'deadbeef'})

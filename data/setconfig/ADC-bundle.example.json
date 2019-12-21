@@ -1,6 +1,5 @@
 {
     "tests": {
-        "__comment__": "instance order is preserved (will execute ADCComms:fooInstance, followed by ADCComms:barInstance)",
         "ADCComms": [
                 "instance": "fooInstance",
                 "args": {

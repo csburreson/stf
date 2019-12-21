@@ -72,9 +72,10 @@ def update(d, u):
 
 
 class SetConfig(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file, set_name):
         self.config_file = config_file
-        debug('conf: {}'.format(config_file))
+        self.set_name = set_name
+        debug(f'conf for {set_name}: {config_file}')
         with open(config_file, 'r') as f:
             self._config = json_load(f)
 

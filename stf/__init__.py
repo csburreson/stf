@@ -90,7 +90,7 @@ class ENV():
     DB_DIR = DATA_DIR
 
     __DIR = __dir('results')
-    __FMT_STRING = '{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
+    __FMT_STRING = '{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
     JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
 
     FIRMWARE_VERSION = 0xb0

@@ -40,6 +40,7 @@ class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
         stf.dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
+        self.group = kw.get('group')
 
         # optional description
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
@@ -108,10 +109,13 @@ class MainboardTest(object):
         self.tests.append(testCallable)
 
     # used for test sets
-    def reconfigure(self, name, args, evs):
+    def reconfigure(self, name, group, args, evs, config):
         self.test_name = name
         self._PARAMS['args'] = args
         self._PARAMS['expectedValues'] = evs
+        self.group = group
+        # ugh... don't wipe out testconfig settings stored in self.config
+        self.config = stf.parse.update(self.config, config)
 
     def getTestParams(self):
         '''
@@ -143,7 +147,7 @@ class MainboardTest(object):
     def get_session(self):
         return self.session
 
-    def execute(self, device):
+    def execute(self, device, iceboot_config={}):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
@@ -168,6 +172,14 @@ class MainboardTest(object):
         # by default fpgaConfigurationFile is set in getIcebootSession
         # if a key is provided and the value is None/null, it will be
         # skipped
+
+        # iceboot_config is provided by the framework and overrides test config settings
+        '''
+        if iceboot_config:
+            iceboot_conf = iceboot_config
+        else:
+            iceboot_conf = self.config.get('iceboot', {})
+        '''
         iceboot_conf = self.config.get('iceboot', {})
 
         # XXX: move this to seutp function or re-implement this as a plug?
@@ -199,6 +211,7 @@ class MainboardTest(object):
             test_name=self.test_name,
             test_version=self.version,
             test_desc=self.desc,
+            test_group='' if not self.group else f'{self.group}::',
             # custom metadata fields
             framework_version=stf.FRAMEWORK_VERSION,
             device=device,
