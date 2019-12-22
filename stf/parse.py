@@ -1,5 +1,5 @@
 """
-Shamelessly stolen from: https://github.com/getify/JSON.minify/
+json_minify shamelessly stolen from: https://github.com/getify/JSON.minify/
 
 https://getify.mit-license.org/
 
@@ -24,6 +24,7 @@ import json
 from .debug import DEBUG, debug
 import stf
 import collections.abc
+from copy import deepcopy as dc
 
 class SetConfigException(Exception):
     pass
@@ -85,11 +86,8 @@ class SetConfig(object):
         self.instances = []
 
 
-    #@property
-    #def tests(self):
         self.tests = self._config['tests'].keys()
         debug('(SetConfig) tests: {}'.format(self.tests))
-    #    return tests
 
     def configure(self):
         #self.instances = []
@@ -101,12 +99,14 @@ class SetConfig(object):
             for ti in test_instances:
                 inst = ti['instance']
                 if inst == 'base':
+                    #debug('base instance; using test params:')
                     if ti.get('args') or ti.get('expectedValues'):
                         raise SetConfigException('Base instances cannot have overrides')
-                    mergedConfig = registered.getTestParams()
+                    mergedConfig = dc(registered.getTestParams())
+                    #debug(f"  args: {mergedConfig['args']}\n  expv: {mergedConfig['expectedValues']}")
                 else:
-                    debug(f' checking {testName}:{ti["instance"]}')
-                    mergedConfig = verify_config(registered.getTestParams(), ti)
+                    #debug(f' checking {testName}:{ti["instance"]}')
+                    mergedConfig = verify_config(dc(registered.getTestParams()), ti)
                 self.instances.append({
                     'test_name': testName,
                     'testinstance_name': f'{testName}:{inst}',
@@ -124,11 +124,8 @@ class SetConfig(object):
                     'args': ps.get('args', {}),
                     'expectedValues': ps.get('expectedValues', {})
                 })
-    #def configuredTests(self):
-        #for jkjkj
 
 
-# stf code
 def json_loads(s):
     if not DEBUG.NOSTRIPJSON:
         s = json_minify(s)  

@@ -19,7 +19,7 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass
+from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT
 from .parse import SetConfig
 
 
@@ -140,7 +140,7 @@ def _run(testClass, device):
       testClass.execute(device)
       return True
 
-def run_set(set_name=None, config_file=None):
+def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False):
     # 
     import os
     if set_name:
@@ -173,7 +173,7 @@ def run_set(set_name=None, config_file=None):
         testFile = '{}/{}.py'.format(ENV.TEST_DIR, test)
         dbg('verifying testfile {} ...'.format(testFile))
         try:
-            testCode = """__STF_CONFIG = {}\n""" + open(testFile).read()
+            testCode = open(testFile).read()
             exec(testCode)
         except:
             dbg('exception when running {}'.format(testFile))
@@ -188,10 +188,18 @@ def run_set(set_name=None, config_file=None):
 
 
     for test in setConfig.instances:
-    #for name, testClass in getRegisteredClassesByName().items():
         testName = test['test_name']
         dbg('running: {}'.format(test['testinstance_name']))
         dbg('   with: {}'.format(test))
+
+        if list_tests:
+            _PRINT(test['testinstance_name'])
+            continue
+        if list_overrides:
+            _PRINT(test['testinstance_name'])
+            _PRINT(f"  args: {test['args']}")
+            _PRINT(f"  expv: {test['expectedValues']}")
+            continue
         #exec(testClass.execute, *getClassContext(name))
         #exec(*getClassContext(name))
         testFile = '{}/{}.py'.format(ENV.TEST_DIR, testName)
@@ -203,11 +211,6 @@ def run_set(set_name=None, config_file=None):
         cc = getClassContext(testName)
         exec(testCode + code, cc[2])
 
-    # get tests:
-
-    # apply overrides? 
-
-#def get_set
 
 def run_single_test(name, instance, group, args, evs):
     test = getRegisteredClass(name)
