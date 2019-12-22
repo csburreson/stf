@@ -99,6 +99,7 @@ class ENV():
     # this is a db placeholder hackjob (i.e. this will be removed someday)
     DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
 
+    SETCONFIG_DIR = __dir(DATA_DIR, 'setconfig')
     SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
 
 #from I3Test import *
