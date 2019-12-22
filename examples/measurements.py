@@ -31,10 +31,8 @@ def fail_after_measure(test, session):
     return stf.FAIL
 
 
-#for f in [pass_measure, pass_measure_none, pass_measure_many,
-#    fail_nomeasure, fail_after_measure]:
-for f in [pass_measure, pass_measure_none, pass_measure_many]:
-
+for f in [pass_measure, pass_measure_none, pass_measure_many,
+    fail_nomeasure, fail_after_measure]:
 
     stf.register(
         version='1.0',
