@@ -2,6 +2,10 @@
     "tests": {
         // instance order is preserved (will execute ADCComms:fooInstance, followed by ADCComms:barInstance)
         "ADCComms": [{
+            "instance": "base"
+        },
+        
+        {
                 "instance": "fooInstance",
                 "args": {
                     "channel": 42

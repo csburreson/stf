@@ -95,17 +95,34 @@ class SetConfig(object):
         #self.instances = []
         stf.debug('setconfig->configure')
         for testName, test_instances in self._config['tests'].items():
-            debug(f'verifying instance configs for test {testName}')
+            # test_instances can be empty
             registered = stf.getRegisteredClass(testName)
+            debug(f'verifying instance configs for test {testName}')
             for ti in test_instances:
-                debug(f' checking {testName}:{ti["instance"]}')
-                mergedConfig = verify_config(registered.getTestParams(), ti)
+                inst = ti['instance']
+                if inst == 'base':
+                    if ti.get('args') or ti.get('expectedValues'):
+                        raise SetConfigException('Base instances cannot have overrides')
+                    mergedConfig = registered.getTestParams()
+                else:
+                    debug(f' checking {testName}:{ti["instance"]}')
+                    mergedConfig = verify_config(registered.getTestParams(), ti)
                 self.instances.append({
                     'test_name': testName,
-                    'testinstance_name': '{}:{}'.format(testName, ti['instance']),
-                    'instance_name': ti['instance'],
+                    'testinstance_name': f'{testName}:{inst}',
+                    'instance_name': inst,
                     'args': mergedConfig['args'],
                     'expectedValues': mergedConfig['expectedValues']
+                })
+            if not test_instances:
+                debug('no instances, appending base instance')
+                ps = registered.getTestParams()
+                self.instances.append({
+                    'test_name': testName,
+                    'testinstance_name': testName,
+                    'instance_name': 'base',
+                    'args': ps.get('args', {}),
+                    'expectedValues': ps.get('expectedValues', {})
                 })
     #def configuredTests(self):
         #for jkjkj
