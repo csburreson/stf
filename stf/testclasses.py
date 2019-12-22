@@ -19,9 +19,7 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum'))
-    # XXX: fix this later (use a different validator) 
-    # # .equalsParam('expected_fw_vnum'))
+    @stf.measures(stf.M('fw_vnum').equals(hex(stf.ENV.FIRMWARE_VERSION)))
     def checkCommsAndFirmware(test, session, **kw):
         vn = session.fpgaVersion()
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
@@ -147,7 +145,9 @@ class MainboardTest(object):
     def get_session(self):
         return self.session
 
-    def execute(self, device, iceboot_config={}):
+    ### TODO: implement option to ignore test "config" key? or at least iceboot
+    #def execute(self, device, iceboot_config={'iceboot': {'host': 'localhost'}}):
+    def execute(self, device, iceboot_config={'iceboot': {}}):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
@@ -181,6 +181,9 @@ class MainboardTest(object):
             iceboot_conf = self.config.get('iceboot', {})
         '''
         iceboot_conf = self.config.get('iceboot', {})
+
+        if iceboot_config:
+            iceboot_conf = stf.parse.update(iceboot_conf, iceboot_config['iceboot'])
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
