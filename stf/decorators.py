@@ -36,13 +36,28 @@ def register(**kw):
             testClass
     '''
     name = kw.get('test_name')
+    import inspect
+    frame = inspect.stack()[1]
     if not name:
-        import inspect
-        frame = inspect.stack()[1]
         name = frame[0].f_code.co_filename.split('.')[0].split('/')[-1]
         stf.dbg('test_name not provided, using: {}'.format(name))
     if not __valid_test_name(name):
         raise Exception('Misconfigured test, invalid or missing `test_name`. Can not run')
+
+    try :
+        frame = inspect.stack()[2]
+        testLocals = frame[0].f_locals
+        testGlobals = frame[0].f_globals
+        code_obj = frame[0].f_code
+    except IndexError:
+        testLocals = {}
+        testGlobals = {}
+        code_obj = None
+        pass
+    #stf.dbg('testLocals: {}'.format(testLocals))
+
+    if '__STF_TEST_OVERRIDES' in testLocals:
+        stf.dbg('TEST OVERRIDES FOUND')
 
     conf_file = kw.get('config_file')
     if not conf_file:
@@ -62,13 +77,19 @@ def register(**kw):
     func = kw.get('run')
     if not hasattr(func, 'measurements'):
         func = make_test(func)
+    # XXX: func.func.__globals?
+    #testLocals['STF_RUN_TEST'] = func
+    #func.func.__globals__.update(testLocals)
+    #stf.dbg('testLocals {}'.format(testLocals.keys()))
+    #stf.dbg('testGlobals{}'.format(testGlobals.keys()))
+    #func.func.__locals__.update(testLocals)
 
     desc = kw.get('test_desc')
     # get test description from the function's docstring if test_desc is not present
     #desc = desc or func.__doc__
     cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc)
 
-    stf.addTestClass(cls)
+    stf.addTestClass(name, cls, testLocals, testGlobals, code_obj=code_obj)
 
     return True
 

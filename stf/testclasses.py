@@ -19,9 +19,7 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum'))
-    # XXX: fix this later (use a different validator) 
-    # # .equalsParam('expected_fw_vnum'))
+    @stf.measures(stf.M('fw_vnum').equals(hex(stf.ENV.FIRMWARE_VERSION)))
     def checkCommsAndFirmware(test, session, **kw):
         vn = session.fpgaVersion()
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
@@ -40,6 +38,7 @@ class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
         stf.dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
+        self.group = kw.get('group')
 
         # optional description
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
@@ -79,9 +78,10 @@ class MainboardTest(object):
                 self.config.update(cfg)
                 stf.dbg('@configure: full config: {}'.format(self.config))
 
-            #if 'expectedValues' in self._PARAMS:
-
-
+        if not 'args' in self._PARAMS:
+            self._PARAMS['args'] = {}
+        if not 'expectedValues' in self._PARAMS:
+            self._PARAMS['expectedValues'] = {}
 
         # XXX:
         # create iceboot session here?
@@ -100,11 +100,20 @@ class MainboardTest(object):
 
     def tearDown(self, test):
         # placeholder for OpenHTF tearDown phase
-        pass
+        del self.session
 
     # DEPRECATED
     def addTest(self, testCallable):
         self.tests.append(testCallable)
+
+    # used for test sets
+    def reconfigure(self, name, group, args, evs, config):
+        self.test_name = name
+        self._PARAMS['args'] = args
+        self._PARAMS['expectedValues'] = evs
+        self.group = group
+        # ugh... don't wipe out testconfig settings stored in self.config
+        self.config = stf.parse.update(self.config, config)
 
     def getTestParams(self):
         '''
@@ -136,7 +145,9 @@ class MainboardTest(object):
     def get_session(self):
         return self.session
 
-    def execute(self, device):
+    ### TODO: implement option to ignore test "config" key? or at least iceboot
+    #def execute(self, device, iceboot_config={'iceboot': {'host': 'localhost'}}):
+    def execute(self, device, iceboot_config={'iceboot': {}}):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
@@ -161,9 +172,21 @@ class MainboardTest(object):
         # by default fpgaConfigurationFile is set in getIcebootSession
         # if a key is provided and the value is None/null, it will be
         # skipped
+
+        # iceboot_config is provided by the framework and overrides test config settings
+        '''
+        if iceboot_config:
+            iceboot_conf = iceboot_config
+        else:
+            iceboot_conf = self.config.get('iceboot', {})
+        '''
         iceboot_conf = self.config.get('iceboot', {})
 
+        if iceboot_config:
+            iceboot_conf = stf.parse.update(iceboot_conf, iceboot_config['iceboot'])
+
         # XXX: move this to seutp function or re-implement this as a plug?
+        # hack for non-standard multiple tests run with single class
         self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
 
         #if expected_values:
@@ -191,6 +214,7 @@ class MainboardTest(object):
             test_name=self.test_name,
             test_version=self.version,
             test_desc=self.desc,
+            test_group='' if not self.group else f'{self.group}::',
             # custom metadata fields
             framework_version=stf.FRAMEWORK_VERSION,
             device=device,

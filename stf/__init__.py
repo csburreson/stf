@@ -1,18 +1,33 @@
 from __future__ import print_function
+from collections import OrderedDict
 
-__version__ = '0.2'
+__version__ = '1.0'
 FRAMEWORK_VERSION = __version__
 
 
 global TESTABLE_CLASSES
-TESTABLE_CLASSES = []
+TESTABLE_CLASSES = OrderedDict() 
+global CLASS_CONTEXT 
+CLASS_CONTEXT = {}
 
-def addTestClass(cls):
+def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
     global TESTABLE_CLASSES
-    TESTABLE_CLASSES.append(cls)
+    TESTABLE_CLASSES[name] = cls
+    CLASS_CONTEXT[name] = (code_obj, test_globals, test_locals)
+
+
+def getClassContext(name):
+    return CLASS_CONTEXT[name]
+#def delTestClass
 
 def getRegisteredClasses():
+    return TESTABLE_CLASSES.values()
+
+def getRegisteredClassesByName():
     return TESTABLE_CLASSES
+
+def getRegisteredClass(name):
+    return TESTABLE_CLASSES[name]
 
 import sys
 import os
@@ -75,7 +90,7 @@ class ENV():
     DB_DIR = DATA_DIR
 
     __DIR = __dir('results')
-    __FMT_STRING = '{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
+    __FMT_STRING = '{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
     JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
 
     FIRMWARE_VERSION = 0xb0
@@ -84,9 +99,12 @@ class ENV():
     # this is a db placeholder hackjob (i.e. this will be removed someday)
     DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
 
+    SETCONFIG_DIR = __dir(DATA_DIR, 'setconfig')
+    SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
+
 #from I3Test import *
 debug = dbg
-from .core import run
+from .core import run, run_set
 from . import parse
 
 # core aliases
