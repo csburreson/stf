@@ -63,7 +63,7 @@ __builtins__.print = print_smash
 from .debug import dbg, DEBUG
 
 if PYTHON3:
-    def printToInfo(*args):
+    def printToInfo(*args, **ignored):
         try:
             # get test object
             #... hmm, maybe something like?

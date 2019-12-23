@@ -1,4 +1,5 @@
 import json
+import time
 import openhtf as htf
 # XXX: this monkey-patch fixes JSON serialization problems with numpy arrays in
 # test.measurements
@@ -201,6 +202,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
             _PRINT(test['testinstance_name'])
             _PRINT(f"  args: {test['args']}")
             _PRINT(f"  expv: {test['expectedValues']}")
+            _PRINT('')
             continue
         #exec(testClass.execute, *getClassContext(name))
         #exec(*getClassContext(name))
@@ -213,6 +215,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         cc = getClassContext(testName)
         exec(compile(testCode + code, testFile, 'exec'), cc[2])
+        time.sleep(2)
 
 
 def run_single_test(name, instance, group, args, evs):
