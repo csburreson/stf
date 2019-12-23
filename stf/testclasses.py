@@ -114,6 +114,8 @@ class MainboardTest(object):
         self.group = group
         # ugh... don't wipe out testconfig settings stored in self.config
         self.config = stf.parse.update(self.config, config)
+        stf.debug('reconfigure: ')
+        stf.debug(config)
 
     def getTestParams(self):
         '''

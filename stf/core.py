@@ -21,6 +21,7 @@ from . import db
 from stf.debug import dbg, DEBUG
 from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT
 from .parse import SetConfig
+from .util.files import getNameFromPath
 
 
 ### fake DB stuff
@@ -78,7 +79,7 @@ def getIcebootSession(fake=False, **kw):
         #host = '192.168.0.10'
         host = 'localhost'
         port = 5012
-        debug = True
+        debug = not ENV.ICEBOOT_DEBUG_OFF
         # always make this None for now, and override with testconfig
         # "Defaults" and overide THAT with testconfig "config.iceboot"
         # if provided by test writer
@@ -152,7 +153,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
        raise Exception('Must provide config file')
 
     if not set_name:
-        set_name = os.path.splitext(os.path.split(config_file)[-1])[0]
+        set_name = getNameFromPath(config_file)
 
     #setConfig = stf.parse.json_load(config_file)
     setConfig = SetConfig(config_file, set_name)
@@ -173,8 +174,9 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         testFile = '{}/{}.py'.format(ENV.TEST_DIR, test)
         dbg('verifying testfile {} ...'.format(testFile))
         try:
-            testCode = open(testFile).read()
-            exec(testCode)
+            with open(testFile) as f:
+                testCode = f.read()
+            exec(compile(testCode, testFile, 'exec'))
         except:
             dbg('exception when running {}'.format(testFile))
             raise
@@ -205,11 +207,12 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         testFile = '{}/{}.py'.format(ENV.TEST_DIR, testName)
 
         testCode = open(testFile).read()
+        ib_hack = f"""\nstf.set_default_iceboot("{ENV.CFG_ICEBOOT['host']}", "{ENV.CFG_ICEBOOT['port']}")"""
         code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
-        dbg(testCode + code)
+        dbg(testCode + ib_hack + code)
 
         cc = getClassContext(testName)
-        exec(testCode + code, cc[2])
+        exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
 
 def run_single_test(name, instance, group, args, evs):
@@ -219,7 +222,7 @@ def run_single_test(name, instance, group, args, evs):
     # to erase test override settings used in development
     # or just have a hardcoded default
     test.reconfigure(instance, group, args, evs, {
-        'iceboot': { 'host': 'localhost' }
+        'iceboot': ENV.CFG_ICEBOOT
     })
 
     test.execute({'id': 'deadbeef'})

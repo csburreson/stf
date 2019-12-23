@@ -102,10 +102,23 @@ class ENV():
     SETCONFIG_DIR = __dir(DATA_DIR, 'setconfig')
     SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
 
+    CFG_ICEBOOT = {
+        "host": "localhost",
+        "port": "5012"
+    }
+
+def set_default_iceboot(host='localhost', port='5012', debug_disabled=False):
+    dbg(f'set default: {host} {port}')
+    ENV.CFG_ICEBOOT["host"] = host
+    ENV.CFG_ICEBOOT["port"] = port
+    ENV.ICEBOOT_DEBUG_OFF = debug_disabled
+ENV.set_default_iceboot = set_default_iceboot        
+
 #from I3Test import *
 debug = dbg
 from .core import run, run_set
 from . import parse
+from . import util
 
 # core aliases
 Measurement = M = core.htf.Measurement
