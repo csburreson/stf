@@ -91,6 +91,20 @@ SLO_ADC
 
 ## Examining runset configs
 
+Run the `runset.py` script with no arguments to see all available runsets:
+
+```
+$ python3 runset.py
+No set name provided, choose one of:
+  brainstorm
+  ADCTestGroup.nooverides
+  g
+  baseinstance.example
+  ADCTestGroup.example
+```
+
+This is simply a listing of `<STF_HOME>/data/setconfig/*.json` with the extension stripped off.
+
 Use `python runset.py <setname> [--tests | --configs]` to get information about runsets.
 
 `--tests` will list out the name of every test instance to be created by the config.
