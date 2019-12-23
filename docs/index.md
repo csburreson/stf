@@ -1,9 +1,13 @@
 # STF
 
-To get started, read the first two short docs and try running a test.
-
 ## Using the Framework
+
 ### [Test Writing Guide](test-writing-guide.md)
+
+### [Test Set Guide](test-sets.md)
+
+
+(todo)
 
 ### [Test Output](testOutput.md)
 

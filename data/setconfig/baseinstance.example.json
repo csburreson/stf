@@ -1,0 +1,15 @@
+{
+  "tests": {
+      "ADCNoiseLevel": [
+        { "instance": "base" },
+        { 
+          "instance": "noisy",
+          "expectedValues": { "noise_min": 42, "noise_max": 44 }
+        }, {
+          "instance": "DACtweak"
+        }
+      ],
+      "Interlock": [{"instance": "base"}],
+      "SLO_ADC": []
+  }
+}
