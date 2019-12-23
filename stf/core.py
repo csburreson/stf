@@ -209,7 +209,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         testCode = open(testFile).read()
         ib_hack = f"""\nstf.set_default_iceboot("{ENV.CFG_ICEBOOT['host']}", "{ENV.CFG_ICEBOOT['port']}")"""
         code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
-        dbg(testCode + ib_hack + code)
+        #dbg(testCode + ib_hack + code)
 
         cc = getClassContext(testName)
         exec(compile(testCode + code, testFile, 'exec'), cc[2])

@@ -85,14 +85,22 @@ class SetConfig(object):
 
         self.instances = []
 
-
-        self.tests = self._config['tests'].keys()
+        if isinstance(self._config['tests'], list):
+            self.is_test_list = True
+            self.tests = self._config['tests']
+            self.testDict = {k: [] for k in self._config['tests']}
+            debug("\nHERE")
+        else:
+            self.is_test_list = False
+            self.tests = self._config['tests'].keys()
+            self.testDict = self._config['tests']
         debug('(SetConfig) tests: {}'.format(self.tests))
+        debug('\nSETCONFIG')
 
     def configure(self):
         #self.instances = []
         stf.debug('setconfig->configure')
-        for testName, test_instances in self._config['tests'].items():
+        for testName, test_instances in self.testDict.items():
             # test_instances can be empty
             registered = stf.getRegisteredClass(testName)
             debug(f'verifying instance configs for test {testName}')

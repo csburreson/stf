@@ -24,16 +24,9 @@ if __name__ == '__main__':
         print("  " + "\n  ".join(configs))  
         raise SystemExit
 
-    if args.run:
-        if setName.endswith('.json'):
-            setName = setName[:-5]
+    if setName.endswith('.json'):
+        setName = setName[:-5]
+    if not args.tests and not args.configs:
         stf.ENV.set_default_iceboot(host=args.iceboot_host, port=args.iceboot_port, debug_disabled=args.iceboot_debug_off)
         print(f"Starting test run with iceboot settings: host={args.iceboot_host} port={args.iceboot_port}, debug={not args.iceboot_debug_off}")
-        stf.run_set(setName, list_tests=args.tests, list_overrides=args.configs)
-    elif not args.tests and not args.configs:
-        #import os
-        #if os.path.exists('da
-        print(f"Did you want to run {setName}? try:\npython runset.py {setName} --run")
-        raise SystemExit
-
-
+    stf.run_set(setName, list_tests=args.tests, list_overrides=args.configs)
