@@ -106,6 +106,7 @@ class ENV():
         "host": "localhost",
         "port": "5012"
     }
+    ICEBOOT_DEBUG_OFF = False
 
 def set_default_iceboot(host='localhost', port='5012', debug_disabled=False):
     dbg(f'set default: {host} {port}')
