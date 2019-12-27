@@ -7,6 +7,18 @@ The stf module lives in `stf/` and includes all the core code that test writers 
 
 ## using the framework
 
+### requirements
+
+- **python 3.x** (developed with 3.7.4)
+- **openhtf**
+- **Protoc**
+
+*dev note*
+**test dependencies**
+an import for **matplotlib** in one of the tests' libraries requires that you have matplotlib installed to run the test.
+
+any test can implicitly add a dependency to the workspace... so be careful 
+
 ### install
 
 stf is python3 compliant and requires `openhtf` and `protoc` libraries. 
