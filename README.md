@@ -4,11 +4,6 @@ This is the testing framework workspace for the IceCube Upgrade hardware
 
 The stf module lives in `stf/` and includes all the core code that test writers shouldn't have to worry about.
 
-*NOTE*: Currently the included submodule (specifically `python/tools/iceboot`)
-requires a python2 print statement to be changed to python3. I've modified this
-in my local env but am not very experienced with submodules and don't think
-that I should be committing from it... will update soon.
-
 
 ## using the framework
 
@@ -46,7 +41,7 @@ This assumes you are in the root directory of this repository.
 
 https://wipacrepo.github.io/stf/
 
-(the aboe is mainly a skeleton... will fill in soon)
+(the above is mainly a skeleton... will fill in soon)
 
 #### creating/running tests
 [Test writing guide](https://wipacrepo.github.io/stf/test-writing-guide.html)
