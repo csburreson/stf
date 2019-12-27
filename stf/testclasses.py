@@ -204,7 +204,7 @@ class MainboardTest(object):
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
-        self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
+        self.session = getIcebootSession(**stf.config.getIcebootOpts())
 
         #if expected_values:
             #test_args['expectedValues'] = expected_values

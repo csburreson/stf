@@ -43,6 +43,7 @@ __TMP = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(__TMP, 'tools', 'python'))
 STF_HOME = os.path.realpath(os.path.join(__TMP, '..'))
 
+
 try:
     import builtins as __builtins__
 except ImportError:
@@ -127,6 +128,8 @@ debug = dbg
 from .core import run, run_set
 from . import parse
 from . import util
+from .util.config import get_config
+config = get_config('stfconfig.json', 'stfconfig.local.json')
 
 # core aliases
 Measurement = M = core.htf.Measurement

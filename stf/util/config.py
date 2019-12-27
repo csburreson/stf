@@ -1,25 +1,47 @@
 import json
 from .misc import flatten, jsonify
 from .. import parse
+import os
 import stf
 
 CONFIG = None
 
 class JsonConfig(object):
-    def __init__(self, jsonfile):
-        self.jsonfile = jsonfile
-        with open(jsonfile, 'r') as f:
-            stf.debug(f'f: {jsonfile}')
-            conf = parse.json_load(f)
-            self._config = conf
-            self._flatconfig = flatten(conf)
+    def __init__(self, baseconfig, jsonfiles=[]):
+        # for js in jsonfile:
+        #   misc.update(self._config, conf)
+        # 
+        self._config = {}
+        self._config_files = [baseconfig]
+        self._createConfig()
+        self.addConfigFile(jsonfiles)
+        self._createConfig()
 
-        self.config = jsonify(conf)
-        stf.debug(self.config)
+
+    def addConfigFile(self, jsonfiles):
+
+        if not isinstance(jsonfiles, list):
+            jsonfiles = [jsonfiles]
+        for f in jsonfiles: 
+            if os.path.exists(f):
+                self._config_files.append(f)
+            else:
+                stf.debug(f'Config {f} not found, skipping')
+
+    def _createConfig(self):
+        for jsonfile in self._config_files:
+            with open(jsonfile, 'r') as f:
+                stf.debug(f'parsing config... {jsonfile}')
+                conf = parse.json_load(f)
+                parse.update(self._config, conf)
+
+        self._flatconfig = flatten(self._config)
+        self.config = jsonify(self._config)
 
         d = self.config.directories
+        stf.debug(f'here: {d}')
         if not d.stf_home:
-            stf.debug('setting home to {stf.STF_HOME}')
+            stf.debug(f'setting home to {stf.STF_HOME}')
             d.stf_home = stf.STF_HOME
         dirs = d.values()
         # for format?
@@ -41,12 +63,18 @@ class JsonConfig(object):
     def get_dir(self, dirname):
         return self.config.directories[dirname]
         
+    def getIcebootOpts(self):
+        return dict(
+            host=self.config.iceboot.host,
+            port=self.config.iceboot.port,
+            fake=stf.DEBUG.FAKE_ICEBOOT
+        )
 
-def get_config(path):
+def get_config(path, optional):
     global CONFIG
     if not CONFIG:
-        CONFIG = JsonConfig(path)
-    return CONFIG.config
+        CONFIG = JsonConfig(path, jsonfiles=optional)
+    return CONFIG
     
 
         
