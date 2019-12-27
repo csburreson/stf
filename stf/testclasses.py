@@ -5,6 +5,7 @@ from openhtf.output.callbacks import console_summary
 from .core import getIcebootSession
 from .validators import *
 import stf
+from .util.colors import termcolor as clr
 FAKE_ICEBOOT = False
 
 class TestSet(object):
@@ -20,13 +21,26 @@ class Common(object):
         'timeout_s': 10
     }
     @stf.measures(stf.M('fw_vnum').equals(hex(stf.ENV.FIRMWARE_VERSION)))
+    #XXX: need long timeout for localhost from crappy inet cnxn
+    @stf.options(timeout_s=500)
     def checkCommsAndFirmware(test, session, **kw):
         vn = session.fpgaVersion()
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
+
+        gINFO = stf.ginfo(['framework', 'iceboot'])
+        if not session.flashLS():
+            gINFO(f'uploading fw file to flash ({stf.ENV.FIRMWARE_FILE_PATH})... \n\t(this could take a while)')
+            #session.ymodemConfigureCycloneFPGA(stf.ENV.FIRMWARE_FILE_PATH)
+            session.ymodemFlashUpload(stf.ENV.FIRMWARE_FILE_REMOTE, stf.ENV.FIRMWARE_FILE_PATH)
+        gINFO(f'configuring fw file from flash ({stf.ENV.FIRMWARE_FILE_REMOTE})...')
+        session.flashConfigureCycloneFPGA(stf.ENV.FIRMWARE_FILE_REMOTE)
+
+        vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
         if vn == 0xFFFF:
             test.logger.error('no firmware detected. quitting.')
             return stf.STOP
+
 
 
     def setupIceboot(test, session):
@@ -96,10 +110,11 @@ class MainboardTest(object):
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
-        pass
+        self.session.flashLS()
 
     def tearDown(self, test):
         # placeholder for OpenHTF tearDown phase
+        #self.session.reboot()
         del self.session
 
     # DEPRECATED

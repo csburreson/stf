@@ -20,9 +20,10 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT
+from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo
 from .parse import SetConfig
 from .util.files import getNameFromPath
+from .util.colors import termcolor as tc
 
 
 ### fake DB stuff
@@ -215,11 +216,18 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         cc = getClassContext(testName)
         exec(compile(testCode + code, testFile, 'exec'), cc[2])
+        #delClassContext(testName)
         time.sleep(2)
 
 
 def run_single_test(name, instance, group, args, evs):
     test = getRegisteredClass(name)
+    #from stf.util.misc import setInfoGroups
+    #setInfoGroups(['runset'])
+    cName = tc(name, 'aqua')
+    cInst = tc(instance, 'aqua')
+
+    INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
 
     # XXX: reconfigure should use framework config settings here 
     # to erase test override settings used in development

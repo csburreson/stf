@@ -2,6 +2,7 @@ import os
 from .util.colors import termcolor as clr
 from . import PYTHON3
 from . import _PRINT as prnt
+from .util.misc import setInfoGroups
 
 ### dev symbols
 class DEBUG:

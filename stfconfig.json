@@ -1,0 +1,28 @@
+{
+    "output": {
+        "console": "enabled",
+        "json": "enabled",
+        "quiet": "disabled",
+        "database": null
+    },
+    "directories": {
+        // this defaults to stf workspace directory
+        "stf_home": null,
+        "data": "{stf_home}/data",
+        "tests": "{stf_home}/tests",
+        "testconfig": "{data}/testconfig",
+        "setconfig": "{data}/setconfig",
+        "fwfile_pattern": "fw_{config.iceboot.fw_version}.rbf",
+        "fwfile_path": "{data}/{fwfile_pattern}",
+        "json_output": "{stf_home}/results"
+    },
+    "iceboot": {
+        "fw_version": "0xb0",
+        "host": "localhost",
+        "port": 5012
+    },
+    "device": {
+        "source": "json",
+        "path": "{config.directories.data}/all.json"
+    }
+}

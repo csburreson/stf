@@ -18,6 +18,9 @@ def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
 
 def getClassContext(name):
     return CLASS_CONTEXT[name]
+
+def delClassContext(name):
+    del CLASS_CONTEXT[name]
 #def delTestClass
 
 def getRegisteredClasses():
@@ -33,8 +36,12 @@ import sys
 import os
 
 # directories:
-STF_HOME = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
+#STF_HOME = os.path.dirname(os.path.realpath(__file__))
+#sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
+# directories:
+__TMP = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(__TMP, 'tools', 'python'))
+STF_HOME = os.path.realpath(os.path.join(__TMP, '..'))
 
 try:
     import builtins as __builtins__
@@ -52,15 +59,11 @@ else:
     PYTHON3 = True
     PYTHON2 = False
 
-# hack to redirect print statements to test logger.info
-'''
-#XXX: print_smasher?
-def print_smash(*args):
-    pass
-__builtins__.print = print_smash
-'''
 
 from .debug import dbg, DEBUG
+
+from stf.util.misc import INFO, get_InfoWithGroups as ginfo
+
 
 if PYTHON3:
     def printToInfo(*args, **ignored):
@@ -79,10 +82,12 @@ if PYTHON3:
                 dbg('Error! BAD PRINT {}'.format(args))
     __builtins__.print = printToInfo
 
+
+
 # XXX: todo -- create JSON based config file for STF itself
 class ENV():
     def __dir(*args):
-        return os.path.join(STF_HOME, '..', *args)
+        return os.path.join(STF_HOME, *args)
 
     DATA_DIR = __dir('data')
     TEST_DIR = __dir('tests')
@@ -95,9 +100,11 @@ class ENV():
 
     FIRMWARE_VERSION = 0xb0
     FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_{}.rbf'.format(hex(FIRMWARE_VERSION)))
+    FIRMWARE_FILE_REMOTE = 'degg_fw_v{}.rbf'.format(hex(FIRMWARE_VERSION))
 
     # this is a db placeholder hackjob (i.e. this will be removed someday)
     DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
+
 
     SETCONFIG_DIR = __dir(DATA_DIR, 'setconfig')
     SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
