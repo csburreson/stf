@@ -1,4 +1,5 @@
 import json
+import time
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.output.callbacks import console_summary
@@ -6,6 +7,7 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
+from .util.misc import INFO
 FAKE_ICEBOOT = False
 
 class TestSet(object):
@@ -43,10 +45,15 @@ class Common(object):
 
 
 
+    '''
     def setupIceboot(test, session):
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {})
-        )
+        if session:
+            INFO("HERE")
+            del self.session
+            import time
+            time.sleep(5)
+        #self.session = getIcebootSession(**stf.config.getIcebootOpts())
+        '''
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
@@ -67,7 +74,7 @@ class MainboardTest(object):
         # instance can be none
         self.instance = kw.get('instance')
 
-        self.session = None
+        #self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
@@ -101,21 +108,29 @@ class MainboardTest(object):
         # create iceboot session here?
         # or as a test phase?
     def setupIceboot(self, test):
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {
-                'host': 'localhost',
-                'port': 5012
-            })
-        )
+        #if session:
+        #    INFO("HERE")
+        #    del self.session
+        #    import time
+        #    time.sleep(5)
+        self.session = getIcebootSession(**stf.config.getIcebootOpts())
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
-        self.session.flashLS()
+        #self.session.flashLS()
+        #if self.session
+        pass
 
     def tearDown(self, test):
-        # placeholder for OpenHTF tearDown phase
-        #self.session.reboot()
-        del self.session
+        if self.session:
+            INFO('tearing down session')
+            try:
+                self.session.reboot()
+            except OSError:
+                INFO('waiting for reboot...')
+                time.sleep(3)
+                del self.session
+            INFO('done')
 
     # DEPRECATED
     def addTest(self, testCallable):
@@ -186,21 +201,7 @@ class MainboardTest(object):
         # with "conf" top-level key
         #defaults = testclasses.Common.TEST_CONFIG
 
-        # by default fpgaConfigurationFile is set in getIcebootSession
-        # if a key is provided and the value is None/null, it will be
-        # skipped
-
         # iceboot_config is provided by the framework and overrides test config settings
-        '''
-        if iceboot_config:
-            iceboot_conf = iceboot_config
-        else:
-            iceboot_conf = self.config.get('iceboot', {})
-        '''
-        iceboot_conf = self.config.get('iceboot', {})
-
-        if iceboot_config:
-            iceboot_conf = stf.parse.update(iceboot_conf, iceboot_config['iceboot'])
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
@@ -214,6 +215,8 @@ class MainboardTest(object):
             for v in m.validators:
                 setattr(v, 'expectedValues', expected_values)
 
+        #self.session = getIcebootSession(**stf.config.getIcebootOpts())
+
         phases = [
             Common.checkCommsAndFirmware.with_args(session=self.session, 
                 expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
@@ -223,7 +226,7 @@ class MainboardTest(object):
 
         T = htf.Test(htf.PhaseGroup(
                 #setup=[self.setupIceboot],
-                setup=[self.setup],
+                #setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
             ),
@@ -239,6 +242,7 @@ class MainboardTest(object):
             test_config=self._PARAMS,
             framework_override_config=self.config
         )
+        #T.configure(teardown_function=self.tearDown)
 
         # XXX: how to deal with output options?
         T.add_output_callbacks(

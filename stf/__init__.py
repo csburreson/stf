@@ -125,11 +125,11 @@ ENV.set_default_iceboot = set_default_iceboot
 
 #from I3Test import *
 debug = dbg
+from .util.config import get_config
+config = get_config('stfconfig.json', 'stfconfig.local.json')
 from .core import run, run_set
 from . import parse
 from . import util
-from .util.config import get_config
-config = get_config('stfconfig.json', 'stfconfig.local.json')
 
 # core aliases
 Measurement = M = core.htf.Measurement

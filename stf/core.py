@@ -20,10 +20,13 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo
+from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo 
 from .parse import SetConfig
 from .util.files import getNameFromPath
 from .util.colors import termcolor as tc
+from .util.config import get_config
+
+CONFIG = get_config()
 
 
 ### fake DB stuff
@@ -57,7 +60,6 @@ def getIcebootSession(fake=False, **kw):
     
     # this value can be null/None and that means DON'T send a fw file
     if 'fpgaConfigurationFile' in kw:
-        # get this, eve
         fw_file = kw['fpgaConfigurationFile']
         dbg('fw_file: {}'.format(fw_file))
 
@@ -68,17 +70,13 @@ def getIcebootSession(fake=False, **kw):
         ENV.FIRMWARE_VERSION = int(fn[-4:], 16)
         dbg('setting fw version: {}'.format(ENV.FIRMWARE_VERSION))
 
-
-    # SKIP_FW debug symbol overrides testconfig
-    if DEBUG.SKIP_FW:
-        dbg('NOT loading firmeware STF_SKIPFW is set')
-        fw_file = None
+    # now set by config
+    fw_file = None
 
     if fake:
         return FakeIceboot(**kw)
 
     class IcebootOpts:
-        #host = '192.168.0.10'
         host = 'localhost'
         port = 5012
         debug = not ENV.ICEBOOT_DEBUG_OFF
@@ -90,10 +88,7 @@ def getIcebootSession(fake=False, **kw):
 
 
     dbg('(framework) Starting iceboot session ...')
-    if kw:
-        dbg('  using overrides: {}'.format(json.dumps(kw)))
-    if fw_file is None:
-        dbg('  NOT sending Firmware file')
+    dbg(f'{CONFIG.config.iceboot}')
     return iceboot_session_cmd.init(IcebootOpts, **kw)
 
 

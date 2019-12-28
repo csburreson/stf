@@ -70,10 +70,11 @@ class JsonConfig(object):
             fake=stf.DEBUG.FAKE_ICEBOOT
         )
 
-def get_config(path, optional):
+def get_config(path='stfconfig.json', optional=['stfconfig.local.json']):
     global CONFIG
-    if not CONFIG:
-        CONFIG = JsonConfig(path, jsonfiles=optional)
+    if CONFIG:
+        return CONFIG
+    CONFIG = JsonConfig(path, jsonfiles=optional)
     return CONFIG
     
 
