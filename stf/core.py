@@ -216,7 +216,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         cc = getClassContext(testName)
         exec(compile(testCode + code, testFile, 'exec'), cc[2])
-        #delClassContext(testName)
+        delClassContext(testName)
         time.sleep(2)
 
 
