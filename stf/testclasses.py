@@ -22,7 +22,7 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum').equals(hex(stf.ENV.FIRMWARE_VERSION)))
+    @stf.measures(stf.M('fw_vnum').equals(stf.config.settings.iceboot.fw_version))
     #XXX: need long timeout for localhost from crappy inet cnxn
     @stf.options(timeout_s=500)
     def checkCommsAndFirmware(test, session, **kw):
@@ -30,12 +30,13 @@ class Common(object):
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
 
         gINFO = stf.ginfo(['framework', 'iceboot'])
+        paths = stf.config.settings.paths
         if not session.flashLS():
-            gINFO(f'uploading fw file to flash ({stf.ENV.FIRMWARE_FILE_PATH})... \n\t(this could take a while)')
-            #session.ymodemConfigureCycloneFPGA(stf.ENV.FIRMWARE_FILE_PATH)
-            session.ymodemFlashUpload(stf.ENV.FIRMWARE_FILE_REMOTE, stf.ENV.FIRMWARE_FILE_PATH)
-        gINFO(f'configuring fw file from flash ({stf.ENV.FIRMWARE_FILE_REMOTE})...')
-        session.flashConfigureCycloneFPGA(stf.ENV.FIRMWARE_FILE_REMOTE)
+            gINFO(f'uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
+            #session.ymodemConfigureCycloneFPGA
+            session.ymodemFlashUpload(paths.fwfile_remote, paths.fw_file)
+        gINFO(f'configuring fw file from flash ({paths.fw_file_remote})...')
+        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
 
         vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
@@ -219,7 +220,7 @@ class MainboardTest(object):
 
         phases = [
             Common.checkCommsAndFirmware.with_args(session=self.session, 
-                expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
+                expectedValues={'expected_fw_vnum':stf.config.settings.iceboot.fw_version}),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
@@ -244,15 +245,16 @@ class MainboardTest(object):
         )
         #T.configure(teardown_function=self.tearDown)
 
-        # XXX: how to deal with output options?
-        T.add_output_callbacks(
-            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
-        )
+        output = stf.config.settings.output
+        if output.json.enabled:
+            T.add_output_callbacks(
+                JSON(stf.config.get_dir('json_output'), indent=4, default=str)
+            )
 
-        # XXX: add DEBUG flag?
-        T.add_output_callbacks(
-            console_summary.ConsoleSummary()
-        )
+        if output.console.enabled:
+            T.add_output_callbacks(
+                console_summary.ConsoleSummary()
+            )
 
         T.execute(test_start=lambda: device['id'])
 

@@ -14,3 +14,5 @@ def getFWVersionFromFile(path):
     version = x.split('_')[-1]
 
     return version
+
+join = os.path.join

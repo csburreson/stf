@@ -36,16 +36,17 @@ class JsonConfig(object):
                 parse.update(self._config, conf)
 
         self._flatconfig = flatten(self._config)
-        self.config = jsonify(self._config)
+        self.settings = jsonify(self._config)
+        # settings and config are aliases
+        #self.config = self.settings
 
-        d = self.config.directories
-        stf.debug(f'here: {d}')
+        d = self.settings.paths
         if not d.stf_home:
             stf.debug(f'setting home to {stf.STF_HOME}')
             d.stf_home = stf.STF_HOME
         dirs = d.values()
         # for format?
-        config = self.config
+        config = self.settings
         for k, v in d.items():
             if v in dirs:
                 try:
@@ -60,15 +61,19 @@ class JsonConfig(object):
             if dv.path:
                 dv.path = dv.path.format(config=config)
 
-    def get_dir(self, dirname):
-        return self.config.directories[dirname]
+    def get_dir(self, dirname, filename=None):
+        if filename:
+            return os.path.join(self.settings.paths[dirname], filename)
+        return self.settings.paths[dirname]
+
         
     def getIcebootOpts(self):
         return dict(
-            host=self.config.iceboot.host,
-            port=self.config.iceboot.port,
+            host=self.settings.iceboot.host,
+            port=self.settings.iceboot.port,
             fake=stf.DEBUG.FAKE_ICEBOOT
         )
+
 
 def get_config(path='stfconfig.json', optional=['stfconfig.local.json']):
     global CONFIG

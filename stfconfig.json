@@ -1,28 +1,38 @@
 {
     "output": {
-        "console": "enabled",
-        "json": "enabled",
+        "console": {
+            "enabled": true
+        },
+        "json": {
+            "enabled": true,
+            "filename": "{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json"
+        },
         "quiet": "disabled",
         "database": null
     },
-    "directories": {
+    "paths": {
         // this defaults to stf workspace directory
         "stf_home": null,
         "data": "{stf_home}/data",
         "tests": "{stf_home}/tests",
         "testconfig": "{data}/testconfig",
         "setconfig": "{data}/setconfig",
-        "fwfile_pattern": "fw_{config.iceboot.fw_version}.rbf",
-        "fwfile_path": "{data}/{fwfile_pattern}",
-        "json_output": "{stf_home}/results"
+        // full path here ** note: cannot mix relative config refs and absolute
+        "fwfile": "{config.paths.data}/fw_{config.iceboot.fw_version}.rbf",
+        // local path passed to iceboot session for flashing fw
+        "fwfile_remote": "degg_fw_v{config.iceboot.fw_version}.rbf",
+        //"fwfile_path": "{data}/{fwfile_pattern}",
+        "json_output": "{config.paths.stf_home}/results/{config.output.json.filename}"
     },
     "iceboot": {
         "fw_version": "0xb0",
         "host": "localhost",
-        "port": 5012
+        "port": 5012,
+        "debug": false
     },
+
     "device": {
         "source": "json",
-        "path": "{config.directories.data}/all.json"
+        "path": "{config.paths.data}/all.json"
     }
 }

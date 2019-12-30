@@ -56,8 +56,11 @@ class FakeIceboot(object):
 
 def getIcebootSession(fake=False, **kw):
     # default firmware path
-    fw_file = ENV.FIRMWARE_FILE_PATH
+    #fw_file = ENV.FIRMWARE_FILE_PATH
+    # now set by config
+    fw_file = None
     
+    '''
     # this value can be null/None and that means DON'T send a fw file
     if 'fpgaConfigurationFile' in kw:
         fw_file = kw['fpgaConfigurationFile']
@@ -68,10 +71,10 @@ def getIcebootSession(fake=False, **kw):
         # XXX: should probably use splitext and basename from os
         fn = fw_file.split('/')[-1].split('.')[0]
         ENV.FIRMWARE_VERSION = int(fn[-4:], 16)
-        dbg('setting fw version: {}'.format(ENV.FIRMWARE_VERSION))
+        dbg('setting fw version: {}'.format(CONFIG.settings.iceboot.fw_version))
+    #XXX NOT setting this by this method anymore
+    '''
 
-    # now set by config
-    fw_file = None
 
     if fake:
         return FakeIceboot(**kw)
@@ -79,7 +82,8 @@ def getIcebootSession(fake=False, **kw):
     class IcebootOpts:
         host = 'localhost'
         port = 5012
-        debug = not ENV.ICEBOOT_DEBUG_OFF
+        #debug = not ENV.ICEBOOT_DEBUG_OFF
+        debug = CONFIG.settings.iceboot.debug
         # always make this None for now, and override with testconfig
         # "Defaults" and overide THAT with testconfig "config.iceboot"
         # if provided by test writer
@@ -88,7 +92,7 @@ def getIcebootSession(fake=False, **kw):
 
 
     dbg('(framework) Starting iceboot session ...')
-    dbg(f'{CONFIG.config.iceboot}')
+    dbg(f'{CONFIG.settings.iceboot}')
     return iceboot_session_cmd.init(IcebootOpts, **kw)
 
 
@@ -168,7 +172,8 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
     ### VERIFY CONFIG
     for test in setConfig.tests:
-        testFile = '{}/{}.py'.format(ENV.TEST_DIR, test)
+        d = CONFIG.get_dir('tests')
+        testFile = f'{d}/{test}.py'
         dbg('verifying testfile {} ...'.format(testFile))
         try:
             with open(testFile) as f:
@@ -202,7 +207,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
             continue
         #exec(testClass.execute, *getClassContext(name))
         #exec(*getClassContext(name))
-        testFile = '{}/{}.py'.format(ENV.TEST_DIR, testName)
+        testFile = '{}/{}.py'.format(CONFIG.get_dir('tests'), testName)
 
         testCode = open(testFile).read()
         ib_hack = f"""\nstf.set_default_iceboot("{ENV.CFG_ICEBOOT['host']}", "{ENV.CFG_ICEBOOT['port']}")"""
@@ -224,11 +229,7 @@ def run_single_test(name, instance, group, args, evs):
 
     INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
 
-    # XXX: reconfigure should use framework config settings here 
-    # to erase test override settings used in development
-    # or just have a hardcoded default
-    test.reconfigure(instance, group, args, evs, {
-        'iceboot': ENV.CFG_ICEBOOT
-    })
+    # XXX: used?
+    test.reconfigure(instance, group, args, evs, {})
 
     test.execute({'id': 'deadbeef'})

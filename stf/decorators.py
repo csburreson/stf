@@ -64,7 +64,7 @@ def register(**kw):
     conf_file = kw.get('config_file')
     if not conf_file:
         stf.dbg('config_file not provided for test: ' + name)
-        conf_file = '{}/{}.json'.format(stf.ENV.TEST_CONFIG_DIR, name)
+        conf_file = '{}/{}.json'.format(stf.config.get_dir('testconfig'), name)
         stf.dbg('trying {}'.format(conf_file))
         # XXX: validate config here, raise Exception
 

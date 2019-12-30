@@ -126,7 +126,7 @@ ENV.set_default_iceboot = set_default_iceboot
 #from I3Test import *
 debug = dbg
 from .util.config import get_config
-config = get_config('stfconfig.json', 'stfconfig.local.json')
+config = get_config(f'{STF_HOME}/stfconfig.json', f'{STF_HOME}/stfconfig.local.json')
 from .core import run, run_set
 from . import parse
 from . import util
