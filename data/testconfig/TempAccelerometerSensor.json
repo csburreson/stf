@@ -1,0 +1,11 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+      "temp_min": 17.0,
+      "temp_max": 29.0
+    }
+}
