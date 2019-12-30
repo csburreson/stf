@@ -1,0 +1,11 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+      "pressure_min_hpa": 850.0,
+      "pressure_max_hpa": 1050.0
+    }
+}
