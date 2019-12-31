@@ -38,7 +38,7 @@ def register(**kw):
     name = kw.get('test_name')
     import inspect
     frame = inspect.stack()[1]
-    stf.dbg(frame)
+    # stf.dbg(frame)
     if not name:
         from .util.files import getNameFromPath
         name = getNameFromPath(frame[0].f_code.co_filename)

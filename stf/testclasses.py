@@ -87,18 +87,17 @@ class MainboardTest(object):
             return
 
         with open(conf_file, 'r') as f:
-            stf.dbg("(@configure) loaded {}".format(conf_file))
+            stf.dbg("configure: loaded {}".format(conf_file))
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
                 raise Exception('Invalid test configuration file! Is this valid JSON?')
             self._PARAM_CONF_FILE = conf_file
-            stf.dbg("(@configure) {}".format(self._PARAMS))
             if 'config' in self._PARAMS:
                 cfg = self._PARAMS['config']
-                stf.dbg('@configure: config overrides: {}'.format(cfg))
+                stf.dbg('configure: config overrides: {}'.format(cfg))
                 self.config.update(cfg)
-                stf.dbg('@configure: full config: {}'.format(self.config))
+                stf.dbg('configure: full config: {}'.format(self.config))
 
         if not 'args' in self._PARAMS:
             self._PARAMS['args'] = {}
@@ -111,9 +110,7 @@ class MainboardTest(object):
         #    time.sleep(3)
         pass
 
-        # XXX:
-        # create iceboot session here?
-        # or as a test phase?
+    # create iceboot session here? or as a test phase?
     def setupIceboot(self, test):
         #if session:
         #    INFO("HERE")
