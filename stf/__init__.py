@@ -70,12 +70,10 @@ if PYTHON3:
     def printToInfo(*args, **ignored):
         try:
             # get test object
-            #... hmm, maybe something like?
             test = sys._getframe(1).f_locals["test"]
             s = 'print: ' + ' '.join([str(a) for a in args])
             test.logger.info(s)
         except:
-            #from .debug import dbg
             # _PRINT(*args) here? or ignore?
             if DEBUG.ALLOW_PRINT:
                 _PRINT(*args)
@@ -84,46 +82,6 @@ if PYTHON3:
     __builtins__.print = printToInfo
 
 
-
-# XXX: todo -- create JSON based config file for STF itself
-class ENV():
-    def __dir(*args):
-        return os.path.join(STF_HOME, *args)
-
-    DATA_DIR = __dir('data')
-    TEST_DIR = __dir('tests')
-    TEST_CONFIG_DIR = __dir(DATA_DIR, 'testconfig')
-    DB_DIR = DATA_DIR
-
-    __DIR = __dir('results')
-    __FMT_STRING = '{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
-    JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
-
-    FIRMWARE_VERSION = 0xb0
-    FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_{}.rbf'.format(hex(FIRMWARE_VERSION)))
-    FIRMWARE_FILE_REMOTE = 'degg_fw_v{}.rbf'.format(hex(FIRMWARE_VERSION))
-
-    # this is a db placeholder hackjob (i.e. this will be removed someday)
-    DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
-
-
-    SETCONFIG_DIR = __dir(DATA_DIR, 'setconfig')
-    SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
-
-    CFG_ICEBOOT = {
-        "host": "localhost",
-        "port": "5012"
-    }
-    ICEBOOT_DEBUG_OFF = False
-
-def set_default_iceboot(host='localhost', port='5012', debug_disabled=False):
-    dbg(f'set default: {host} {port}')
-    ENV.CFG_ICEBOOT["host"] = host
-    ENV.CFG_ICEBOOT["port"] = port
-    ENV.ICEBOOT_DEBUG_OFF = debug_disabled
-ENV.set_default_iceboot = set_default_iceboot        
-
-#from I3Test import *
 debug = dbg
 from .util.config import get_config
 config = get_config(f'{STF_HOME}/stfconfig.json', f'{STF_HOME}/stfconfig.local.json')

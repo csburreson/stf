@@ -51,7 +51,7 @@ class JsonConfig(object):
             if v in dirs:
                 try:
                     # format local section placeholders
-                    d[k] = v.format(**d)
+                    d[k] = v.format(config=config, **d)
                 except KeyError:
                     # format for placeholders in other sections
                     d[k] = v.format(config=config)
@@ -61,7 +61,7 @@ class JsonConfig(object):
             if dv.path:
                 dv.path = dv.path.format(config=config)
 
-    def get_dir(self, dirname, filename=None):
+    def get_path(self, dirname, filename=None):
         if filename:
             return os.path.join(self.settings.paths[dirname], filename)
         return self.settings.paths[dirname]
@@ -71,8 +71,17 @@ class JsonConfig(object):
         return dict(
             host=self.settings.iceboot.host,
             port=self.settings.iceboot.port,
-            fake=stf.DEBUG.FAKE_ICEBOOT
+            debug=self.settings.iceboot.debug,
         )
+     
+    def setIcebootOpts(self, host=None, port=None, debug=None):
+        if host:
+            self.settings.iceboot.host = host
+        if port:
+            self.settings.iceboot.port = port
+        if debug:
+            self.settings.iceboot.debug = debug
+        
 
 
 def get_config(path='stfconfig.json', optional=['stfconfig.local.json']):

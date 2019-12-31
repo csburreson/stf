@@ -22,7 +22,7 @@
         // local path passed to iceboot session for flashing fw
         "fwfile_remote": "degg_fw_v{config.iceboot.fw_version}.rbf",
         //"fwfile_path": "{data}/{fwfile_pattern}",
-        "json_output": "{config.paths.stf_home}/results/{config.output.json.filename}"
+        "json_output": "{stf_home}/results/{config.output.json.filename}"
     },
     "iceboot": {
         "fw_version": "0xb0",
@@ -32,7 +32,8 @@
     },
 
     "device": {
-        "source": "json",
-        "path": "{config.paths.data}/all.json"
+        "type": "jsonfile", // jsonfile, or db conn string eventually ?
+        "source": "all.json"
     }
+   
 }

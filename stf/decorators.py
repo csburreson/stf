@@ -27,7 +27,7 @@ def register(**kw):
         config_file 
             by default, the framework will look for a a "testconfig"
             directory containing the tests config file:
-            i.e. os.join(stf.ENV.DATA_DIR, 'testconfig', '<test_name>.json')
+            i.e. os.join(<data dir>, 'testconfig', '<test_name>.json')
             or "$STF_HOME/data/testconfig/test_name.json" where STF_HOME
             is the location of the stf package
 
@@ -64,7 +64,7 @@ def register(**kw):
     conf_file = kw.get('config_file')
     if not conf_file:
         stf.dbg('config_file not provided for test: ' + name)
-        conf_file = '{}/{}.json'.format(stf.config.get_dir('testconfig'), name)
+        conf_file = '{}/{}.json'.format(stf.config.get_path('testconfig'), name)
         stf.dbg('trying {}'.format(conf_file))
         # XXX: validate config here, raise Exception
 

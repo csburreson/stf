@@ -26,16 +26,16 @@ class Common(object):
     #XXX: need long timeout for localhost from crappy inet cnxn
     @stf.options(timeout_s=500)
     def checkCommsAndFirmware(test, session, **kw):
+        gINFO = stf.ginfo(['framework', 'iceboot'])
         vn = session.fpgaVersion()
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
 
-        gINFO = stf.ginfo(['framework', 'iceboot'])
         paths = stf.config.settings.paths
         if not session.flashLS():
-            gINFO(f'uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
+            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
             #session.ymodemConfigureCycloneFPGA
-            session.ymodemFlashUpload(paths.fwfile_remote, paths.fw_file)
-        gINFO(f'configuring fw file from flash ({paths.fw_file_remote})...')
+            session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
+        gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
         session.flashConfigureCycloneFPGA(paths.fwfile_remote)
 
         vn = session.fpgaVersion()
@@ -44,7 +44,7 @@ class Common(object):
             test.logger.error('no firmware detected. quitting.')
             return stf.STOP
 
-
+        stf.debug('FW OK! Starting main test phase')
 
     '''
     def setupIceboot(test, session):
@@ -105,6 +105,12 @@ class MainboardTest(object):
         if not 'expectedValues' in self._PARAMS:
             self._PARAMS['expectedValues'] = {}
 
+    def __del__(self):
+        #if self.session:
+        #    del self.session
+        #    time.sleep(3)
+        pass
+
         # XXX:
         # create iceboot session here?
         # or as a test phase?
@@ -114,7 +120,7 @@ class MainboardTest(object):
         #    del self.session
         #    import time
         #    time.sleep(5)
-        self.session = getIcebootSession(**stf.config.getIcebootOpts())
+        self.session = getIcebootSession()
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
@@ -124,14 +130,17 @@ class MainboardTest(object):
 
     def tearDown(self, test):
         if self.session:
-            INFO('tearing down session')
+            if hasattr(self.session, 'FAKE'):
+                return
+            INFO('tearing down ... initiating reboot()')
+            # XXX:rebootafter
             try:
                 self.session.reboot()
-            except OSError:
-                INFO('waiting for reboot...')
                 time.sleep(3)
-                del self.session
-            INFO('done')
+            except OSError:
+                stf.debug('oserror thrown by reboot (expected)')
+            time.sleep(3)
+            stf.debug('teardown complete')
 
     # DEPRECATED
     def addTest(self, testCallable):
@@ -195,6 +204,7 @@ class MainboardTest(object):
         # get test arguments (from json file)
         test_args = ps.get('args', {})
         stf.dbg('test args: {}'.format(test_args))
+
         expected_values = ps.get('expectedValues', {})
         stf.dbg('expected values: {}'.format(expected_values))
 
@@ -206,7 +216,23 @@ class MainboardTest(object):
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
-        self.session = getIcebootSession(**stf.config.getIcebootOpts())
+        self.session = getIcebootSession()
+
+        # XXX:rebootfirst
+        '''
+        try:
+            stf.debug('rebooting device...')
+            self.session.reboot()
+            stf.debug("POST REBOOT")
+            time.sleep(5)
+            stf.debug("REBOOT POST FSLEEP")
+        except OSError:
+            stf.debug("NEW SESSION")
+            #del self.session
+            #del self.session
+            time.sleep(2)
+            self.session = getIcebootSession(**stf.config.getIcebootOpts())
+        '''
 
         #if expected_values:
             #test_args['expectedValues'] = expected_values
@@ -215,8 +241,6 @@ class MainboardTest(object):
         for m in self.test_fn.measurements:
             for v in m.validators:
                 setattr(v, 'expectedValues', expected_values)
-
-        #self.session = getIcebootSession(**stf.config.getIcebootOpts())
 
         phases = [
             Common.checkCommsAndFirmware.with_args(session=self.session, 
@@ -248,7 +272,7 @@ class MainboardTest(object):
         output = stf.config.settings.output
         if output.json.enabled:
             T.add_output_callbacks(
-                JSON(stf.config.get_dir('json_output'), indent=4, default=str)
+                JSON(stf.config.get_path('json_output'), indent=4, default=str)
             )
 
         if output.console.enabled:
@@ -258,4 +282,5 @@ class MainboardTest(object):
 
         T.execute(test_start=lambda: device['id'])
 
+        INFO(f'Finished {self.test_name}')
         stf.dbg("finished execute for test: {}".format(self.test_name))

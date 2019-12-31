@@ -16,3 +16,4 @@ def getFWVersionFromFile(path):
     return version
 
 join = os.path.join
+exists = os.path.exists
