@@ -95,9 +95,9 @@ def readSloAdcSingle(test, session, channel):
         "{voltage_rail_percent}"),
 )
 def test_single_channel(test, session, **kw):
-    session.cmd("0 setLogLevel")
+    #session.cmd("0 setLogLevel")
     test.measurements.chan_00 = readSloAdcSingle(test, session,  0)
-    session.cmd("1 setLogLevel")
+    #session.cmd("1 setLogLevel")
     test.measurements.chan_01 = readSloAdcSingle(test, session,  1)
     test.measurements.chan_02 = readSloAdcSingle(test, session,  2)
     test.measurements.chan_03 = readSloAdcSingle(test, session,  3)
@@ -164,7 +164,7 @@ def test_single_channel(test, session, **kw):
 )
 def test_all_channel(test, session, **kw):
     eol = '\r\n'    # Iceboot end of line
-    session.cmd("0 setLogLevel")
+    #session.cmd("0 setLogLevel")
     allChannels = session.cmd("sloAdcReadAll")
     channel = 0
     for line in allChannels.split(eol):
@@ -172,7 +172,7 @@ def test_all_channel(test, session, **kw):
         name = "chan_%02d" % (channel)
         test.measurements[name] = parseSloAdc(test, session, channel, line)
         channel += 1
-    session.cmd("1 setLogLevel")
+    #session.cmd("1 setLogLevel")
     session.cmd("printLogOutput")
 
 
