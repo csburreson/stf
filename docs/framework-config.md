@@ -1,17 +1,41 @@
 # Framework Configuration
 
-## Default Config
+## Framework File
 
-The framwork includes a default configuration which should not be modified (at least not committed to the respository)
+The framwork includes a default configuration which must not be modified (at least not committed to the respository)
+
+The framework contains output options, path information, iceboot settings and device information. 
+
+It's still under development but at least the `output` and `iceboot` settings are integrated. 
+
+For users (test writers), the `iceboot` section will probably be the only interesting part.
+
+The default framework config file is locaed at `{STF_HOME}/stfconfig.json`
+
+## Local Config (user config)
 
 For local development, create a file called `stfconfig.local.json` in the workspace home (STF_HOME)
 
-This file will be ignored by git so you needn't worry about committing it.
-
-Feel free to `cp stfconfig.json stfconfig.local.json` and edit away.
-
 Note that the file MUST be valid JSON with the exception of comments being allowed, like other STF-JSON configuration files.
 
+This file will be ignored by git so you needn't worry about committing it
+
+It also is automatically loaded by the framework and overrides `stfconfig.json` settings.
+
+You can copy the entire config:
+`cp stfconfig.json stfconfig.local.json` 
+
+Or just create one section:
+```
+{
+  "iceboot": {
+    "host": "foo",
+    "port": 424242
+  }
+}
+```
+
+## Default Config File 
 ***see STF_HOME/stfconfig.json***
 ```
 {
