@@ -1,4 +1,10 @@
 {
+    /*
+    output settings for the output of test runs
+        console output by default provides slightly more information than pass/fail
+        json output is our preferred default for the time being
+        in the future, we may wish to add a "database" output option
+    */
     "output": {
         "console": {
             "enabled": true
@@ -7,11 +13,18 @@
             "enabled": true,
             "filename": "{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json"
         },
-        "quiet": "disabled",
-        "database": null
+        // not implemented
+        "database": null,
+        // not implemented
+        "quiet": "disabled"
     },
+    /*
+    paths contain directories and filenames to relevant resources
+        paths can reference other paths within this configuration section
+        or any part of this configuration object by using "config.<section>.<key>[... .<subkey>]]"
+    */
     "paths": {
-        // this defaults to stf workspace directory
+        // this defaults to stf workspace directory and should probably remain unset
         "stf_home": null,
         "data": "{stf_home}/data",
         "tests": "{stf_home}/tests",
@@ -24,6 +37,10 @@
         //"fwfile_path": "{data}/{fwfile_pattern}",
         "json_output": "{stf_home}/results/{config.output.json.filename}"
     },
+    /*
+    iceboot options include the current FW version and normal iceboot
+        connection string business
+    */
     "iceboot": {
         "fw_version": "0xb0",
         "host": "localhost",
@@ -31,6 +48,14 @@
         "debug": false
     },
 
+    /*
+    currently loading "all.json" for single tests... this section will
+    change with future development, but should contain information about how to
+    access our devices
+
+    it's possible this would be paired with a device "manifest" file or maybe
+    db connection/query information
+    */
     "device": {
         "type": "jsonfile", // jsonfile, or db conn string eventually ?
         "source": "all.json"
