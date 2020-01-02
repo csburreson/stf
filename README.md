@@ -53,14 +53,14 @@ This assumes you are in the root directory of this repository.
 
 https://wipacrepo.github.io/stf/
 
-(the above is mainly a skeleton... will fill in soon)
+#### Framework Configuration
+[Framework Config](https://wipacrepo.github.io/stf/framework-config.html)
 
-#### creating/running tests
+#### Creating and Running single tests
 [Test writing guide](https://wipacrepo.github.io/stf/test-writing-guide.html)
 
-
-#### creating/running sets of tests
-[Run Sets](https://wipacrepo.github.io/stf/test-sets.html)
+#### Creating and Running Sets of Tests
+[Test Sets](https://wipacrepo.github.io/stf/test-sets.html)
 
 
 ### debug environment variables
