@@ -1,10 +1,13 @@
 import json
+import time
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.output.callbacks import console_summary
 from .core import getIcebootSession
 from .validators import *
 import stf
+from .util.colors import termcolor as clr
+from .util.misc import INFO
 FAKE_ICEBOOT = False
 
 class TestSet(object):
@@ -19,20 +22,39 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum').equals(hex(stf.ENV.FIRMWARE_VERSION)))
+    @stf.measures(stf.M('fw_vnum').equals(stf.config.settings.iceboot.fw_version))
+    #XXX: need long timeout for localhost from crappy inet cnxn
+    @stf.options(timeout_s=500)
     def checkCommsAndFirmware(test, session, **kw):
+        gINFO = stf.ginfo(['framework', 'iceboot'])
         vn = session.fpgaVersion()
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
+
+        paths = stf.config.settings.paths
+        if not session.flashLS():
+            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
+            #session.ymodemConfigureCycloneFPGA
+            session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
+        gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
+        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+
+        vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
         if vn == 0xFFFF:
             test.logger.error('no firmware detected. quitting.')
             return stf.STOP
 
+        stf.debug('FW OK! Starting main test phase')
 
+    '''
     def setupIceboot(test, session):
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {})
-        )
+        if session:
+            INFO("HERE")
+            del self.session
+            import time
+            time.sleep(5)
+        #self.session = getIcebootSession(**stf.config.getIcebootOpts())
+        '''
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
@@ -53,7 +75,7 @@ class MainboardTest(object):
         # instance can be none
         self.instance = kw.get('instance')
 
-        self.session = None
+        #self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
@@ -65,42 +87,57 @@ class MainboardTest(object):
             return
 
         with open(conf_file, 'r') as f:
-            stf.dbg("(@configure) loaded {}".format(conf_file))
+            stf.dbg("configure: loaded {}".format(conf_file))
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
                 raise Exception('Invalid test configuration file! Is this valid JSON?')
             self._PARAM_CONF_FILE = conf_file
-            stf.dbg("(@configure) {}".format(self._PARAMS))
             if 'config' in self._PARAMS:
                 cfg = self._PARAMS['config']
-                stf.dbg('@configure: config overrides: {}'.format(cfg))
+                stf.dbg('configure: config overrides: {}'.format(cfg))
                 self.config.update(cfg)
-                stf.dbg('@configure: full config: {}'.format(self.config))
+                stf.dbg('configure: full config: {}'.format(self.config))
 
         if not 'args' in self._PARAMS:
             self._PARAMS['args'] = {}
         if not 'expectedValues' in self._PARAMS:
             self._PARAMS['expectedValues'] = {}
 
-        # XXX:
-        # create iceboot session here?
-        # or as a test phase?
+    def __del__(self):
+        #if self.session:
+        #    del self.session
+        #    time.sleep(3)
+        pass
+
+    # create iceboot session here? or as a test phase?
     def setupIceboot(self, test):
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {
-                'host': 'localhost',
-                'port': 5012
-            })
-        )
+        #if session:
+        #    INFO("HERE")
+        #    del self.session
+        #    import time
+        #    time.sleep(5)
+        self.session = getIcebootSession()
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
+        #self.session.flashLS()
+        #if self.session
         pass
 
     def tearDown(self, test):
-        # placeholder for OpenHTF tearDown phase
-        del self.session
+        if self.session:
+            if hasattr(self.session, 'FAKE'):
+                return
+            INFO('tearing down ... initiating reboot()')
+            # XXX:rebootafter
+            try:
+                self.session.reboot()
+                time.sleep(3)
+            except OSError:
+                stf.debug('oserror thrown by reboot (expected)')
+            time.sleep(3)
+            stf.debug('teardown complete')
 
     # DEPRECATED
     def addTest(self, testCallable):
@@ -164,6 +201,7 @@ class MainboardTest(object):
         # get test arguments (from json file)
         test_args = ps.get('args', {})
         stf.dbg('test args: {}'.format(test_args))
+
         expected_values = ps.get('expectedValues', {})
         stf.dbg('expected values: {}'.format(expected_values))
 
@@ -171,25 +209,27 @@ class MainboardTest(object):
         # with "conf" top-level key
         #defaults = testclasses.Common.TEST_CONFIG
 
-        # by default fpgaConfigurationFile is set in getIcebootSession
-        # if a key is provided and the value is None/null, it will be
-        # skipped
-
         # iceboot_config is provided by the framework and overrides test config settings
-        '''
-        if iceboot_config:
-            iceboot_conf = iceboot_config
-        else:
-            iceboot_conf = self.config.get('iceboot', {})
-        '''
-        iceboot_conf = self.config.get('iceboot', {})
-
-        if iceboot_config:
-            iceboot_conf = stf.parse.update(iceboot_conf, iceboot_config['iceboot'])
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
-        self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT, **iceboot_conf)
+        self.session = getIcebootSession()
+
+        # XXX:rebootfirst
+        '''
+        try:
+            stf.debug('rebooting device...')
+            self.session.reboot()
+            stf.debug("POST REBOOT")
+            time.sleep(5)
+            stf.debug("REBOOT POST FSLEEP")
+        except OSError:
+            stf.debug("NEW SESSION")
+            #del self.session
+            #del self.session
+            time.sleep(2)
+            self.session = getIcebootSession(**stf.config.getIcebootOpts())
+        '''
 
         #if expected_values:
             #test_args['expectedValues'] = expected_values
@@ -201,14 +241,14 @@ class MainboardTest(object):
 
         phases = [
             Common.checkCommsAndFirmware.with_args(session=self.session, 
-                expectedValues={'expected_fw_vnum':stf.ENV.FIRMWARE_VERSION}),
+                expectedValues={'expected_fw_vnum':stf.config.settings.iceboot.fw_version}),
             self.test_fn.with_args(session=self.session, **test_args)
             #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
         ]
 
         T = htf.Test(htf.PhaseGroup(
                 #setup=[self.setupIceboot],
-                setup=[self.setup],
+                #setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
             ),
@@ -224,17 +264,20 @@ class MainboardTest(object):
             test_config=self._PARAMS,
             framework_override_config=self.config
         )
+        #T.configure(teardown_function=self.tearDown)
 
-        # XXX: how to deal with output options?
-        T.add_output_callbacks(
-            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
-        )
+        output = stf.config.settings.output
+        if output.json.enabled:
+            T.add_output_callbacks(
+                JSON(stf.config.get_path('json_output'), indent=4, default=str)
+            )
 
-        # XXX: add DEBUG flag?
-        T.add_output_callbacks(
-            console_summary.ConsoleSummary()
-        )
+        if output.console.enabled:
+            T.add_output_callbacks(
+                console_summary.ConsoleSummary()
+            )
 
         T.execute(test_start=lambda: device['id'])
 
+        INFO(f'Finished {self.test_name}')
         stf.dbg("finished execute for test: {}".format(self.test_name))

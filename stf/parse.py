@@ -95,7 +95,6 @@ class SetConfig(object):
             self.tests = self._config['tests'].keys()
             self.testDict = self._config['tests']
         debug('(SetConfig) tests: {}'.format(self.tests))
-        debug('\nSETCONFIG')
 
     def configure(self):
         #self.instances = []

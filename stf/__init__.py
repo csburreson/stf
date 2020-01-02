@@ -18,6 +18,9 @@ def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
 
 def getClassContext(name):
     return CLASS_CONTEXT[name]
+
+def delClassContext(name):
+    del CLASS_CONTEXT[name]
 #def delTestClass
 
 def getRegisteredClasses():
@@ -33,8 +36,13 @@ import sys
 import os
 
 # directories:
-STF_HOME = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
+#STF_HOME = os.path.dirname(os.path.realpath(__file__))
+#sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
+# directories:
+__TMP = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(__TMP, 'tools', 'python'))
+STF_HOME = os.path.realpath(os.path.join(__TMP, '..'))
+
 
 try:
     import builtins as __builtins__
@@ -52,26 +60,20 @@ else:
     PYTHON3 = True
     PYTHON2 = False
 
-# hack to redirect print statements to test logger.info
-'''
-#XXX: print_smasher?
-def print_smash(*args):
-    pass
-__builtins__.print = print_smash
-'''
 
 from .debug import dbg, DEBUG
+
+from stf.util.misc import INFO, get_InfoWithGroups as ginfo
+
 
 if PYTHON3:
     def printToInfo(*args, **ignored):
         try:
             # get test object
-            #... hmm, maybe something like?
             test = sys._getframe(1).f_locals["test"]
             s = 'print: ' + ' '.join([str(a) for a in args])
             test.logger.info(s)
         except:
-            #from .debug import dbg
             # _PRINT(*args) here? or ignore?
             if DEBUG.ALLOW_PRINT:
                 _PRINT(*args)
@@ -79,44 +81,10 @@ if PYTHON3:
                 dbg('Error! BAD PRINT {}'.format(args))
     __builtins__.print = printToInfo
 
-# XXX: todo -- create JSON based config file for STF itself
-class ENV():
-    def __dir(*args):
-        return os.path.join(STF_HOME, '..', *args)
 
-    DATA_DIR = __dir('data')
-    TEST_DIR = __dir('tests')
-    TEST_CONFIG_DIR = __dir(DATA_DIR, 'testconfig')
-    DB_DIR = DATA_DIR
-
-    __DIR = __dir('results')
-    __FMT_STRING = '{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
-    JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
-
-    FIRMWARE_VERSION = 0xb0
-    FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_{}.rbf'.format(hex(FIRMWARE_VERSION)))
-
-    # this is a db placeholder hackjob (i.e. this will be removed someday)
-    DEVICES_JSON_FILE = os.path.join(DB_DIR, 'all.json')
-
-    SETCONFIG_DIR = __dir(DATA_DIR, 'setconfig')
-    SETCONFIG_PTN = __dir(DATA_DIR, 'setconfig', '{}.json')
-
-    CFG_ICEBOOT = {
-        "host": "localhost",
-        "port": "5012"
-    }
-    ICEBOOT_DEBUG_OFF = False
-
-def set_default_iceboot(host='localhost', port='5012', debug_disabled=False):
-    dbg(f'set default: {host} {port}')
-    ENV.CFG_ICEBOOT["host"] = host
-    ENV.CFG_ICEBOOT["port"] = port
-    ENV.ICEBOOT_DEBUG_OFF = debug_disabled
-ENV.set_default_iceboot = set_default_iceboot        
-
-#from I3Test import *
 debug = dbg
+from .util.config import get_config
+config = get_config(f'{STF_HOME}/stfconfig.json', f'{STF_HOME}/stfconfig.local.json')
 from .core import run, run_set
 from . import parse
 from . import util

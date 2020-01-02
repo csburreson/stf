@@ -20,9 +20,13 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import ENV, getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT
+from stf import getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo 
 from .parse import SetConfig
-from .util.files import getNameFromPath
+from .util import files 
+from .util.colors import termcolor as tc
+from .util.config import get_config
+
+CONFIG = get_config()
 
 
 ### fake DB stuff
@@ -37,6 +41,7 @@ class FakeIceboot(object):
     '''
     def __init__(self, *args, **kw):
         dbg('Creating FAKE iceboot class with (unused) kwargs: {}'.format(kw))
+        self.FAKE = True
 
     def __getattr__(self, attr):
         def fake(*args, **kw):
@@ -47,52 +52,21 @@ class FakeIceboot(object):
                 return f
             return None
         if attr == 'fpgaVersion':
-            return lambda: ENV.FIRMWARE_VERSION
+            return lambda: int(CONFIG.settings.iceboot.fw_version, 16)
         return fake
 
-def getIcebootSession(fake=False, **kw):
-    # default firmware path
-    fw_file = ENV.FIRMWARE_FILE_PATH
-    
-    # this value can be null/None and that means DON'T send a fw file
-    if 'fpgaConfigurationFile' in kw:
-        # get this, eve
-        fw_file = kw['fpgaConfigurationFile']
-        dbg('fw_file: {}'.format(fw_file))
-
-        ### HACK: make the comms test pass with a custom fpgaConfig file ... this relies on the 
-        #   filename to contain the fw version.
-        # XXX: should probably use splitext and basename from os
-        fn = fw_file.split('/')[-1].split('.')[0]
-        ENV.FIRMWARE_VERSION = int(fn[-4:], 16)
-        dbg('setting fw version: {}'.format(ENV.FIRMWARE_VERSION))
-
-
-    # SKIP_FW debug symbol overrides testconfig
-    if DEBUG.SKIP_FW:
-        dbg('NOT loading firmeware STF_SKIPFW is set')
-        fw_file = None
-
-    if fake:
+def getIcebootSession(**kw):
+    if DEBUG.FAKE_ICEBOOT:
         return FakeIceboot(**kw)
 
     class IcebootOpts:
-        #host = '192.168.0.10'
-        host = 'localhost'
-        port = 5012
-        debug = not ENV.ICEBOOT_DEBUG_OFF
-        # always make this None for now, and override with testconfig
-        # "Defaults" and overide THAT with testconfig "config.iceboot"
-        # if provided by test writer
-        fpgaConfigurationFile = fw_file
-        test = []
-
+        host = CONFIG.settings.iceboot.host
+        port = CONFIG.settings.iceboot.port
+        debug = CONFIG.settings.iceboot.debug
+        fpgaConfigurationFile = None
 
     dbg('(framework) Starting iceboot session ...')
-    if kw:
-        dbg('  using overrides: {}'.format(json.dumps(kw)))
-    if fw_file is None:
-        dbg('  NOT sending Firmware file')
+    dbg(f'{CONFIG.settings.iceboot}')
     return iceboot_session_cmd.init(IcebootOpts, **kw)
 
 
@@ -103,12 +77,13 @@ def getDevices(device_type=None):
     global DEVICES
     global META 
     if not DEVICES:
-        with open(ENV.DEVICES_JSON_FILE, 'r') as f:
+        fname = CONFIG.get_path('data', CONFIG.settings.device.source)
+        with open(fname, 'r') as f:
             DB = json.load(f)
         DEVICES = DB['devices']
         META = DB['meta']
 
-    if (device_type):
+    if device_type:
         return [d for d in DEVICES if d["type"] == device_type]
     return DEVICES
         
@@ -125,38 +100,28 @@ def run():
     ran = False
     for testClass in getRegisteredClasses():
         dbg("Running {}".format(testClass.test_name))
-
-        if _run(testClass, device):
-            ran = True
+        testClass.execute(device)
+        ran = True
 
     if not ran:
-        #findAndRun()
         dbg('Nothing ran :(')
         pass
 
 def _run(testClass, device):
-      #if not check_attrs(testClass, required=False):
-      #    dbg('Warn: {} is missing attributes'.format(testClass.__name__))
-      #    return False
-
-      testClass.execute(device)
       return True
 
 def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False):
-    # 
-    import os
     if set_name:
-       config_file = ENV.SETCONFIG_PTN.format(set_name)
-       if not os.path.exists(config_file):
+       config_file = CONFIG.get_path('setconfig', filename=f'{set_name}.json')
+       if not files.exists(config_file):
            raise Exception('Cannot find {}'.format(config_file))
 
     if not config_file:
-       raise Exception('Must provide config file')
+       raise Exception('Must provide config file or set name')
 
     if not set_name:
-        set_name = getNameFromPath(config_file)
+        set_name = files.getNameFromPath(config_file)
 
-    #setConfig = stf.parse.json_load(config_file)
     setConfig = SetConfig(config_file, set_name)
     '''
     import sys
@@ -165,14 +130,14 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
     from tests.Interlock import run_test
     from tests import Interlock
     from tests import ADCNoiseLevel
-    dbg('HER HER HER')
     dbg(dir(Interlock))
     Interlock.STF_RUN_TEST()
     '''
 
     ### VERIFY CONFIG
     for test in setConfig.tests:
-        testFile = '{}/{}.py'.format(ENV.TEST_DIR, test)
+        d = CONFIG.get_path('tests')
+        testFile = f'{d}/{test}.py'
         dbg('verifying testfile {} ...'.format(testFile))
         try:
             with open(testFile) as f:
@@ -183,10 +148,10 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
             raise
         #from .. import tests as definedTests
         #dbg(dir(definedTests[test]))
-    setConfig.configure()
 
+    setConfig.configure()
     
-    dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
+    #dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
     dbg(setConfig.instances)
 
 
@@ -204,28 +169,27 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
             _PRINT(f"  expv: {test['expectedValues']}")
             _PRINT('')
             continue
-        #exec(testClass.execute, *getClassContext(name))
-        #exec(*getClassContext(name))
-        testFile = '{}/{}.py'.format(ENV.TEST_DIR, testName)
+
+        testFile = CONFIG.get_path('tests', filename=f'{testName}.py')
 
         testCode = open(testFile).read()
-        ib_hack = f"""\nstf.set_default_iceboot("{ENV.CFG_ICEBOOT['host']}", "{ENV.CFG_ICEBOOT['port']}")"""
         code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
-        #dbg(testCode + ib_hack + code)
 
         cc = getClassContext(testName)
         exec(compile(testCode + code, testFile, 'exec'), cc[2])
         time.sleep(2)
+        delClassContext(testName)
 
 
 def run_single_test(name, instance, group, args, evs):
     test = getRegisteredClass(name)
+    cName = tc(name, 'aqua')
+    cInst = tc(instance, 'aqua')
 
-    # XXX: reconfigure should use framework config settings here 
-    # to erase test override settings used in development
-    # or just have a hardcoded default
-    test.reconfigure(instance, group, args, evs, {
-        'iceboot': ENV.CFG_ICEBOOT
-    })
+    INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
 
+    # iceboot settings no longer provided here?
+    test.reconfigure(instance, group, args, evs, {})
+
+    # XXX: multiple devices
     test.execute({'id': 'deadbeef'})
