@@ -7,9 +7,9 @@
 import stf
 
 
-@stf.measures(stf.M('registerValue').equalsParam('expectedRegisterValue', type=int))
+@stf.measures(stf.M('memtestValue').equals(True))
 def run_test(test, session, register):
-    test.measurements.registerValue = int(session.fpgaRead(register, 1)[0])
+    test.measurements.memtestValue = session.memtest()
 
 
 stf.register(

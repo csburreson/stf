@@ -1,13 +1,11 @@
 {
     "config": {
         "iceboot": {
-            "host": "192.168.0.10"
+            "host": "localhost"
         }
     },
     "expectedValues": {
-        "expectedRegisterValue": 3
     },
     "args": {
-        "register": 3527
     }
 }
