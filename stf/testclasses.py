@@ -31,17 +31,25 @@ class Common(object):
         stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
 
         paths = stf.config.settings.paths
-        if not session.flashLS():
+
+        flash = session.flashLS()
+        stf.dbg(f'flash: {flash}')
+        fnames = ' '.join([x['Name'] for x in flash])
+        stf.dbg(f' {fnames}')
+
+        if stf.config.settings.iceboot.fw_version not in fnames:
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
-            #session.ymodemConfigureCycloneFPGA
             session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
         gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
-        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+        x = session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+        #x = session.ymodemConfigureCycloneFPGA(paths.fwfile_remote)
+        stf.debug(f'flashConf returned: {x}')
 
         vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
         if vn == 0xFFFF:
-            test.logger.error('no firmware detected. quitting.')
+            test.logger.error('unable to configure firmware. quitting.')
+            gINFO('unable to configure firmware. quitting.')
             return stf.STOP
 
         stf.debug('FW OK! Starting main test phase')
