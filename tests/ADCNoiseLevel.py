@@ -3,6 +3,7 @@
 # Creates an ADC noise histogram
 # records the full histogram and some summary statistics
 #
+# Quantiles are reported relative to the ADC mode
 
 import stf
 import time
@@ -13,10 +14,14 @@ from DEggTest.fpga_reg import fpga_write
 
 
 @stf.measures(stf.M('noise_histogram'),
-              stf.M('one_pct_quantile'),
-              stf.M('ninetynine_pct_quantile'),
+              stf.M('adc_mean'),
+              stf.M('adc_mode'),
+              stf.M('one_pct_quantile').expectRange(
+                  '{one_pct_min}', '{one_pct_max}', type=int),
+              stf.M('ninetynine_pct_quantile').expectRange(
+                  '{ninetynine_pct_min}', '{ninetynine_pct_max}', type=int),
               stf.M('noise_std').expectRange('{noise_min}', '{noise_max}',
-                                          type=float))
+                                             type=float))
 def run_test(test, session, channel, dac_val,
              wfm_period=3, wfm_len=1000, n_waveforms=1000):
     ''' acquires an ADC noise histogram '''
@@ -25,11 +30,15 @@ def run_test(test, session, channel, dac_val,
     adc_hist = make_sw_trig_histogram(session, channel,
                                       wfm_period, n_waveforms)
 
+    adc_mean = hist_mean(adc_hist)
+    adc_mode = np.argmax(adc_hist['counts']) + adc_hist['min']
     noise_std = hist_std(adc_hist)
     one_pct_q, ninetynine_pct_q = calculate_quantiles(adc_hist)
 
     test.logger.info(f'Baseline from channel {channel}: '
-                     f'{hist_mean(adc_hist)}')
+                     f'{adc_mean}')
+    test.logger.info(f'ADC mode: '
+                     f'{adc_mode}')
     test.logger.info(f'Noise level: {noise_std}')
     test.logger.info(f'low extreme: {adc_hist["min"]}')
     test.logger.info(f'1% quantile: {one_pct_q}')
@@ -37,9 +46,11 @@ def run_test(test, session, channel, dac_val,
     test.logger.info(f'99% quantile: {ninetynine_pct_q}')
 
     test.measurements.noise_histogram = adc_hist
+    test.measurements.adc_mean = adc_mean
+    test.measurements.adc_mode = adc_mode
     test.measurements.noise_std = noise_std
-    test.measurements.one_pct_quantile = one_pct_q
-    test.measurements.ninetynine_pct_quantile = ninetynine_pct_q
+    test.measurements.one_pct_quantile = one_pct_q - adc_mode
+    test.measurements.ninetynine_pct_quantile = ninetynine_pct_q - adc_mode
 
 
 stf.register(
