@@ -59,8 +59,13 @@ https://wipacrepo.github.io/stf/
 #### Creating and Running single tests
 [Test writing guide](https://wipacrepo.github.io/stf/test-writing-guide.html)
 
+[Test Best Practices](https://wipacrepo.github.io/stf/test-best-practices.html)
+
 #### Creating and Running Sets of Tests
 [Test Sets](https://wipacrepo.github.io/stf/test-sets.html)
+
+#### Working with Git Submodules
+[Git Submodule Hints](https://wipacrepo.github.io/stf/git-submodule-hints.html)
 
 
 ### debug environment variables

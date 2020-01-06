@@ -276,3 +276,6 @@ def run_test(test, session, arg1=None, **kw):
     # OK if we get here, framework takes care of comparing xxx to bar
     # if they don't match or xxx weren't recorded, the test will fail
 ```
+## Best Practices
+[Test Best Practices](docs/test-best-practices.md) has guidelines for creating effective, understandle tests.
+

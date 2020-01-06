@@ -4,7 +4,11 @@
 
 ### [Test Writing Guide](test-writing-guide.md)
 
+### [Test Best Practices](test-best-practices.md)
+
 ### [Test Set Guide](test-sets.md)
+
+### [Git Submodule Hints](git-submodule-hints.md)
 
 
 (todo)
