@@ -277,5 +277,6 @@ def run_test(test, session, arg1=None, **kw):
     # if they don't match or xxx weren't recorded, the test will fail
 ```
 ## Best Practices
-[Test Best Practices](docs/test-best-practices.md) has guidelines for creating effective, understandle tests.
+[Test Best Practices](https://github.com/WIPACrepo/stf/blob/master/docs/test-best-practices.md) 
+has guidelines for creating effective, understandle tests.
 
