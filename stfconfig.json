@@ -42,7 +42,8 @@
         connection string business
     */
     "iceboot": {
-        "fw_version": "0xb0",
+        // SLO_ADC requires 0xce on rev3 board. This is temporary. */
+        "fw_version": "0xce",
         "host": "localhost",
         "port": 5012,
         "debug": false

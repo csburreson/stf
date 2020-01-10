@@ -64,7 +64,7 @@ def readSloAdcSingle(test, session, channel):
         "{current_percent}"),
     stf.Measurement('chan_04').expectPercent(
         "{channel 04 LVS_SLO_IMON_3V3}",
-        "{current3_3_percent}"),
+        "{current_percent}"),
     stf.Measurement('chan_05').expectPercent(
         "{channel 05 +1V8_A}",
         "{voltage_rail_percent}"),
@@ -137,7 +137,7 @@ def test_single_channel(test, session, **kw):
         "{current_percent}"),
     stf.Measurement('chan_04').expectPercent(
         "{channel 04 LVS_SLO_IMON_3V3}",
-        "{current3_3_percent}"),
+        "{current_percent}"),
     stf.Measurement('chan_05').expectPercent(
         "{channel 05 +1V8_A}",
         "{voltage_rail_percent}"),
