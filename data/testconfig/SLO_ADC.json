@@ -7,14 +7,14 @@
     },
 
     "expectedValues": {
-        "channel 00 LVS_SLO_IMON_1V1":          0.0,
-        "channel 01 LVS_SLO_IMON_1V35":         0.0,
-        "channel 02 LVS_SLO_IMON_1V8":          0.0,
-        "channel 03 LVS_SLO_IMON_2V5":          0.0,
-        "channel 04 LVS_SLO_IMON_3V3":          0.0,
+        "channel 00 LVS_SLO_IMON_1V1":          458.0,
+        "channel 01 LVS_SLO_IMON_1V35":         192.0,
+        "channel 02 LVS_SLO_IMON_1V8":          365.0,
+        "channel 03 LVS_SLO_IMON_2V5":          295.0,
+        "channel 04 LVS_SLO_IMON_3V3":          160.0,
         "channel 05 +1V8_A":                    1.8,
         "channel 06 light_sensor_dark_min":     0.0,
-        "channel 06 light_sensor_dark_max":     0.0,
+        "channel 06 light_sensor_dark_max":     3000.0,
         "channel 07 temperature_room_min":      17.0,
         "channel 07 temperature_room_max":      31.0,
         "channel 07 temperature_+5":            80.0,
@@ -30,6 +30,8 @@
         "channel 15 +3V3_power_rail_monitor":   3.3,
 
         "voltage_rail_percent":                 3.0,
+        "current_percent":                      3.0,
+        "current3_3_percent":                   6.5,
         "temperature_soak_percent":             2.0
     }
 }
