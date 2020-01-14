@@ -35,16 +35,17 @@ def register(**kw):
             by default, the framework will use 'stf.tests.MainboardTest' as the
             testClass
     '''
-    name = kw.get('test_name')
     import inspect
     frame = inspect.stack()[1]
     # stf.dbg(frame)
-    if not name:
-        from .util.files import getNameFromPath
-        name = getNameFromPath(frame[0].f_code.co_filename)
-        stf.dbg('test_name not provided, using: {}'.format(name))
+    from .util.files import getNameFromPath
+    fname = getNameFromPath(frame[0].f_code.co_filename)
+
+    name = kw.get('test_name', fname)
+
     if not __valid_test_name(name):
         raise Exception('Misconfigured test, invalid or missing `test_name`. Can not run')
+    stf.dbg('registering test: name={} filename={}'.format(name, fname))
 
     try :
         frame = inspect.stack()[2]
@@ -91,7 +92,7 @@ def register(**kw):
     #desc = desc or func.__doc__
     cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc)
 
-    stf.addTestClass(name, cls, testLocals, testGlobals, code_obj=code_obj)
+    stf.addTestClass(fname, cls, testLocals, testGlobals, code_obj=code_obj)
 
     return True
 

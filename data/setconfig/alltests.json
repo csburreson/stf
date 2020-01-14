@@ -1,9 +1,9 @@
 {
     "tests": [
        "ADCComms",
-       //"ADCNoiseLevel",
-       //"ADCTestPatterns",
-       //"BaselineStability",
+       "ADCNoiseLevel",
+       "ADCTestPatterns",
+       "BaselineStability",
        "CheckFirmware",
        "DACScan",
        "DPRAM",
