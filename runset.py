@@ -10,8 +10,8 @@ if __name__ == '__main__':
     cmd.add_argument('--run', action='store_true')
     cmd.add_argument('--tests', action='store_true')
     cmd.add_argument('--configs', action='store_true')
-    p.add_argument('--iceboot_host', '--host', '-H', type=str, default='localhost')
-    p.add_argument('--iceboot_port', '--port', '-p', type=str, default='5012')
+    p.add_argument('--iceboot_host', '--host', '-H', type=str, default=None)
+    p.add_argument('--iceboot_port', '--port', '-p', type=str, default=None)
     p.add_argument('--iceboot_debug', '-D', action='store_true', default=False)
 
     args = p.parse_args()

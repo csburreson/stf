@@ -8,8 +8,8 @@ import stf
 
 
 @stf.measures(stf.M('memtestValue').equals(True))
-def run_test(test, session, register):
-    test.measurements.memtestValue = session.memtest()
+def run_test(test, session):
+    test.measurements.memtestValue = bool(session.memtest())
 
 
 stf.register(
