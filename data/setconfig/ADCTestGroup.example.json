@@ -5,7 +5,7 @@
             "instance": "base"
         }, {
             "instance": "fooInstance",
-            "args": { "channel": 42 },
+            "args": {},
             "expectedValues": {}
         }, {
             "instance": "barInstance",
@@ -26,30 +26,5 @@
                 "dac_val" : 42 
             }
         }]
-    }, 
-    // end tests
-
-    // IGNORE this for now... I'm not sure if I'll keep "config" keys in setconfig files
-    "config": {
-        /* 
-        Config is reserved for framework-level configuration and subject to
-        change. Eventually the framework will have its own config... but here
-        we might specify connection settings for setting up iceboot for a
-        device, or giving output settings which could potentially vary by
-        location run 
-        */
-        "iceboot": {
-            /* 
-            custom iceboot settings here for now... in the future we might use
-            Framework Configs for this 
-            */
-        },
-
-        "output": {
-            /* 
-            this could be used for example to instruct the framework output
-            settings: jsonFiles database consoleoutput 
-            */
-        }
     }
 }
