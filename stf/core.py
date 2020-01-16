@@ -65,9 +65,27 @@ def getIcebootSession(**kw):
         debug = CONFIG.settings.iceboot.debug
         fpgaConfigurationFile = None
 
-    dbg('(framework) Starting iceboot session ...')
-    dbg(f'{CONFIG.settings.iceboot}')
-    return iceboot_session_cmd.init(IcebootOpts, **kw)
+    dbg('Starting iceboot session ...')
+    dbg(f'  {CONFIG.settings.iceboot}')
+    session = None
+    fail_count = 0
+    while session is None and fail_count < 5:
+        del session
+        try:
+            # this sleep prevents OSError from being thrown in some
+            # circumstances
+            time.sleep(1)
+            session = iceboot_session_cmd.init(IcebootOpts, **kw)
+        except (IOError, OSError):
+            # this except doesn't seem to trigger anymore with the sleep, but
+            # just in case...
+            fail_count += 1
+            dbg("OSERROR!!!")
+            session = None
+            if fail_count == 5:
+                raise
+
+    return session
 
 
 def getDevices(device_type=None):
@@ -177,8 +195,6 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         cc = getClassContext(testName)
         exec(compile(testCode + code, testFile, 'exec'), cc[2])
-        time.sleep(2)
-        delClassContext(testName)
 
 
 def run_single_test(name, instance, group, args, evs):
