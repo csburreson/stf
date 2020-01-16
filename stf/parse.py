@@ -141,6 +141,9 @@ def json_loads(s):
 
 
 def json_load(f):
+    if isinstance(f, str):
+        with open(f, 'r') as f:
+            return json_loads(f.read())
     return json_loads(f.read())
 
 # Shamelessly stolen from: https://github.com/getify/JSON.minify/
