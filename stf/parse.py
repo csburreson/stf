@@ -136,7 +136,8 @@ class SetConfig(object):
 def json_loads(s):
     if not DEBUG.NOSTRIPJSON:
         s = json_minify(s)  
-        debug('minify: {}'.format(s))
+        # XXX: add this to some debug logging group?
+        #debug('minify: {}'.format(s))
     return json.loads(s)
 
 

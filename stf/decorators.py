@@ -45,7 +45,7 @@ def register(**kw):
 
     if not __valid_test_name(name):
         raise Exception('Misconfigured test, invalid or missing `test_name`. Can not run')
-    stf.dbg('registering test: name={} filename={}'.format(name, fname))
+    #stf.dbg('registering test: name={} filename={}'.format(name, fname))
 
     try :
         frame = inspect.stack()[2]
@@ -64,10 +64,9 @@ def register(**kw):
 
     conf_file = kw.get('config_file')
     if not conf_file:
-        stf.dbg('config_file not provided for test: ' + name)
         conf_file = '{}/{}.json'.format(stf.config.get_path('testconfig'), name)
-        stf.dbg('trying {}'.format(conf_file))
-        # XXX: validate config here, raise Exception
+        stf.dbg(f'config_file not provided test "{name}"; trying {conf_file}')
+        # XXX: validate config here?, raise Exception
 
     version = kw.get('version')
     if not version:

@@ -41,9 +41,8 @@ class Common(object):
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
         gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
-        x = session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
         #x = session.ymodemConfigureCycloneFPGA(paths.fwfile_remote)
-        stf.debug(f'flashConf returned: {x}')
 
         vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
@@ -52,7 +51,7 @@ class Common(object):
             gINFO('unable to configure firmware. quitting.')
             return stf.STOP
 
-        stf.debug('FW OK! Starting main test phase')
+        stf.debug('FW OK! Starting main test phase...')
 
     '''
     def setupIceboot(test, session):
@@ -95,7 +94,6 @@ class MainboardTest(object):
             return
 
         with open(conf_file, 'r') as f:
-            stf.dbg("configure: loaded {}".format(conf_file))
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
@@ -103,9 +101,10 @@ class MainboardTest(object):
             self._PARAM_CONF_FILE = conf_file
             if 'config' in self._PARAMS:
                 cfg = self._PARAMS['config']
-                stf.dbg('configure: config overrides: {}'.format(cfg))
+                #stf.dbg('configure: config overrides: {}'.format(cfg))
+                # XXX: should we do this anymore? for test timeouts maybe?
                 self.config.update(cfg)
-                stf.dbg('configure: full config: {}'.format(self.config))
+                #stf.dbg('configure: full config: {}'.format(self.config))
 
         if not 'args' in self._PARAMS:
             self._PARAMS['args'] = {}
@@ -140,11 +139,11 @@ class MainboardTest(object):
             INFO('tearing down ... initiating reboot()')
             # XXX:rebootafter
             try:
+                self.session.printLogOutput()
                 self.session.reboot()
-                time.sleep(3)
             except OSError:
                 stf.debug('oserror thrown by reboot (expected)')
-            time.sleep(3)
+                del self.session
             stf.debug('teardown complete')
 
     # DEPRECATED
@@ -159,8 +158,7 @@ class MainboardTest(object):
         self.group = group
         # ugh... don't wipe out testconfig settings stored in self.config
         self.config = stf.parse.update(self.config, config)
-        stf.debug('reconfigure: ')
-        stf.debug(config)
+        stf.debug(f'reconfigure: {config}')
 
     def getTestParams(self):
         '''
