@@ -49,6 +49,9 @@ class JsObject(object):
     def __str__(self):
         return self.__dict__.__str__()
 
+    def __eq__(self, other):
+        return self.__dict__ == other
+
     def get(self, *a, **k):
         return self.__dict__.get(*a, **k)
 
@@ -65,9 +68,13 @@ class JsObject(object):
 def jsonify(d):
   def _recurse_dict(obj, parent_keys=[]):
     jobj = JsObject()
+    if not isinstance(obj, (dict, list)):
+        return obj
     for k, v in obj.items():
       if isinstance(v, dict):
         jobj[k] = _recurse_dict(v)
+      elif isinstance(v, list):
+        jobj[k] = [_recurse_dict(x) for x in v]
       else:
         jobj[k] = v
     return jobj
