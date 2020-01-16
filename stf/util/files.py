@@ -1,4 +1,5 @@
 import os
+import glob
 
 def getNameFromPath(path):
     return os.path.split(os.path.splitext(path)[0])[-1]
@@ -14,6 +15,11 @@ def getFWVersionFromFile(path):
     version = x.split('_')[-1]
 
     return version
+
+def globFiles(*dirs, pattern='*'):
+    gp = list(dirs) + [pattern]
+    path = os.path.join(*gp)
+    return glob.glob(path)
 
 join = os.path.join
 exists = os.path.exists
