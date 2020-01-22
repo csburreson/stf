@@ -103,6 +103,14 @@ def jformat(doc, tpl, root='ROOT'):
 
     return s
 
+# helper
+def get_instanceName(s):
+    try:
+        x, y = s.split(':')
+        return x, y
+    except ValueError:
+        return s, 'base'
+
 def runset_summary(runset_name, out='console'):
     jp_meas = jparse('$.phases.[2].measurements.*')
     files = runset_getFiles(runset_name)
@@ -121,16 +129,14 @@ def runset_summary(runset_name, out='console'):
         doc = json_load(f)
         jdoc = jsonify(doc)
 
+        name, inst = get_instanceName(jdoc.metadata.test_name)
         if out == 'console':
             s += f'''{colorize_outcome(jdoc.outcome)}   {jdoc.metadata.test_name} v{jdoc.metadata.test_version}\n'''
         elif out == 'consolebrief':
-            name = jdoc.metadata.test_name.split(':')[0]
             s += f'''{colorize_outcome(jdoc.outcome)}   {name}\n'''
         elif out == 'csv':
-            name, inst = jdoc.metadata.test_name.split(':')
             s += f'"{jdoc.outcome}","{name}","{inst}","{jdoc.metadata.test_version}"\n'
         elif out == 'json':
-            name, inst = jdoc.metadata.test_name.split(':')
             j.append({
                 'outcome': jdoc.outcome,
                 'test_name': name,
