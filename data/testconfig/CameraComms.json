@@ -1,0 +1,11 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost",
+	    "port": "5012"
+        }
+    },
+    "expectedValues": {
+        "ExpectedRegisterValue": "0x55"
+    }
+}
