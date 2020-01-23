@@ -7,7 +7,7 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-from .util.misc import INFO
+from .util.misc import INFO, check_mainboard_fwfile
 FAKE_ICEBOOT = False
 
 class TestSet(object):
@@ -33,16 +33,20 @@ class Common(object):
         paths = stf.config.settings.paths
 
         flash = session.flashLS()
-        stf.dbg(f'flash: {flash}')
-        fnames = ' '.join([x['Name'] for x in flash])
-        stf.dbg(f' {fnames}')
+        try:
+            fwfile_status = check_mainboard_fwfile(flash)
+        except FileNotFoundError as e:
+            gINFO(f'FW File does not exist: {e}')
+            return stf.STOP
 
-        if stf.config.settings.iceboot.fw_version not in fnames:
-            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fw_file})... \n\t(this could take a while)')
+        gINFO(f'checking flash for {paths.fwfile_remote} ... status={fwfile_status})')
+
+        if fwfile_status == 'ok':
+            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
+            session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+        else:
+            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fwfile})... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
-        gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
-        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
-        #x = session.ymodemConfigureCycloneFPGA(paths.fwfile_remote)
 
         vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
