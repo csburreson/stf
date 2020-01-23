@@ -160,9 +160,8 @@ A test config is a JSON file which consists of an outer object (dictionary) with
 
 Each of these keys holds another object/dict of keys pointing to any valid JSON type.
 
-Config files are used to pass parameters into a test (`args`), validate measurements 
-made during testing (`expectedValues`) or set test configuration options
-(`config`) like test timeouts with `timeout_s` or iceboot settings with `iceboot`, etc.
+Config files are used to pass parameters into a test (`args`) or validate measurements 
+made during testing (`expectedValues`)
 
 You *should* use a config file, even if it's blank.
 
@@ -178,7 +177,6 @@ example empty file:
 or
 ```
 { 
-    "config": {},
     "args": {},
     "expectedValues": {}
 }
@@ -190,8 +188,6 @@ Test writers will provide configuration files to inject arguments or expectedVal
 Arguments can be accessed from the kwargs keyword or mentioned as explicit kw args.
 
 `expectedValues` are used by validators and aren't accessible directly from the test function.
-
-The **config** keyword is used to override framework-level config settings and possibly to specify test timeouts eventually (config based timeout settings are broken, so use `@stf.options(timeout_s=<int>)`. Currently the only override is for `iceboot` settings to specify host and port settings. 
 
 
 ## Passing a test
@@ -276,7 +272,9 @@ def run_test(test, session, arg1=None, **kw):
     # OK if we get here, framework takes care of comparing xxx to bar
     # if they don't match or xxx weren't recorded, the test will fail
 ```
+
 ## Best Practices
+
 [Test Best Practices](test-best-practices.md)
 has guidelines for creating effective, understandle tests.
 

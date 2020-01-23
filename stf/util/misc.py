@@ -1,5 +1,7 @@
 from .colors import termcolor as clr
 from stf import _PRINT
+from stf.util.files import getFileSize
+import stf
 
 def flatten(d, separator='.'):
   final = {}
@@ -97,3 +99,28 @@ def INFO(s, **kw):
         if not (set(groups) & set(__SHOW_GROUPS)):
             return
     _PRINT(clr('INFO >>> ', 'gray') + clr(s, 'gold'))
+
+
+def check_mainboard_fwfile(flash):
+    '''
+    check whether mainboard file is present and configured
+    '''
+    fname = stf.config.settings.paths.fwfile
+    fwvnum = stf.config.settings.iceboot.fw_version
+    fsize = getFileSize(fname)
+
+    stf.debug(f'Checking flash for name={fname} size={fsize}...')
+    for doc in flash:
+        if not ('Name' in doc and 'Size' in doc):
+            continue
+        stf.debug(f"  name={doc['Name']}, size={doc['Size']}")
+        if fwvnum in doc['Name']:
+            if doc['Size'] == str(fsize):
+                stf.debug(f"  found correct version with correct fsize (rv=ok)")
+                return 'ok'
+            else:
+                stf.debug(f"  found correct version, but BAD fsize (rv=corrupt)")
+                return 'corrupt'
+
+    stf.debug(f"FW File not present in flash! (rv=missing)")
+    return 'missing'
