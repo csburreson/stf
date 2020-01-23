@@ -21,5 +21,9 @@ def globFiles(*dirs, pattern='*'):
     path = os.path.join(*gp)
     return glob.glob(path)
 
+def getFileSize(path):
+    stat = os.stat(path)
+    return stat.st_size
+
 join = os.path.join
 exists = os.path.exists
