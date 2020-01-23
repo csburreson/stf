@@ -47,6 +47,7 @@ class Common(object):
         else:
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fwfile})... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
+            session.flashConfigureCycloneFPGA(paths.fwfile_remote)
 
         vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
