@@ -66,6 +66,8 @@ class JsObject(object):
     def items(self):
         return self.__dict__.items()
 
+    def dict(self):
+        return self.__dict__
 
 def jsonify(d):
   def _recurse_dict(obj, parent_keys=[]):

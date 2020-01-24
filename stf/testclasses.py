@@ -273,7 +273,7 @@ class MainboardTest(object):
             device=device,
             # XXX: make sure to include entire config eventually
             test_config=self._PARAMS,
-            framework_override_config=self.config
+            iceboot_settings=stf.config.settings.iceboot.dict()
         )
         #T.configure(teardown_function=self.tearDown)
 
