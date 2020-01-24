@@ -25,5 +25,23 @@ def getFileSize(path):
     stat = os.stat(path)
     return stat.st_size
 
+def getFilePath(path):
+    '''
+    tries to get "path" whether relative to framework or not
+    '''
+    from stf import config
+
+    locations = [
+        '.',
+        config.settings.paths.testconfig,
+        config.settings.paths.stf_home,
+    ]
+
+    for loc in locations:
+        p = os.path.join(loc, path)
+        if os.path.exists(p):
+            return os.path.abspath(p)
+    return None
+        
 join = os.path.join
 exists = os.path.exists

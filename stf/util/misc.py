@@ -1,3 +1,4 @@
+from copy import deepcopy
 from .colors import termcolor as clr
 from stf import _PRINT
 from stf.util.files import getFileSize
@@ -68,6 +69,9 @@ class JsObject(object):
 
     def dict(self):
         return self.__dict__
+
+    def __deepcopy__(self, memo=None):
+        return JsObject(deepcopy(self.__dict__, memo=memo)).dict()
 
 def jsonify(d):
   def _recurse_dict(obj, parent_keys=[]):

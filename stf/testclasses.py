@@ -8,6 +8,7 @@ from .validators import *
 import stf
 from .util.colors import termcolor as clr
 from .util.misc import INFO, check_mainboard_fwfile
+from .util.files import getFilePath
 FAKE_ICEBOOT = False
 
 class TestSet(object):
@@ -98,17 +99,23 @@ class MainboardTest(object):
             self._PARAM_CONF_FILE = None
             return
 
-        with open(conf_file, 'r') as f:
+        conf_file_path = getFilePath(conf_file)
+        if not conf_file_path:
+            # TODO: STFException -> STFTestConfigException
+            raise Exception('TestConfigException: config file not found {conf_file}')
+
+
+        with open(conf_file_path, 'r') as f:
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
                 raise Exception('Invalid test configuration file! Is this valid JSON?')
-            self._PARAM_CONF_FILE = conf_file
-            if 'config' in self._PARAMS:
-                cfg = self._PARAMS['config']
+            self._PARAM_CONF_FILE = conf_file_path
+            #if 'config' in self._PARAMS:
+            #    cfg = self._PARAMS['config']
                 #stf.dbg('configure: config overrides: {}'.format(cfg))
                 # XXX: should we do this anymore? for test timeouts maybe?
-                self.config.update(cfg)
+            #    self.config.update(cfg)
                 #stf.dbg('configure: full config: {}'.format(self.config))
 
         if not 'args' in self._PARAMS:
@@ -258,8 +265,6 @@ class MainboardTest(object):
         ]
 
         T = htf.Test(htf.PhaseGroup(
-                #setup=[self.setupIceboot],
-                #setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
             ),
@@ -268,12 +273,11 @@ class MainboardTest(object):
             test_version=self.version,
             test_desc=self.desc,
             test_group='' if not self.group else f'{self.group}::',
-            # custom metadata fields
-            framework_version=stf.FRAMEWORK_VERSION,
-            device=device,
-            # XXX: make sure to include entire config eventually
             test_config=self._PARAMS,
-            iceboot_settings=stf.config.settings.iceboot.dict()
+            # custom metadata fields
+            stf_version=stf.FRAMEWORK_VERSION,
+            stf_config=stf.config.settings.dict(),
+            device=device,
         )
         #T.configure(teardown_function=self.tearDown)
 
