@@ -109,10 +109,15 @@ def INFO(s, **kw):
 
 def check_mainboard_fwfile(flash):
     '''
-    check whether mainboard file is present and configured
+    check whether mainboard file is present and the proper size
+
+    can return 'ok', 'corrupt', 'missing' or 'skip'
     '''
     fname = stf.config.settings.paths.fwfile
     fwvnum = stf.config.settings.iceboot.fw_version
+    if stf.config.DEBUG.SKIP_FW:
+        stf.debug(f'[SKIPPED] Checking flash for name={fname}')
+        return 'skip'
     fsize = getFileSize(fname)
 
     stf.debug(f'Checking flash for name={fname} size={fsize}...')

@@ -1,6 +1,7 @@
 import json
 from .misc import flatten, jsonify
 from .. import parse
+from ..debug import DEBUG
 import os
 import stf
 
@@ -89,6 +90,7 @@ def get_config(path='stfconfig.json', optional=['stfconfig.local.json']):
     if CONFIG:
         return CONFIG
     CONFIG = JsonConfig(path, jsonfiles=optional)
+    CONFIG.DEBUG = jsonify(DEBUG)
     return CONFIG
     
 

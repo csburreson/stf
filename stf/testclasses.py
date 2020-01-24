@@ -11,9 +11,7 @@ from .util.misc import INFO, check_mainboard_fwfile
 from .util.files import getFilePath
 FAKE_ICEBOOT = False
 
-class TestSet(object):
-    def __init(self, version):
-        pass
+# class TestSet(object):
 
 
 
@@ -34,6 +32,7 @@ class Common(object):
         paths = stf.config.settings.paths
 
         flash = session.flashLS()
+
         try:
             fwfile_status = check_mainboard_fwfile(flash)
         except FileNotFoundError as e:
@@ -43,12 +42,14 @@ class Common(object):
         gINFO(f'checking flash for {paths.fwfile_remote} ... status={fwfile_status})')
 
         if fwfile_status == 'ok':
-            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
-            session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_remote})')
+        elif fwfile_status == 'skip':
+            gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_remote}')
         else:
-            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fwfile})... \n\t(this could take a while)')
+            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
-            session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+
+        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
 
         vn = session.fpgaVersion()
         test.measurements.fw_vnum = hex(vn)
@@ -57,17 +58,8 @@ class Common(object):
             gINFO('unable to configure firmware. quitting.')
             return stf.STOP
 
-        stf.debug('FW OK! Starting main test phase...')
+        stf.debug(f'FPGA v{vn} Configured. Starting main test phase...')
 
-    '''
-    def setupIceboot(test, session):
-        if session:
-            INFO("HERE")
-            del self.session
-            import time
-            time.sleep(5)
-        #self.session = getIcebootSession(**stf.config.getIcebootOpts())
-        '''
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
@@ -104,7 +96,6 @@ class MainboardTest(object):
             # TODO: STFException -> STFTestConfigException
             raise Exception('TestConfigException: config file not found {conf_file}')
 
-
         with open(conf_file_path, 'r') as f:
             try:
                 self._PARAMS = stf.parse.json_load(f)
@@ -120,6 +111,7 @@ class MainboardTest(object):
 
         if not 'args' in self._PARAMS:
             self._PARAMS['args'] = {}
+
         if not 'expectedValues' in self._PARAMS:
             self._PARAMS['expectedValues'] = {}
 
@@ -203,8 +195,7 @@ class MainboardTest(object):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    #def execute(self, device, iceboot_config={'iceboot': {'host': 'localhost'}}):
-    def execute(self, device, iceboot_config={'iceboot': {}}):
+    def execute(self, device):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
@@ -226,8 +217,6 @@ class MainboardTest(object):
         # get test configuration options (defaults hardcoded, override in test config file
         # with "conf" top-level key
         #defaults = testclasses.Common.TEST_CONFIG
-
-        # iceboot_config is provided by the framework and overrides test config settings
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
@@ -277,6 +266,7 @@ class MainboardTest(object):
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
             stf_config=stf.config.settings.dict(),
+            # 
             device=device,
         )
         #T.configure(teardown_function=self.tearDown)
