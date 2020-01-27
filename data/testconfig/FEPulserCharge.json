@@ -5,8 +5,8 @@
         }
     },
     "expectedValues": {
-      "exp_x": 120,
-      "exp_y": 180
+      "exp_x": 400,
+      "exp_y": 700
     },
     "args": {
     	"channel" : 0,

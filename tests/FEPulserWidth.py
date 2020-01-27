@@ -13,7 +13,7 @@ def run_test(test, session, channel, dac_val,
         wf = get_waveform(session, channel, nsamples, dac_val, dac_val_fepulser)
         # see tests/template.json for testconfig
         half_width.append(len(wf[wf>wf.max()/2]))
-    test.measurements.meas = sum(half_width)/len(half_width)
+    test.measurements.meas = sum(half_width)//len(half_width)
 
     test.logger.info(f'FEPulser width: {test.measurements.meas}')
 
