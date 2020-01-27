@@ -1,7 +1,7 @@
 import stf
 from DEggTest.fepulser import get_waveform
 
-@stf.measures(stf.M('meas').expect('{exp}', type=int))
+@stf.measures(stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
 def run_test(test, session, channel, dac_val,
              dac_val_fepulser, nsamples=128, n_waveforms=10, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
@@ -13,7 +13,7 @@ def run_test(test, session, channel, dac_val,
         wf = get_waveform(session, channel, nsamples, dac_val, dac_val_fepulser)
         # see tests/template.json for testconfig
         half_width.append(len(wf[wf>wf.max()/2]))
-    test.measurements.meas = sum(half_width)//len(half_width)
+    test.measurements.meas = sum(half_width)/len(half_width)
 
     test.logger.info(f'FEPulser width: {test.measurements.meas}')
 
