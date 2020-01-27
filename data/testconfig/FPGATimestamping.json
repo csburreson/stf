@@ -6,9 +6,9 @@
     },
     "expectedValues": {    
         "clockdiff_min" : 0,
-        "clockdiff_max" : 2,
-        "perioddiff_min": -0.001,
-        "perioddiff_max": 0.001
+        "clockdiff_max" : 10,
+        "perioddiff_min": -0.005,
+        "perioddiff_max": 0.005
     },
     "args": {
     	"channel" : 0       

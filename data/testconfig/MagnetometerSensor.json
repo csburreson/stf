@@ -1,0 +1,13 @@
+{
+    "config": {
+    },
+// Though the magnitude of the magnetic field on the Earth's surfacde varies
+// from 0.25 to 0.65 gauss, initial testing has shown the LIS3MDL can be
+// influenced by nearby large metal objects, magnets, motors, etc. Accordingly,
+// the pass/fail criteria are initially set to 3 x the max Earth field
+// magnitude.
+    "expectedValues": {
+      "bField_min": 0.00,
+      "bField_max": 6.5e-05
+    }
+}
