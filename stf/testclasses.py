@@ -137,14 +137,36 @@ class MainboardTest(object):
         #if self.session
         pass
 
+    # Process any queued MCU internal logging records
+    def logOutput(self, test):
+        logOutputLines = self.session.printLogOutput()
+        if len(logOutputLines) == 0:
+            return
+        logOutput = logOutputLines.split('\r\n')
+        for logLine in logOutput:
+            if len(logLine) == 0:
+                # Weird: split of empty multiline string produces nonzero number of strings
+                continue;
+            word = logLine.split()
+            logFn = test.logger.error
+            # Map MCU logging level to test logging level
+            if len(word) == 0:
+                continue
+            if word[0] == 'DEBUG':
+                logFn = test.logger.info
+            elif word[0] == 'INFO':
+                logFn = test.logger.info
+            logFn('MCU log: ' + logLine)
+
+
     def tearDown(self, test):
         if self.session:
             if hasattr(self.session, 'FAKE'):
                 return
+            self.logOutput(test)
             INFO('tearing down ... initiating reboot()')
             # XXX:rebootafter
             try:
-                self.session.printLogOutput()
                 self.session.reboot()
             except OSError:
                 stf.debug('oserror thrown by reboot (expected)')
