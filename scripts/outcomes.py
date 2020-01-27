@@ -14,6 +14,8 @@ jp_measurements = jparse('$.phases.[*].measurements')
 meas_name = '$.[*].name'
 meas_outcome = '$.[*].outcome'
 
+jp_commsMeasurements = jparse('$.phases.[1].measurements')
+
 tpl_nameoutcome = '{outcome}       {name}\n'
 
 tpl_name_outcome = '{jp_phaseOutcomes}       {jp_phaseNames}\n'
@@ -24,6 +26,38 @@ from stf.util.misc import jsonify
 import stf.util as util
 
 doc = json_load('/livebox/scratch/stf/results/alltests::SLO_ADC-v1.0-degg-deadbeef.json')
+
+def msToDatetime(ms):
+    import datetime
+    return str(datetime.datetime.fromtimestamp(ms / 1000.0))
+
+def dd(label, key):
+    return f'<dt>{label}</dt><dd>{{{key}}}</dd>'
+
+def getHtmlSummary(jdoc):
+    summary_fields = [
+        ('Runset Name', 'runSet'),
+        ('Date run', 'runDate'),
+        ('Station', 'station'),
+        ('STF Version', 'stfVersion'),
+        ('FPGA Version', 'fpgaVersion'),
+        ('Iceboot', 'softwareInfo')
+    ]
+    h = ''
+    testGroup = jdoc.metadata.test_group.replace(':', '')
+    meas = jp_commsMeasurements.find(jdoc)[0].value
+    fpgaVersion = meas['fpgaVersion']['measured_value']
+    swInfo = f'v{meas["softwareVersion"]["measured_value"]} - github# <strong>{meas["softwareId"]["measured_value"]}</strong>'
+    for label, key in summary_fields:
+        h += dd(label, key).format(**dict(
+            runSet=testGroup,
+            runDate=msToDatetime(jdoc.start_time_millis),
+            station=jdoc.station_id,
+            stfVersion=jdoc.metadata.stf_version,
+            fpgaVersion=fpgaVersion,
+            softwareInfo=swInfo
+        ))
+    return f'<h1>Runset report for {testGroup}</h1><br><dl>{h}</dl>'
 
 
 def vals(matches):
@@ -115,6 +149,15 @@ def runset_summary(runset_name, out='console'):
     jp_meas = jparse('$.phases.[2].measurements.*')
     files = runset_getFiles(runset_name)
     report = f'RUNSET SUMMARY RESULTS FOR {tc(runset_name, "gold")}\n'
+    # for html output
+    outcome_colors = {
+        'PASS': 'green',
+        'FAIL': 'red',
+        'ERROR': 'orange'
+    }
+
+    html_summary = ''
+
 
     #dash = (len(report) * '=')
     #report = f'{dash}\n{report}\n{dash}'
@@ -128,6 +171,9 @@ def runset_summary(runset_name, out='console'):
     for f in files:
         doc = json_load(f)
         jdoc = jsonify(doc)
+        if not html_summary and out == 'html':
+
+            html_summary = getHtmlSummary(jdoc)
 
         name, inst = get_instanceName(jdoc.metadata.test_name)
         if out == 'console':
@@ -135,13 +181,17 @@ def runset_summary(runset_name, out='console'):
         elif out == 'consolebrief':
             s += f'''{colorize_outcome(jdoc.outcome)}   {name}\n'''
         elif out == 'csv':
-            s += f'"{jdoc.outcome}","{name}","{inst}","{jdoc.metadata.test_version}"\n'
+            s += f'"{jdoc.outcome}","{name}","{inst}","{jdoc.metadata.test_version}","{jdoc.metadata.stf_version}"\n'
+        elif out == 'html':
+            c = outcome_colors.get(jdoc.outcome, 'black')
+            s += f'<tr><td><span style="color: {c}">{jdoc.outcome}</span></td><td>{name}</td><td>{inst}</td><td>{jdoc.metadata.test_version}</td></tr>\n'
         elif out == 'json':
             j.append({
                 'outcome': jdoc.outcome,
                 'test_name': name,
                 'test_instance': inst,
-                'test_version': jdoc.metadata.test_version
+                'test_version': jdoc.metadata.test_version,
+                'framework_version': jdoc.metadata.stf_version
             })
 
 
@@ -150,6 +200,10 @@ def runset_summary(runset_name, out='console'):
         #print(s)
     if out == 'json':
         print(json.dumps(j, indent=2))
+        return
+    if out == 'html':
+        print(html_summary)
+        print(f'<table><thead><th>Outcome</th><th>Test Name</th><th>Instance</th><th>Test Version</th></thead><tbody>{s}</tbody></table>')
         return
     print(report + textwrap.dedent(s))
 

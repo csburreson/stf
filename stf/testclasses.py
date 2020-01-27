@@ -292,8 +292,8 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
-        INFO(f'{dir(T)}')
         '''
+        INFO(f'{dir(T)}')
         T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
         T.descriptor.metadata['board_softwareVersion'] = session.fpgaVersion
         T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
