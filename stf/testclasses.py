@@ -21,7 +21,11 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum').equals(stf.config.settings.iceboot.fw_version))
+    @stf.measures(
+        stf.M('fpgaVersion').equals(stf.config.settings.iceboot.fw_version),
+        stf.M('softwareId'),
+        stf.M('softwareVersion')
+    )
     #XXX: need long timeout for localhost from crappy inet cnxn
     @stf.options(timeout_s=500)
     def checkCommsAndFirmware(test, session, **kw):
@@ -52,13 +56,18 @@ class Common(object):
         session.flashConfigureCycloneFPGA(paths.fwfile_remote)
 
         vn = session.fpgaVersion()
-        test.measurements.fw_vnum = hex(vn)
+        test.measurements.fpgaVersion = hex(vn)
         if vn == 0xFFFF:
             test.logger.error('unable to configure firmware. quitting.')
             gINFO('unable to configure firmware. quitting.')
             return stf.STOP
 
-        stf.debug(f'FPGA v{vn} Configured. Starting main test phase...')
+        test.measurements.softwareId = session.softwareId()
+        test.measurements.softwareVersion = session.softwareVersion()
+
+        x = test.measurements
+        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId}')
+        stf.debug('Starting main test phase...')
 
 
 class MainboardTest(object):
@@ -283,6 +292,13 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
+        INFO(f'{dir(T)}')
+        '''
+        T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
+        T.descriptor.metadata['board_softwareVersion'] = session.fpgaVersion
+        T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
+        '''
+        #self.T = T
 
         INFO(f'Finished {self.test_name}')
         stf.dbg("finished execute for test: {}".format(self.test_name))
