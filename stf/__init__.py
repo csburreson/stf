@@ -1,7 +1,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-__version__ = '1.0'
+__version__ = '1.1'
 FRAMEWORK_VERSION = __version__
 
 

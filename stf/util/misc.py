@@ -1,3 +1,4 @@
+from copy import deepcopy
 from .colors import termcolor as clr
 from stf import _PRINT
 from stf.util.files import getFileSize
@@ -66,6 +67,11 @@ class JsObject(object):
     def items(self):
         return self.__dict__.items()
 
+    def dict(self):
+        return self.__dict__
+
+    def __deepcopy__(self, memo=None):
+        return JsObject(deepcopy(self.__dict__, memo=memo)).dict()
 
 def jsonify(d):
   def _recurse_dict(obj, parent_keys=[]):
@@ -103,10 +109,15 @@ def INFO(s, **kw):
 
 def check_mainboard_fwfile(flash):
     '''
-    check whether mainboard file is present and configured
+    check whether mainboard file is present and the proper size
+
+    can return 'ok', 'corrupt', 'missing' or 'skip'
     '''
     fname = stf.config.settings.paths.fwfile
     fwvnum = stf.config.settings.iceboot.fw_version
+    if stf.config.DEBUG.SKIP_FW:
+        stf.debug(f'[SKIPPED] Checking flash for name={fname}')
+        return 'skip'
     fsize = getFileSize(fname)
 
     stf.debug(f'Checking flash for name={fname} size={fsize}...')

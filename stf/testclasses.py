@@ -8,11 +8,10 @@ from .validators import *
 import stf
 from .util.colors import termcolor as clr
 from .util.misc import INFO, check_mainboard_fwfile
+from .util.files import getFilePath
 FAKE_ICEBOOT = False
 
-class TestSet(object):
-    def __init(self, version):
-        pass
+# class TestSet(object):
 
 
 
@@ -22,7 +21,11 @@ class Common(object):
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum').equals(stf.config.settings.iceboot.fw_version))
+    @stf.measures(
+        stf.M('fpgaVersion').equals(stf.config.settings.iceboot.fw_version),
+        stf.M('softwareId'),
+        stf.M('softwareVersion')
+    )
     #XXX: need long timeout for localhost from crappy inet cnxn
     @stf.options(timeout_s=500)
     def checkCommsAndFirmware(test, session, **kw):
@@ -33,40 +36,39 @@ class Common(object):
         paths = stf.config.settings.paths
 
         flash = session.flashLS()
+
         try:
             fwfile_status = check_mainboard_fwfile(flash)
         except FileNotFoundError as e:
             gINFO(f'FW File does not exist: {e}')
             return stf.STOP
 
-        gINFO(f'checking flash for {paths.fwfile_remote} ... status={fwfile_status})')
+        gINFO(f'checking flash for {paths.fwfile} ... status={fwfile_status})')
 
         if fwfile_status == 'ok':
-            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash ({paths.fwfile_remote})')
-            session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_name})')
+        elif fwfile_status == 'skip':
+            gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_name}')
         else:
-            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash ({paths.fwfile})... \n\t(this could take a while)')
-            session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
-            session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
+            session.ymodemFlashUpload(paths.fwfile, paths.fwfile_name)
+
+        session.flashConfigureCycloneFPGA(paths.fwfile_name)
 
         vn = session.fpgaVersion()
-        test.measurements.fw_vnum = hex(vn)
+        test.measurements.fpgaVersion = hex(vn)
         if vn == 0xFFFF:
             test.logger.error('unable to configure firmware. quitting.')
             gINFO('unable to configure firmware. quitting.')
             return stf.STOP
 
-        stf.debug('FW OK! Starting main test phase...')
+        test.measurements.softwareId = session.softwareId()
+        test.measurements.softwareVersion = session.softwareVersion()
 
-    '''
-    def setupIceboot(test, session):
-        if session:
-            INFO("HERE")
-            del self.session
-            import time
-            time.sleep(5)
-        #self.session = getIcebootSession(**stf.config.getIcebootOpts())
-        '''
+        x = test.measurements
+        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId}')
+        stf.debug('Starting main test phase...')
+
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
@@ -85,7 +87,7 @@ class MainboardTest(object):
         self.test_fn = test_fn
         self.version = version
         # instance can be none
-        self.instance = kw.get('instance')
+        self.instance = kw.get('instance', 'base')
 
         #self.session = None
         # XXX: move to init or "configure" step or something
@@ -98,21 +100,27 @@ class MainboardTest(object):
             self._PARAM_CONF_FILE = None
             return
 
-        with open(conf_file, 'r') as f:
+        conf_file_path = getFilePath(conf_file)
+        if not conf_file_path:
+            # TODO: STFException -> STFTestConfigException
+            raise Exception('TestConfigException: config file not found {conf_file}')
+
+        with open(conf_file_path, 'r') as f:
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
                 raise Exception('Invalid test configuration file! Is this valid JSON?')
-            self._PARAM_CONF_FILE = conf_file
-            if 'config' in self._PARAMS:
-                cfg = self._PARAMS['config']
+            self._PARAM_CONF_FILE = conf_file_path
+            #if 'config' in self._PARAMS:
+            #    cfg = self._PARAMS['config']
                 #stf.dbg('configure: config overrides: {}'.format(cfg))
                 # XXX: should we do this anymore? for test timeouts maybe?
-                self.config.update(cfg)
+            #    self.config.update(cfg)
                 #stf.dbg('configure: full config: {}'.format(self.config))
 
         if not 'args' in self._PARAMS:
             self._PARAMS['args'] = {}
+
         if not 'expectedValues' in self._PARAMS:
             self._PARAMS['expectedValues'] = {}
 
@@ -179,7 +187,7 @@ class MainboardTest(object):
 
     # used for test sets
     def reconfigure(self, name, group, args, evs, config):
-        self.test_name = name
+        self.instance = name
         self._PARAMS['args'] = args
         self._PARAMS['expectedValues'] = evs
         self.group = group
@@ -218,8 +226,7 @@ class MainboardTest(object):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    #def execute(self, device, iceboot_config={'iceboot': {'host': 'localhost'}}):
-    def execute(self, device, iceboot_config={'iceboot': {}}):
+    def execute(self, device):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
@@ -241,8 +248,6 @@ class MainboardTest(object):
         # get test configuration options (defaults hardcoded, override in test config file
         # with "conf" top-level key
         #defaults = testclasses.Common.TEST_CONFIG
-
-        # iceboot_config is provided by the framework and overrides test config settings
 
         # XXX: move this to seutp function or re-implement this as a plug?
         # hack for non-standard multiple tests run with single class
@@ -280,8 +285,6 @@ class MainboardTest(object):
         ]
 
         T = htf.Test(htf.PhaseGroup(
-                #setup=[self.setupIceboot],
-                #setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
             ),
@@ -289,20 +292,25 @@ class MainboardTest(object):
             test_name=self.test_name,
             test_version=self.version,
             test_desc=self.desc,
-            test_group='' if not self.group else f'{self.group}::',
-            # custom metadata fields
-            framework_version=stf.FRAMEWORK_VERSION,
-            device=device,
-            # XXX: make sure to include entire config eventually
+            test_instance=self.instance,
+            # HEY: test_group is referenced by config
+            # HEY: test_group is referenced by runset/scripts
+            # XXX: this breaks non-linux environments :shrug:
+            test_group='' if not self.group else f'{self.group}/',
             test_config=self._PARAMS,
-            framework_override_config=self.config
+            # custom metadata fields
+            stf_version=stf.FRAMEWORK_VERSION,
+            stf_config=stf.config.settings.dict(),
+            # 
+            device=device,
         )
         #T.configure(teardown_function=self.tearDown)
 
         output = stf.config.settings.output
         if output.json.enabled:
+            p = stf.config.get_path('json_output', filename=output.json.filename)
             T.add_output_callbacks(
-                JSON(stf.config.get_path('json_output'), indent=4, default=str)
+                JSON(p, indent=4, default=str)
             )
 
         if output.console.enabled:
@@ -311,6 +319,13 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
+        '''
+        INFO(f'{dir(T)}')
+        T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
+        T.descriptor.metadata['board_softwareVersion'] = session.fpgaVersion
+        T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
+        '''
+        #self.T = T
 
         INFO(f'Finished {self.test_name}')
         stf.dbg("finished execute for test: {}".format(self.test_name))

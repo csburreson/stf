@@ -1,10 +1,14 @@
 import json
 from .misc import flatten, jsonify
 from .. import parse
+from ..debug import DEBUG
 import os
 import stf
 
 CONFIG = None
+
+class STFPathException(Exception):
+    pass
 
 class JsonConfig(object):
     def __init__(self, baseconfig, jsonfiles=[]):
@@ -62,9 +66,12 @@ class JsonConfig(object):
                 dv.path = dv.path.format(config=config)
 
     def get_path(self, dirname, filename=None):
-        if filename:
-            return os.path.join(self.settings.paths[dirname], filename)
-        return self.settings.paths[dirname]
+        path = self.settings.paths[dirname]
+        if path is None or not os.path.exists(path):
+            raise STFPathException(f'Invalid path: {path}')
+        if filename is not None:
+            return os.path.join(path, filename)
+        return path
 
         
     def getIcebootOpts(self):
@@ -89,6 +96,7 @@ def get_config(path='stfconfig.json', optional=['stfconfig.local.json']):
     if CONFIG:
         return CONFIG
     CONFIG = JsonConfig(path, jsonfiles=optional)
+    CONFIG.DEBUG = jsonify(DEBUG)
     return CONFIG
     
 

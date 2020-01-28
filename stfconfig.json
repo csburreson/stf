@@ -11,7 +11,7 @@
         },
         "json": {
             "enabled": true,
-            "filename": "{metadata[test_group]}{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json"
+            "filename": "{metadata[test_group]}{metadata[test_name]}-{metadata[test_instance]}-v{metadata[test_version]}_{metadata[device][type]}-{dut_id}.json"
         },
         // not implemented
         "database": null,
@@ -28,14 +28,12 @@
         "stf_home": null,
         "data": "{stf_home}/data",
         "tests": "{stf_home}/tests",
+        "results": "{stf_home}/results",
         "testconfig": "{data}/testconfig",
         "setconfig": "{data}/setconfig",
-        // full path here ** note: cannot mix relative config refs and absolute
-        "fwfile": "{config.paths.data}/fw_{config.iceboot.fw_version}.rbf",
-        // local path passed to iceboot session for flashing fw
-        "fwfile_remote": "degg_fw_v{config.iceboot.fw_version}.rbf",
-        //"fwfile_path": "{data}/{fwfile_pattern}",
-        "json_output": "{stf_home}/results/{config.output.json.filename}"
+        "fwfile_name": "degg_fw_v{config.iceboot.fw_version}.rbf",
+        "fwfile": "{config.paths.data}/{fwfile_name}",
+        "json_output": "{stf_home}/results/"
     },
     /*
     iceboot options include the current FW version and normal iceboot
