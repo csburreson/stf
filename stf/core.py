@@ -172,6 +172,11 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
     #dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
     dbg(setConfig.instances)
 
+    dbg(f'Emptying results dir for {setConfig.set_name}')
+    files.ensureEmptyDir(
+        CONFIG.get_path('results', filename=setConfig.set_name), 
+        delete_pattern='*.json'
+    )
 
     for test in setConfig.instances:
         testName = test['test_name']
@@ -190,11 +195,14 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         testFile = CONFIG.get_path('tests', filename=f'{testName}.py')
 
-        testCode = open(testFile).read()
-        code = f"""\nstf.core.run_single_test("{testName}", "{test['testinstance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
 
-        cc = getClassContext(testName)
-        exec(compile(testCode + code, testFile, 'exec'), cc[2])
+
+        with open(testFile) as f:
+            testCode = f.read()
+            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
+
+            cc = getClassContext(testName)
+            exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
 
 def run_single_test(name, instance, group, args, evs):
@@ -204,8 +212,8 @@ def run_single_test(name, instance, group, args, evs):
 
     INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
 
-    # iceboot settings no longer provided here?
+    # iceboot settings no longer provided here? 
     test.reconfigure(instance, group, args, evs, {})
 
     # XXX: multiple devices
-    test.execute({'id': 'deadbeef'})
+    test.execute({'id': 'deadbeef', 'type': 'degg'})

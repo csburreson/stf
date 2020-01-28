@@ -43,7 +43,7 @@ class Common(object):
             gINFO(f'FW File does not exist: {e}')
             return stf.STOP
 
-        gINFO(f'checking flash for {paths.fwfile_remote} ... status={fwfile_status})')
+        gINFO(f'checking flash for {paths.fwfile} ... status={fwfile_status})')
 
         if fwfile_status == 'ok':
             gINFO(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_remote})')
@@ -51,9 +51,9 @@ class Common(object):
             gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_remote}')
         else:
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
-            session.ymodemFlashUpload(paths.fwfile_remote, paths.fwfile)
+            session.ymodemFlashUpload(paths.fwfile, paths.fwfile_name)
 
-        session.flashConfigureCycloneFPGA(paths.fwfile_remote)
+        session.flashConfigureCycloneFPGA(paths.fwfile_name)
 
         vn = session.fpgaVersion()
         test.measurements.fpgaVersion = hex(vn)
@@ -87,7 +87,7 @@ class MainboardTest(object):
         self.test_fn = test_fn
         self.version = version
         # instance can be none
-        self.instance = kw.get('instance')
+        self.instance = kw.get('instance', 'base')
 
         #self.session = None
         # XXX: move to init or "configure" step or something
@@ -165,7 +165,7 @@ class MainboardTest(object):
 
     # used for test sets
     def reconfigure(self, name, group, args, evs, config):
-        self.test_name = name
+        self.instance = name
         self._PARAMS['args'] = args
         self._PARAMS['expectedValues'] = evs
         self.group = group
@@ -270,7 +270,11 @@ class MainboardTest(object):
             test_name=self.test_name,
             test_version=self.version,
             test_desc=self.desc,
-            test_group='' if not self.group else f'{self.group}::',
+            test_instance=self.instance,
+            # HEY: test_group is referenced by config
+            # HEY: test_group is referenced by runset/scripts
+            # XXX: this breaks non-linux environments :shrug:
+            test_group='' if not self.group else f'{self.group}/',
             test_config=self._PARAMS,
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
@@ -282,8 +286,9 @@ class MainboardTest(object):
 
         output = stf.config.settings.output
         if output.json.enabled:
+            p = stf.config.get_path('json_output', filename=output.json.filename)
             T.add_output_callbacks(
-                JSON(stf.config.get_path('json_output'), indent=4, default=str)
+                JSON(p, indent=4, default=str)
             )
 
         if output.console.enabled:

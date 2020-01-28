@@ -25,7 +25,7 @@ from stf.parse import json_load
 from stf.util.misc import jsonify
 import stf.util as util
 
-doc = json_load('/livebox/scratch/stf/results/alltests::SLO_ADC-v1.0-degg-deadbeef.json')
+#doc = json_load('/livebox/scratch/stf/results/alltests::SLO_ADC-v1.0-degg-deadbeef.json')
 
 def msToDatetime(ms):
     import datetime
@@ -47,7 +47,7 @@ def getHtmlSummary(jdoc):
     testGroup = jdoc.metadata.test_group.replace(':', '')
     meas = jp_commsMeasurements.find(jdoc)[0].value
     fpgaVersion = meas['fpgaVersion']['measured_value']
-    swInfo = f'v{meas["softwareVersion"]["measured_value"]} - github# <strong>{meas["softwareId"]["measured_value"]}</strong>'
+    swInfo = f'<strong>v{meas["softwareVersion"]["measured_value"]}</strong> - build {meas["softwareId"]["measured_value"]}'
     for label, key in summary_fields:
         h += dd(label, key).format(**dict(
             runSet=testGroup,
@@ -175,7 +175,8 @@ def runset_summary(runset_name, out='console'):
 
             html_summary = getHtmlSummary(jdoc)
 
-        name, inst = get_instanceName(jdoc.metadata.test_name)
+        name = jdoc.metadata.test_name
+        inst = jdoc.metadata.test_instance
         if out == 'console':
             s += f'''{colorize_outcome(jdoc.outcome)}   {jdoc.metadata.test_name} v{jdoc.metadata.test_version}\n'''
         elif out == 'consolebrief':
@@ -246,11 +247,15 @@ def runset_report(runset_name):
             failed_measurements = 'No Failed Measurements'
         else:
             failed_measurements = f'Failed Measurements:\n{failed_measurements}'
-
-        dash = (len(jdoc.metadata.test_name) + 12) * '-'
+        m = jdoc.metadata
+        dash = (len(m.test_name) + len(m.test_instance) + 13) * '-'
+        if m.test_instance == 'base':
+            inst = tc(m.test_instance, 'gray')
+        else:
+            inst = tc(m.test_instance, 'aqua')
         s += f'''
         {dash}
-        {colorize_outcome(jdoc.outcome)}   {jdoc.metadata.test_name} v{jdoc.metadata.test_version}
+        {colorize_outcome(jdoc.outcome)}   {m.test_name}:{inst} v{m.test_version}
         {dash}
         Measurements:
 {measurements}
@@ -262,6 +267,6 @@ def runset_report(runset_name):
 def runset_getFiles(runset_name, results_dir=None):
     import stf
     if not results_dir:
-        results_dir = stf.config.get_path('stf_home', 'results')
+        results_dir = stf.config.get_path('results', filename=runset_name)
 
-    return util.files.globFiles(results_dir, pattern=f'{runset_name}::*')
+    return util.files.globFiles(results_dir, pattern='*.json')

@@ -7,6 +7,9 @@ import stf
 
 CONFIG = None
 
+class STFPathException(Exception):
+    pass
+
 class JsonConfig(object):
     def __init__(self, baseconfig, jsonfiles=[]):
         # for js in jsonfile:
@@ -63,9 +66,12 @@ class JsonConfig(object):
                 dv.path = dv.path.format(config=config)
 
     def get_path(self, dirname, filename=None):
-        if filename:
-            return os.path.join(self.settings.paths[dirname], filename)
-        return self.settings.paths[dirname]
+        path = self.settings.paths[dirname]
+        if path is None or not os.path.exists(path):
+            raise STFPathException(f'Invalid path: {path}')
+        if filename is not None:
+            return os.path.join(path, filename)
+        return path
 
         
     def getIcebootOpts(self):

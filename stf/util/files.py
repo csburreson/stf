@@ -1,8 +1,41 @@
 import os
 import glob
 
+def popPath(path):
+    
+    x, y = os.path.split(path)
+    # if it's a filename or doesn't have a trailing slash
+    if y:
+        return x, y
+    
+    # otherwise pop the directory
+    return os.path.split(x)
+
+def ensureEmptyDir(path, delete_pattern='*'):
+    if path == '/':
+        raise Exception('Unable to ensure "/" is empty')
+
+    if not os.path.exists(path):
+        root, d = popPath(path)
+        if not os.path.exists(root):
+            # XXX: STFPathException
+            raise Exception(f'Cannot find root direcotry for {d} (tried: {root})')
+
+        os.mkdir(path)
+        
+    else:
+        files = globFiles(path, pattern=delete_pattern)
+
+        for f in files:
+            try:
+                os.remove(f)
+            except Exception as e:
+                stf.debug(str(e))
+
+
 def getNameFromPath(path):
     return os.path.split(os.path.splitext(path)[0])[-1]
+
 
 def getFWVersionFromFile(path):
     '''
@@ -17,6 +50,8 @@ def getFWVersionFromFile(path):
     return version
 
 def globFiles(*dirs, pattern='*'):
+    import stf
+    stf.debug(f'dirs={dirs}')
     gp = list(dirs) + [pattern]
     path = os.path.join(*gp)
     return glob.glob(path)
