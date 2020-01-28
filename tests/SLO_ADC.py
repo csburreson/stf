@@ -118,7 +118,6 @@ def test_single_channel(test, session, **kw):
     test.measurements.chan_13 = readSloAdcSingle(test, session, 13)
     test.measurements.chan_14 = readSloAdcSingle(test, session, 14)
     test.measurements.chan_15 = readSloAdcSingle(test, session, 15)
-    session.cmd("printLogOutput")
 
 
 # Test SLO_ADC read all channels
@@ -183,7 +182,6 @@ def test_all_channel(test, session, **kw):
         test.measurements[name] = parseSloAdc(test, session, channel, line)
         channel += 1
     #session.cmd("1 setLogLevel")
-    session.cmd("printLogOutput")
 
 
 stf.register(
