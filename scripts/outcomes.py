@@ -1,5 +1,11 @@
-from jsonpath_rw import jsonpath as jpath
-from jsonpath_rw import parse as jparse
+try:
+    from jsonpath_rw import jsonpath as jpath
+    from jsonpath_rw import parse as jparse
+except ModuleNotFoundError:
+    print('jsonpath_rw required for reports and summaries')
+    print('\ntry:\n  pip install jsonpath-rw\n')
+    print('more info: https://github.com/kennknowles/python-jsonpath-rw')
+    raise SystemExit
 from stf import parse, config, util
 from stf.util.colors import termcolor as tc
 import textwrap
