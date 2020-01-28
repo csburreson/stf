@@ -46,9 +46,9 @@ class Common(object):
         gINFO(f'checking flash for {paths.fwfile} ... status={fwfile_status})')
 
         if fwfile_status == 'ok':
-            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_remote})')
+            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile})')
         elif fwfile_status == 'skip':
-            gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_remote}')
+            gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile}')
         else:
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile, paths.fwfile_name)
