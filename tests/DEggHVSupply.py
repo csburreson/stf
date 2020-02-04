@@ -1,3 +1,7 @@
+# Ryo Nagai / Ken'ichi Kin
+#
+# Supply 200V to ch0/ch1 -> Check readback values
+
 import stf
 import time
 
@@ -32,9 +36,9 @@ def readVal(test, session, ch):
         test.logger.info('Measured Current value for ch0: {}'.format(observed_current))
         test.measurements.DEggCurrent0 = observed_current
     else:
-        test.logger.info('Measured HV value for ch0: {}'.format(observed_hvvalue))
+        test.logger.info('Measured HV value for ch1: {}'.format(observed_hvvalue))
         test.measurements.DEggHVSupply1 = observed_hvvalue
-        test.logger.info('Measured Current value for ch0: {}'.format(observed_current))
+        test.logger.info('Measured Current value for ch1: {}'.format(observed_current))
         test.measurements.DEggCurrent1 = observed_current
     session.disableHV(ch)
 
