@@ -9,7 +9,7 @@ set -e
 
 
 declare -r PROGRAM=${0##*/}
-declare -r PYTHON="/usr/bin/python3"
+declare -r PYTHON=`which python3`
 declare -a TESTS=( )
 declare -a TESTOPTS=( )
 declare    TestCount=0
