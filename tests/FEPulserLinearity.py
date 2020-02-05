@@ -1,21 +1,24 @@
 import stf
-from DEggTest.fepulser import get_pulser_charge
+from DEggTest.fepulser import get_pulser_charge, set_dac, set_fepulser_dac, get_baseline_waveform
 import numpy as np
 
 @stf.measures(stf.M('r2').expectRange('{exp_x}', '{exp_y}', type=float))
 def run_test(test, session, channel, dac_val, dac_val_fepulser_start,
              dac_val_fepulser_step, dac_val_fepulser_nstep, bins_before_peak, bins_after_peak,
-             nsamples=128, n_waveforms=10, **kw):
+             nsamples=180, n_waveforms=100, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
         test.logger.error('Number of samples must be at least 16 and divisible by 4')
         return stf.FAIL
-
+    session.setDEggConstReadout(channel, 1, nsamples)
+    set_dac(session, channel, dac_val)
+    baseline_wv = get_baseline_waveform(session, channel)
     qs = []
     dac_vals = []
     for i in range(dac_val_fepulser_nstep+1):
         _ = dac_val_fepulser_start+i*dac_val_fepulser_step
+        set_fepulser_dac(session, channel, _)
         qs_dac = [get_pulser_charge(
-            session, channel, nsamples, dac_val, _,
+            session, channel, baseline_wv,
             bins_before_peak, bins_after_peak) for _i in range(n_waveforms)]
         test.logger.info(qs_dac)
         qs.append(sum(qs_dac)/len(qs_dac))
