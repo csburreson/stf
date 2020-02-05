@@ -72,7 +72,6 @@ class Common(object):
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
-        stf.dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
         self.group = kw.get('group', '')
         self.group_timeslug = ''
@@ -81,7 +80,7 @@ class MainboardTest(object):
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
 
         # test_params is a map of fn name = list of varnames
-        self.test_params = kw.get('params', {})
+        #self.test_params = kw.get('params', {})
         self.test_name = test_name
         if not callable(test_fn):
             raise Exception('Invalid "test_fn" parameter. Expecting callable')
@@ -90,17 +89,30 @@ class MainboardTest(object):
         # instance can be none
         self.instance = kw.get('instance', 'base')
 
+        stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
+
         #self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
 
-        # skip loading config
+        # for instance derivations, args and evs are already figured out from base instance
+        # and passed directly here
+        if self.instance != 'base':
+            self._PARAMS = {
+                'args': kw.get('instance_args', {}),
+                'expectedValues': kw.get('instance_expectedValues', {})
+            }
+            return
+
+        # skip loading config (note that instance derivations use stf.NOCONFIG)
         if conf_file == stf.NOCONFIG:
             self._PARAMS = {'args': {}, 'expectedValues': {}}
             self._PARAM_CONF_FILE = None
             return
 
+
+        # load config (base instances only)
         conf_file_path = getFilePath(conf_file)
         if not conf_file_path:
             # TODO: STFException -> STFTestConfigException
@@ -198,32 +210,24 @@ class MainboardTest(object):
         #self.config = stf.parse.update(self.config, config)
         stf.debug(f'reconfigure: {config}')
 
+    def deriveInstance(self, name, group, args, evs, timeslug='', config={}):
+        return type(self)(self.version, self.test_name, self.test_fn, 
+            test_desc=self.desc, group=self.group, group_timeslug=timeslug,
+            instance=name, instance_args=args, instance_expectedValues=evs,
+            conf_file=stf.NOCONFIG
+        )
+
     def getTestParams(self):
         '''
-        pname = "test name" but should probably be thought of as "phase name"
-
         self._PARAMS is dict of {
-            "test (phase) name": {
-                "varname": "value"
-            }
         }
         '''
         # XXX: this requires @configure deco
         if hasattr(self, '_PARAMS'):
             return self._PARAMS
 
-        # deprecated (bwloe)
-        if not getattr(self, 'test_params') or not self.test_params:
-            return {} 
-
-        #pname = func
-        if pname not in self.test_params:
-            return {}
-
-        # lookup param values
-        plist = self.test_params[pname]
-        get_db()
-        return ParamDB.getTestParams(pname, plist)
+        #return ParamDB.getTestParams(pname, plist)
+        return {}
     
     def get_session(self):
         return self.session

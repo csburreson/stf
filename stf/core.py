@@ -225,7 +225,8 @@ def run_single_test(name, instance, group, args, evs, timeslug):
 
     # XXX: copy class info? clone method? maybe just 
     # return new Test object with test.reconfigure()?
-    test.reconfigure(instance, group, args, evs, timeslug, {})
+    #test.reconfigure(instance, group, args, evs, timeslug, {})
+    T = test.deriveInstance(instance, group, args, evs, timeslug, {})
 
     # XXX: multiple devices
-    test.execute({'id': 'deadbeef', 'type': 'degg'})
+    T.execute({'id': 'deadbeef', 'type': 'degg'})
