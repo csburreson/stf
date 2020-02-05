@@ -8,7 +8,7 @@ from .validators import *
 import stf
 from .util.colors import termcolor as clr
 from .util.misc import INFO, check_mainboard_fwfile, getTimeSlug
-from .util.files import getFilePath
+from .util import files
 FAKE_ICEBOOT = False
 
 # class TestSet(object):
@@ -74,7 +74,7 @@ class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
         self.tests = []
         self.group = kw.get('group', '')
-        self.group_timeslug = ''
+        self.group_timeslug = kw.get('group_timeslug', '')
 
         # optional description
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
@@ -113,7 +113,7 @@ class MainboardTest(object):
 
 
         # load config (base instances only)
-        conf_file_path = getFilePath(conf_file)
+        conf_file_path = files.getFilePath(conf_file)
         if not conf_file_path:
             # TODO: STFException -> STFTestConfigException
             raise Exception('TestConfigException: config file not found {conf_file}')
@@ -211,8 +211,13 @@ class MainboardTest(object):
         stf.debug(f'reconfigure: {config}')
 
     def deriveInstance(self, name, group, args, evs, timeslug='', config={}):
+        if (name == 'base'):
+            self.group = group
+            self.group_timeslug = timeslug
+            return self
+
         return type(self)(self.version, self.test_name, self.test_fn, 
-            test_desc=self.desc, group=self.group, group_timeslug=timeslug,
+            test_desc=self.desc, group=group, group_timeslug=timeslug,
             instance=name, instance_args=args, instance_expectedValues=evs,
             conf_file=stf.NOCONFIG
         )
@@ -233,7 +238,7 @@ class MainboardTest(object):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    def execute(self, device):
+    def execute(self, device, config):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
@@ -309,17 +314,21 @@ class MainboardTest(object):
             stf_config=stf.config.settings.dict(),
             #  XXX: device stuff?!
             device=device,
+            conn=config.get('iceboot', {})
         )
         #T.configure(teardown_function=self.tearDown)
 
         output = stf.config.settings.output
         if output.json.enabled:
             # issue X: support timeSlugs in path 
-            p = stf.config.get_path('json_results', 
+            p = files.join(
+                stf.config.get_path('json_results'),
                 # this can be empty str
                 self.group,
                 self.group_timeslug,
-                filename=output.json.filename)
+                output.json.filename
+            )
+            stf.debug(f'jsonout path: {p}')
             T.add_output_callbacks(
                 JSON(p, indent=4, default=str)
             )

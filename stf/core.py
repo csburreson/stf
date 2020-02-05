@@ -128,7 +128,8 @@ def run():
 def _run(testClass, device):
       return True
 
-def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False):
+def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False, device_type='degg',
+            device_host=CONFIG.settings.iceboot.host, device_port=CONFIG.settings.iceboot.port):
     if set_name:
        config_file = CONFIG.get_path('setconfig', filename=f'{set_name}.json')
        if not files.exists(config_file):
@@ -191,6 +192,9 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         setConfig.time_slug
     )
 
+    # check for board ID
+    dut_id = getBoardID(host=device_host, port=device_port)
+
     for test in setConfig.instances:
         testName = test['test_name']
         dbg('running: {}'.format(test['testinstance_name']))
@@ -210,13 +214,14 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         with open(testFile) as f:
             testCode = f.read()
-            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}")"""
-
+            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}")"""
+            dbg(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
 
-def run_single_test(name, instance, group, args, evs, timeslug):
+def run_single_test(name, instance, group, args, evs, timeslug, 
+                    dut_id, dut_type='degg', dut_host=None, dut_port=None):
     test = getRegisteredClass(name)
     cName = tc(name, 'aqua')
     cInst = tc(instance, 'aqua')
@@ -226,7 +231,17 @@ def run_single_test(name, instance, group, args, evs, timeslug):
     # XXX: copy class info? clone method? maybe just 
     # return new Test object with test.reconfigure()?
     #test.reconfigure(instance, group, args, evs, timeslug, {})
-    T = test.deriveInstance(instance, group, args, evs, timeslug, {})
+    T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
 
     # XXX: multiple devices
-    T.execute({'id': 'deadbeef', 'type': 'degg'})
+    T.execute({'id': dut_id, 'type': dut_type}, {
+        'iceboot': {
+            'host': dut_host,
+            'port': dut_port,
+            'debug': CONFIG.settings.iceboot.debug
+        }
+    })
+
+def getBoardID(host=None, port=None):
+    session = getIcebootSession(host=host, port=port)
+    return session.flashID()
