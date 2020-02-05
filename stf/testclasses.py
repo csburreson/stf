@@ -7,7 +7,7 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-from .util.misc import INFO, check_mainboard_fwfile
+from .util.misc import INFO, check_mainboard_fwfile, getTimeSlug
 from .util.files import getFilePath
 FAKE_ICEBOOT = False
 
@@ -74,7 +74,8 @@ class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
         stf.dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
-        self.group = kw.get('group')
+        self.group = kw.get('group', '')
+        self.group_timeslug = ''
 
         # optional description
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
@@ -186,13 +187,15 @@ class MainboardTest(object):
         self.tests.append(testCallable)
 
     # used for test sets
-    def reconfigure(self, name, group, args, evs, config):
+    def reconfigure(self, name, group, args, evs, timeslug='', config={}):
         self.instance = name
         self._PARAMS['args'] = args
         self._PARAMS['expectedValues'] = evs
         self.group = group
+        # used for output
+        self.group_timeslug = timeslug
         # ugh... don't wipe out testconfig settings stored in self.config
-        self.config = stf.parse.update(self.config, config)
+        #self.config = stf.parse.update(self.config, config)
         stf.debug(f'reconfigure: {config}')
 
     def getTestParams(self):
@@ -295,20 +298,24 @@ class MainboardTest(object):
             test_instance=self.instance,
             # HEY: test_group is referenced by config
             # HEY: test_group is referenced by runset/scripts
-            # XXX: this breaks non-linux environments :shrug:
-            test_group='' if not self.group else f'{self.group}/',
+            test_group=self.group,
             test_config=self._PARAMS,
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
             stf_config=stf.config.settings.dict(),
-            # 
+            #  XXX: device stuff?!
             device=device,
         )
         #T.configure(teardown_function=self.tearDown)
 
         output = stf.config.settings.output
         if output.json.enabled:
-            p = stf.config.get_path('json_output', filename=output.json.filename)
+            # issue X: support timeSlugs in path 
+            p = stf.config.get_path('json_results', 
+                # this can be empty str
+                self.group,
+                self.group_timeslug,
+                filename=output.json.filename)
             T.add_output_callbacks(
                 JSON(p, indent=4, default=str)
             )

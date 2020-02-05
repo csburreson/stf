@@ -11,27 +11,55 @@ def popPath(path):
     # otherwise pop the directory
     return os.path.split(x)
 
-def ensureEmptyDir(path, delete_pattern='*'):
+
+'''
+def ensureEmptyDir(path=None, delete_pattern='*', root=None, dirs=[]):
+    if root:
+
+        return ensureEmptyDir(
+def _ensureEmptyDir(path, delete_pattern='*'):
+
+def _ensureEmptyDir(path, delete_pattern='*'):
     if path == '/':
         raise Exception('Unable to ensure "/" is empty')
 
-    if not os.path.exists(path):
-        root, d = popPath(path)
-        if not os.path.exists(root):
+    _path = path
+    ds = []
+    import stf
+    while not os.path.exists(_path):
+        
+        root, d = popPath(_path)
+        stf.debug(f'foo:  {_path}, {root}, {d}')
+        if os.path.exists(root):
+            os.mkdir(_path)
+            break
+        _path = root
+        ds.append(d)
+
+        from stf import config
+        if not config.paths.stf_home in root:
             # XXX: STFPathException
             raise Exception(f'Cannot find root direcotry for {d} (tried: {root})')
-
-        os.mkdir(path)
-        
+    if ds:
+        for d in ds:
+            _path = os.path.join(_path, d)
+            os.mkdir(d)
     else:
-        files = globFiles(path, pattern=delete_pattern)
+        os.mkdir(_path)
+        
+    # purge files
+    remove_files(path, delete_pattern)
+'''
 
-        for f in files:
-            try:
-                os.remove(f)
-            except Exception as e:
-                stf.debug(str(e))
+def remove_files(path, pattern):
+    files = globFiles(path, pattern)
 
+    for f in files:
+        try:
+            os.remove(f)
+        except Exception as e:
+            stf.debug(str(e))
+    
 
 def getNameFromPath(path):
     return os.path.split(os.path.splitext(path)[0])[-1]
@@ -77,6 +105,10 @@ def getFilePath(path):
         if os.path.exists(p):
             return os.path.abspath(p)
     return None
+
+# XXX: make sure root exists and is within home?
+def mkdir(*path):
+    os.makedirs(os.path.join(*path))
         
 join = os.path.join
 exists = os.path.exists

@@ -172,10 +172,23 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
     #dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
     dbg(setConfig.instances)
 
-    dbg(f'Emptying results dir for {setConfig.set_name}')
+    # maybe the results path should include results/setname/{dut_id}-{timeSlug} wehre timeSlug has minutes precision (or we just add sequence numbers...
+    # maybe dut_id-suquence-timeslug? since the 
+    # XXX: just thought of this; should timeSlug be property of class at time of instantion? or passed from runset code? because it should be the same for all test outputs...
+    '''
     files.ensureEmptyDir(
-        CONFIG.get_path('results', filename=setConfig.set_name), 
+        root=CONFIG.get_path('results'),
+        dirs=[setConfig.set_name,
+        setConfig.time_slug],
+        # delete in case of duplication?
         delete_pattern='*.json'
+    )
+    '''
+    dbg(f'Creating results dir for {setConfig.set_name}/{setConfig.time_slug}')
+    files.mkdir(
+        CONFIG.get_path('results'),
+        setConfig.set_name,
+        setConfig.time_slug
     )
 
     for test in setConfig.instances:
@@ -195,25 +208,24 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
         testFile = CONFIG.get_path('tests', filename=f'{testName}.py')
 
-
-
         with open(testFile) as f:
             testCode = f.read()
-            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']})"""
+            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}")"""
 
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
 
-def run_single_test(name, instance, group, args, evs):
+def run_single_test(name, instance, group, args, evs, timeslug):
     test = getRegisteredClass(name)
     cName = tc(name, 'aqua')
     cInst = tc(instance, 'aqua')
 
     INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
 
-    # iceboot settings no longer provided here? 
-    test.reconfigure(instance, group, args, evs, {})
+    # XXX: copy class info? clone method? maybe just 
+    # return new Test object with test.reconfigure()?
+    test.reconfigure(instance, group, args, evs, timeslug, {})
 
     # XXX: multiple devices
     test.execute({'id': 'deadbeef', 'type': 'degg'})
