@@ -36,7 +36,7 @@ bullet = tc('>>> ', 'aqua')
 
 def msToDatetime(ms):
     import datetime
-    return str(datetime.datetime.fromtimestamp(ms / 1000.0))
+    return str(datetime.datetime.utcfromtimestamp(ms / 1000.0))
 
 def dd(label, key):
     return f'<dt>{label}</dt><dd>{{{key}}}</dd>'
