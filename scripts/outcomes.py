@@ -53,6 +53,8 @@ def getSummary(jdoc, output):
         return ''
     summary_fields = [
         ('Runset Name', 'runSet'),
+        ('Device Type', 'dtype'),
+        ('Device ID', 'dut_id'),
         ('Date run', 'runDate'),
         ('Station', 'station'),
         ('STF Version', 'stfVersion'),
@@ -70,6 +72,8 @@ def getSummary(jdoc, output):
             h += dd(label, key).format(**dict(
                 runSet=testGroup,
                 runDate=msToDatetime(jdoc.start_time_millis),
+                dut_id=jdoc.dut_id,
+                dtype=jdoc.device.type,
                 station=jdoc.station_id,
                 stfVersion=jdoc.metadata.stf_version,
                 fpgaVersion=fpgaVersion,
