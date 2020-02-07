@@ -238,32 +238,37 @@ class MainboardTest(object):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    def execute(self, device, config):
+    def execute(self, device, config={}):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
-        ps = self.getTestParams()
+        inst = config.get('instance', {})
+        if inst:
+            test_args = inst.get('args', {})
+            expected_values = inst.get('expectedValues', {})
+            group = inst['group']
+            group_timeslug = inst['group_timeslug']
+            instance_name = inst['instance']
+        else:
+            ps = self.getTestParams()
+            test_args = ps.get('args', {})
+            expected_values = ps.get('expectedValues', {})
+            group = ''
+            group_timeslug = ''
+            instance_name = 'base'
 
-        # could get device config here:
-        # dev_conf = getDeviceConfig(device)
+        x = config.get('iceboot', {})
+        dut_host = x.get('host') or stf.config.settings.iceboot.host
+        dut_port = x.get('port') or stf.config.settings.iceboot.port
 
         # TODO: get test desc (or keep this in DB and link to test name)
         desc = 'todo'
 
-        # get test arguments (from json file)
-        test_args = ps.get('args', {})
         stf.dbg('test args: {}'.format(test_args))
-
-        expected_values = ps.get('expectedValues', {})
         stf.dbg('expected values: {}'.format(expected_values))
 
-        # get test configuration options (defaults hardcoded, override in test config file
-        # with "conf" top-level key
-        #defaults = testclasses.Common.TEST_CONFIG
-
         # XXX: move this to seutp function or re-implement this as a plug?
-        # hack for non-standard multiple tests run with single class
-        self.session = getIcebootSession()
+        self.session = getIcebootSession(host=dut_host, port=dut_port)
 
         # XXX:rebootfirst
         '''
@@ -280,9 +285,6 @@ class MainboardTest(object):
             time.sleep(2)
             self.session = getIcebootSession(**stf.config.getIcebootOpts())
         '''
-
-        #if expected_values:
-            #test_args['expectedValues'] = expected_values
 
         # add expectedValues directly to the measurement validator class
         for m in self.test_fn.measurements:
@@ -303,16 +305,19 @@ class MainboardTest(object):
             # openhtf fields
             test_name=self.test_name,
             test_version=self.version,
+            # XXX: self.desc could be mentioned in setconfig
             test_desc=self.desc,
-            test_instance=self.instance,
+            test_instance=instance_name,
             # HEY: test_group is referenced by config
             # HEY: test_group is referenced by runset/scripts
-            test_group=self.group,
-            test_config=self._PARAMS,
+            test_group=group,
+            test_config={
+                'args': test_args,
+                'expectedValues': expected_values
+            },
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
             stf_config=stf.config.settings.dict(),
-            #  XXX: device stuff?!
             device=device,
             conn=config.get('iceboot', {})
         )
@@ -324,8 +329,8 @@ class MainboardTest(object):
             p = files.join(
                 stf.config.get_path('json_results'),
                 # this can be empty str
-                self.group,
-                self.group_timeslug,
+                group,
+                group_timeslug,
                 output.json.filename
             )
             stf.debug(f'jsonout path: {p}')

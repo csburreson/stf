@@ -11,6 +11,7 @@ def foo(*a, **k):
     return x(*a, **k)
 htf.data.convert_to_base_types = foo
 # XXX end hack
+import threading
 from openhtf import measures, Measurement
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
 from openhtf.util.checkpoints import checkpoint as CHECKPOINT
@@ -108,17 +109,31 @@ def getDevices(device_type=None):
 
 # test running code 
 
-def run():
+def run(dhost=CONFIG.settings.iceboot.host, 
+        dport=CONFIG.settings.iceboot.port,
+        dtype='degg'):
     '''
     run should discover devices (TODO) and loop over and run all registered
     tests
     '''
-    mainboard = getDevices('mainboard')
-    device = mainboard[0]
+    #mainboard = getDevices('mainboard')
+    #device = mainboard[0]
+    dut_id = getBoardID(host=dhost, port=dport)
+    device = {
+        'id': dut_id,
+        'type': dtype
+    }
+    # must ensure output directory exists for this device
+    device_dir = '{type}-{id}'.format(**device)
+    files.mkdir(
+        CONFIG.get_path('results'),
+        device_dir
+    )
+
     ran = False
     for testClass in getRegisteredClasses():
         dbg("Running {}".format(testClass.test_name))
-        testClass.execute(device)
+        testClass.execute(device, {'iceboot': dict(host=dhost, port=dport)})
         ran = True
 
     if not ran:
@@ -153,53 +168,78 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
     Interlock.STF_RUN_TEST()
     '''
 
-    ### VERIFY CONFIG
-    for test in setConfig.tests:
-        d = CONFIG.get_path('tests')
-        testFile = f'{d}/{test}.py'
-        dbg('verifying testfile {} ...'.format(testFile))
-        try:
-            with open(testFile) as f:
-                testCode = f.read()
-            exec(compile(testCode, testFile, 'exec'))
-        except:
-            dbg('exception when running {}'.format(testFile))
-            raise
-        #from .. import tests as definedTests
-        #dbg(dir(definedTests[test]))
+    #conns = [('10.134.32.51', device_port), ('localhost', '5012')]
+    conns = [(device_host, device_port)]
+    threads = []
 
-    setConfig.configure()
-    
-    #dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
-    dbg(setConfig.instances)
+    for host, port in conns:
+        ### VERIFY CONFIG
+        for test in setConfig.tests:
+            d = CONFIG.get_path('tests')
+            testFile = f'{d}/{test}.py'
+            dbg('verifying testfile {} ...'.format(testFile))
+            try:
+                with open(testFile) as f:
+                    testCode = f.read()
+                exec(compile(testCode, testFile, 'exec'))
+            except:
+                dbg('exception when running {}'.format(testFile))
+                raise
+            #from .. import tests as definedTests
+            #dbg(dir(definedTests[test]))
 
-    # maybe the results path should include results/setname/{dut_id}-{timeSlug} wehre timeSlug has minutes precision (or we just add sequence numbers...
-    # maybe dut_id-suquence-timeslug? since the 
-    # XXX: just thought of this; should timeSlug be property of class at time of instantion? or passed from runset code? because it should be the same for all test outputs...
-    '''
-    files.ensureEmptyDir(
-        root=CONFIG.get_path('results'),
-        dirs=[setConfig.set_name,
-        setConfig.time_slug],
-        # delete in case of duplication?
-        delete_pattern='*.json'
-    )
-    '''
-    dbg(f'Creating results dir for {setConfig.set_name}/{setConfig.time_slug}')
-    files.mkdir(
-        CONFIG.get_path('results'),
-        setConfig.set_name,
-        setConfig.time_slug
-    )
+        setConfig.configure()
+        
+        #dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
+        dbg(setConfig.instances)
+
+        # maybe the results path should include results/setname/{dut_id}-{timeSlug} wehre timeSlug has minutes precision (or we just add sequence numbers...
+        # maybe dut_id-suquence-timeslug? since the 
+        # XXX: just thought of this; should timeSlug be property of class at time of instantion? or passed from runset code? because it should be the same for all test outputs...
+        '''
+        files.ensureEmptyDir(
+            root=CONFIG.get_path('results'),
+            dirs=[setConfig.set_name,
+            setConfig.time_slug],
+            # delete in case of duplication?
+            delete_pattern='*.json'
+        )
+        '''
+        t = threading.Thread(target=runset_thread, args=(setConfig, host, port, device_type))
+        t.start()
+        dbg(f'Creating thread... runset_thread -> runset="{setConfig.set_name}" args=( "{host}", "{port}", "{device_type}")')
+        threads.append(t)
+
+    dbg('Threads created... joining')
+    for t in threads:
+        t.join()
+        #runset_thread(setConfig, device_host, device_port, device_type)
+
+
+def runset_thread(setConfig, device_host, device_port, device_type, list_tests=False, list_overrides=False):
+    def debug(s):
+        dbg('XXX: {}:{}:{} {}'.format(setConfig.set_name, device_host, device_port, s))
+    debug('Creating results dir for {setConfig.set_name}/{setConfig.time_slug}')
 
     # check for board ID
     dut_id = getBoardID(host=device_host, port=device_port)
 
+    # NOTE: must match config.output.json.filename
+    device_dir = '{}-{}'.format(device_type, dut_id)
+    files.mkdir(
+        CONFIG.get_path('results'),
+        setConfig.set_name,
+        setConfig.time_slug,
+        device_dir
+    )
+
     for test in setConfig.instances:
         testName = test['test_name']
-        dbg('running: {}'.format(test['testinstance_name']))
-        dbg('   with: {}'.format(test))
+        debug('running: {}'.format(test['testinstance_name']))
+        debug('   with: {}'.format(test))
 
+        # XXX: refactor test/config listing to be insdie of setConfig
+        # then modify runset script to just ask setConfig for this stuff
         if list_tests:
             _PRINT(test['testinstance_name'])
             continue
@@ -215,7 +255,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         with open(testFile) as f:
             testCode = f.read()
             code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}")"""
-            dbg(f'code: {code}')
+            debug(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
@@ -231,14 +271,24 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     # XXX: copy class info? clone method? maybe just 
     # return new Test object with test.reconfigure()?
     #test.reconfigure(instance, group, args, evs, timeslug, {})
-    T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
+    #T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
 
     # XXX: multiple devices
-    T.execute({'id': dut_id, 'type': dut_type}, {
+    test.execute( {
+        'id': dut_id, 
+        'type': dut_type
+    }, {
         'iceboot': {
             'host': dut_host,
             'port': dut_port,
             'debug': CONFIG.settings.iceboot.debug
+        },
+        'instance': {
+            'args': args,
+            'expectedValues': evs,
+            'instance': instance,
+            'group': group,
+            'group_timeslug': timeslug
         }
     })
 

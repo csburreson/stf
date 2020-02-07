@@ -108,7 +108,10 @@ def getFilePath(path):
 
 # XXX: make sure root exists and is within home?
 def mkdir(*path):
-    os.makedirs(os.path.join(*path))
+    try:
+        os.makedirs(os.path.join(*path))
+    except FileExistsError:
+        pass
         
 join = os.path.join
 exists = os.path.exists
