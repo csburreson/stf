@@ -258,6 +258,7 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
             debug(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
+            time.sleep(0.1)
 
 
 def run_single_test(name, instance, group, args, evs, timeslug, 

@@ -189,7 +189,7 @@ class MainboardTest(object):
             # XXX:rebootafter
             try:
                 self.session.reboot()
-            except OSError:
+            except (OSError, IOError):
                 stf.debug('oserror thrown by reboot (expected)')
                 del self.session
             stf.debug('teardown complete')
