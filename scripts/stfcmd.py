@@ -1,7 +1,7 @@
 import cmd
 import stf
 import argparse
-from scripts.outcomes import runset_report, runset_summary
+from scripts.outcomes import runset_report, runset_summary, runset_report_dir, runset_summary_dir 
 
 def show_tests():
     f = stf.util.files.globFiles(stf.config.get_path('testconfig'), pattern='*.py'), 
@@ -75,7 +75,6 @@ def cli():
     ))
     p.add_argument('arg', nargs='?')
     p.add_argument('--out',
-        default='console',
         choices=('console', 'consolebrief', 'html', 'csv', 'json'),
     )
 
@@ -90,10 +89,13 @@ def cli():
 
     # cmds that take args
     if args.cmd == 'report':
-        runset_report(args.arg)
+        runset_report_dir(args.arg)
 
     if args.cmd == 'summary':
-        runset_summary(args.arg, out=args.out)
+        if args.out:
+            runset_summary(args.arg, out=args.out)
+        else:
+            runset_summary_dir(args.arg)
 
 
     

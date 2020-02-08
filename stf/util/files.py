@@ -88,11 +88,12 @@ def getFileSize(path):
     stat = os.stat(path)
     return stat.st_size
 
-def getFilePath(path):
+def getFilePath(*path_, filename=None):
     '''
     tries to get "path" whether relative to framework or not
     '''
     from stf import config
+    path = os.path.join(*path_)
 
     locations = [
         '.',
@@ -103,8 +104,15 @@ def getFilePath(path):
     for loc in locations:
         p = os.path.join(loc, path)
         if os.path.exists(p):
+            if filename:
+                p = os.path.join(p, filename)
             return os.path.abspath(p)
     return None
+
+def getDirs(path):
+    # trim 0th dir 
+    return [x[0] for x in os.walk(path)][1:]
+
 
 # XXX: make sure root exists and is within home?
 def mkdir(*path):
