@@ -6,12 +6,12 @@
     },
 
     "expectedValues": {
-        "channel 08 SLO_HVS0_VMON":             2000.0,
+        "channel 08 SLO_HVS0_VMON":             1200.0,
         "channel 09 SLO_HVS0_IMON":             0.0,
-        "channel 10 SLO_HVS1_VMON":             2000.0,
+        "channel 10 SLO_HVS1_VMON":             1200.0,
         "channel 11 SLO_HVS1_IMON":             0.0,
 
-        "voltage_rail_percent":                 3.0,
+        "voltage_percent":                      2.0,
         "current_percent":                      50.0
     }
 }
