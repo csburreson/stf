@@ -6,9 +6,7 @@
         }
     },
     "expectedValues": {
-        "expected_degghvsupply_min": 100.0,
-        "expected_degghvsupply_max": 300.0,
-        "expected_deggcurrent_min": 10.00,
-        "expected_deggcurrent_max": 1000.0
+        "expected_degghvsupply_min": 150.0,
+        "expected_degghvsupply_max": 300.0
     }
 }
