@@ -20,7 +20,15 @@ def run_test(test, session, channel, dac_val,
     means = []
     rmss = []
     # skip first readout
+    parseTestWaveform(session.readWFMFromStream())
+    
     readout = parseTestWaveform(session.readWFMFromStream())
+    wf = readout['waveform']
+    mean = np.mean(wf)
+    rms = np.std(wf)
+
+    chi2 = 0
+    ndof = 0
     while time.time() - start < interval:
         try:
             readout = parseTestWaveform(session.readWFMFromStream())
@@ -32,20 +40,19 @@ def run_test(test, session, channel, dac_val,
         # Check for timeout
         if readout is None:
             continue
-        wf = readout["waveform"]
+        wf = np.asarray(readout["waveform"])
         # Fix for 0x6a firmware
         if len(wf) != nsamples:
             continue
-        means.append(np.mean(wf))
-        rmss.append(np.std(wf))
+
+        chi2 += np.sum((wf - mean)**2/rms**2)
+        ndof += len(wf)
 
     session.endStream()
-    _ = len(means)
-    stf.debug(f'length {_}')
-    stf.debug(f'means {means[:10]}')
-    means = np.asarray(means)
-    rmss = np.asarray(rmss)
-    test.measurements.reducedChi2 = np.sum((means[1:]-means[0])**2/rmss[1:]**2)/len(means[1:])
+    stf.debug(f'chi2 {chi2}')
+    stf.debug(f'ndof {ndof}')
+    stf.debug(f'chi2/ndof {chi2/ndof}')
+    test.measurements.reducedChi2 = chi2/ndof
 
     test.logger.info(f'Baseline Chi2/NDOF: {test.measurements.reducedChi2}')
 
