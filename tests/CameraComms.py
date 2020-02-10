@@ -16,6 +16,7 @@ def run_test(test, session):
     session.setCalibrationSlavePowerMask(1)
     session.setCameraEnableMask(0x15)
     for cam in range(1,4):
+        session.initCamera(cam)
         time.sleep(0.2) #increase sleep time if you fail to run this test
         session.writeCameraRegister(cam, TEST_REGISTER, 0)
         readRegister(test, session, cam)
