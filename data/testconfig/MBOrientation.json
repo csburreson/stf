@@ -5,7 +5,7 @@
         }
     },
     "expectedValues": {
-      "temp_min": -45.0,
-      "temp_max": 40.0
+      "accel_z_min": 9.7,
+      "accel_z_max": 9.9
     }
 }

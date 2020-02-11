@@ -1,14 +1,14 @@
 import stf
 import numpy as np
 
-@stf.measures(stf.M('accel_mag').expectRange('{accel_mag_min}', '{accel_mag_max}', type=float))
+@stf.measures(stf.M('accel_z').expectRange('{accel_z_min}', '{accel_z_max}', type=float))
 def run_test(test, session):
-    # Test magnitude of acceleration read over I2C bus via python interface:
+    # Test direction of acceleration read over I2C bus via python interface:
     #  session.readAccelerometerXYZ()
+    # In other workds, make sure the MB is flat and right-side up...
     my_accel = session.readAccelerometerXYZ()
-    my_accel_mag = np.sqrt(my_accel[0]*my_accel[0] + my_accel[1]*my_accel[1] + my_accel[2]*my_accel[2])
-    test.measurements.accel_mag = my_accel_mag
-    test.logger.info('Read accelerometer: {}, Magnitude: {}'.format(my_accel,my_accel_mag))
+    test.measurements.accel_z = my_accel[2]
+    test.logger.info('Read z accelerometer magnitude: {}'.format(my_accel[2]))
 
 stf.register(
     # version should change if your code changes (required if this test has
@@ -19,9 +19,9 @@ stf.register(
     run=run_test,
 
     # optional: test name is generated from filename if not provided
-    test_name='AccelerometerSensor',
+    test_name='MBOrientation',
     # optional: test_desc is a description of your test which will appear in the output
-    test_desc='Test acceleration magnitude measured by Accelerometer Sensor ADXL355',
+    test_desc='Test magnitude and direction of z-compoenent of accelerometer',
     # optional: defaults to std.testclasses.MainboardTest
     test_class=stf.testclasses.MainboardTest,
     # override: use 'config_file' to point to a different location for config
