@@ -7,8 +7,8 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-from .util.misc import INFO, check_mainboard_fwfile
-from .util.files import getFilePath
+from .util.misc import INFO, check_mainboard_fwfile, getTimeSlug
+from .util import files
 FAKE_ICEBOOT = False
 
 # class TestSet(object):
@@ -23,6 +23,7 @@ class Common(object):
     }
     @stf.measures(
         stf.M('fpgaVersion').equals(stf.config.settings.iceboot.fw_version),
+        stf.M('fpgaChipID'),
         stf.M('softwareId'),
         stf.M('softwareVersion')
     )
@@ -64,23 +65,27 @@ class Common(object):
 
         test.measurements.softwareId = session.softwareId()
         test.measurements.softwareVersion = session.softwareVersion()
+        try:
+            test.measurements.fpgaChipID = session.fpgaChipID()
+        except AttributeError:
+            test.measurements.fpgaChipID = 'unset'
 
         x = test.measurements
-        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId}')
+        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId} FPGA ID: {x.fpgaChipID}')
         stf.debug('Starting main test phase...')
 
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
-        stf.dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
-        self.group = kw.get('group')
+        self.group = kw.get('group', '')
+        self.group_timeslug = kw.get('group_timeslug', '')
 
         # optional description
         self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
 
         # test_params is a map of fn name = list of varnames
-        self.test_params = kw.get('params', {})
+        #self.test_params = kw.get('params', {})
         self.test_name = test_name
         if not callable(test_fn):
             raise Exception('Invalid "test_fn" parameter. Expecting callable')
@@ -89,18 +94,31 @@ class MainboardTest(object):
         # instance can be none
         self.instance = kw.get('instance', 'base')
 
+        stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
+
         #self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
 
-        # skip loading config
+        # for instance derivations, args and evs are already figured out from base instance
+        # and passed directly here
+        if self.instance != 'base':
+            self._PARAMS = {
+                'args': kw.get('instance_args', {}),
+                'expectedValues': kw.get('instance_expectedValues', {})
+            }
+            return
+
+        # skip loading config (note that instance derivations use stf.NOCONFIG)
         if conf_file == stf.NOCONFIG:
             self._PARAMS = {'args': {}, 'expectedValues': {}}
             self._PARAM_CONF_FILE = None
             return
 
-        conf_file_path = getFilePath(conf_file)
+
+        # load config (base instances only)
+        conf_file_path = files.getFilePath(conf_file)
         if not conf_file_path:
             # TODO: STFException -> STFTestConfigException
             raise Exception('TestConfigException: config file not found {conf_file}')
@@ -176,7 +194,7 @@ class MainboardTest(object):
             # XXX:rebootafter
             try:
                 self.session.reboot()
-            except OSError:
+            except (OSError, IOError):
                 stf.debug('oserror thrown by reboot (expected)')
                 del self.session
             stf.debug('teardown complete')
@@ -186,72 +204,82 @@ class MainboardTest(object):
         self.tests.append(testCallable)
 
     # used for test sets
-    def reconfigure(self, name, group, args, evs, config):
+    def reconfigure(self, name, group, args, evs, timeslug='', config={}):
         self.instance = name
         self._PARAMS['args'] = args
         self._PARAMS['expectedValues'] = evs
         self.group = group
+        # used for output
+        self.group_timeslug = timeslug
         # ugh... don't wipe out testconfig settings stored in self.config
-        self.config = stf.parse.update(self.config, config)
+        #self.config = stf.parse.update(self.config, config)
         stf.debug(f'reconfigure: {config}')
+
+    def deriveInstance(self, name, group, args, evs, timeslug='', config={}):
+        if (name == 'base'):
+            self.group = group
+            self.group_timeslug = timeslug
+            return self
+
+        return type(self)(self.version, self.test_name, self.test_fn, 
+            test_desc=self.desc, group=group, group_timeslug=timeslug,
+            instance=name, instance_args=args, instance_expectedValues=evs,
+            conf_file=stf.NOCONFIG
+        )
 
     def getTestParams(self):
         '''
-        pname = "test name" but should probably be thought of as "phase name"
-
         self._PARAMS is dict of {
-            "test (phase) name": {
-                "varname": "value"
-            }
         }
         '''
         # XXX: this requires @configure deco
         if hasattr(self, '_PARAMS'):
             return self._PARAMS
 
-        # deprecated (bwloe)
-        if not getattr(self, 'test_params') or not self.test_params:
-            return {} 
-
-        #pname = func
-        if pname not in self.test_params:
-            return {}
-
-        # lookup param values
-        plist = self.test_params[pname]
-        get_db()
-        return ParamDB.getTestParams(pname, plist)
+        #return ParamDB.getTestParams(pname, plist)
+        return {}
     
     def get_session(self):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    def execute(self, device):
+    def execute(self, device, config={}):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
-        ps = self.getTestParams()
+        inst = config.get('instance', {})
+        if inst:
+            test_args = inst.get('args', {})
+            expected_values = inst.get('expectedValues', {})
+            group = inst['group']
+            group_timeslug = inst['group_timeslug']
+            instance_name = inst['instance']
+        else:
+            ps = self.getTestParams()
+            test_args = ps.get('args', {})
+            expected_values = ps.get('expectedValues', {})
+            group = ''
+            group_timeslug = ''
+            instance_name = 'base'
 
-        # could get device config here:
-        # dev_conf = getDeviceConfig(device)
+        x = config.get('iceboot', {})
+        dut_host = x.get('host') or stf.config.settings.iceboot.host
+        dut_port = x.get('port') or stf.config.settings.iceboot.port
 
         # TODO: get test desc (or keep this in DB and link to test name)
         desc = 'todo'
 
-        # get test arguments (from json file)
-        test_args = ps.get('args', {})
         stf.dbg('test args: {}'.format(test_args))
-
-        expected_values = ps.get('expectedValues', {})
         stf.dbg('expected values: {}'.format(expected_values))
 
-        # get test configuration options (defaults hardcoded, override in test config file
-        # with "conf" top-level key
-        #defaults = testclasses.Common.TEST_CONFIG
-
         # XXX: move this to seutp function or re-implement this as a plug?
-        # hack for non-standard multiple tests run with single class
-        self.session = getIcebootSession()
+        #try:
+        self.session = getIcebootSession(host=dut_host, port=dut_port)
+        #except:
+        #    self.session = None
+        #    stf.dbg('Lots of OSErrors... sleeping for 10...')
+        #    time.sleep(10)
+        #    self.session = getIcebootSession(host=dut_host, port=dut_port)
 
         # XXX:rebootfirst
         '''
@@ -268,9 +296,6 @@ class MainboardTest(object):
             time.sleep(2)
             self.session = getIcebootSession(**stf.config.getIcebootOpts())
         '''
-
-        #if expected_values:
-            #test_args['expectedValues'] = expected_values
 
         # add expectedValues directly to the measurement validator class
         for m in self.test_fn.measurements:
@@ -291,24 +316,35 @@ class MainboardTest(object):
             # openhtf fields
             test_name=self.test_name,
             test_version=self.version,
+            # XXX: self.desc could be mentioned in setconfig
             test_desc=self.desc,
-            test_instance=self.instance,
+            test_instance=instance_name,
             # HEY: test_group is referenced by config
             # HEY: test_group is referenced by runset/scripts
-            # XXX: this breaks non-linux environments :shrug:
-            test_group='' if not self.group else f'{self.group}/',
-            test_config=self._PARAMS,
+            test_group=group,
+            test_config={
+                'args': test_args,
+                'expectedValues': expected_values
+            },
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
             stf_config=stf.config.settings.dict(),
-            # 
             device=device,
+            conn=config.get('iceboot', {})
         )
         #T.configure(teardown_function=self.tearDown)
 
         output = stf.config.settings.output
         if output.json.enabled:
-            p = stf.config.get_path('json_output', filename=output.json.filename)
+            # issue X: support timeSlugs in path 
+            p = files.join(
+                stf.config.get_path('json_results'),
+                # this can be empty str
+                group,
+                group_timeslug,
+                output.json.filename
+            )
+            stf.debug(f'jsonout path: {p}')
             T.add_output_callbacks(
                 JSON(p, indent=4, default=str)
             )

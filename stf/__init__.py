@@ -1,8 +1,9 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-__version__ = '1.1'
+__version__ = '1.2'
 FRAMEWORK_VERSION = __version__
+FRAMEWORK_VERSIONNAME = 'Chernobyl'
 
 
 global TESTABLE_CLASSES

@@ -65,8 +65,12 @@ class JsonConfig(object):
             if dv.path:
                 dv.path = dv.path.format(config=config)
 
-    def get_path(self, dirname, filename=None):
+    def get_path(self, dirname, *dirs, filename=None):
         path = self.settings.paths[dirname]
+        # trim leading slash (XXX: OS-SPECIFIC)
+        if dirs:
+            dirs = [d[1:] if d.startswith('/') else d for d in dirs]
+        path = os.path.join(path, *dirs)
         if path is None or not os.path.exists(path):
             raise STFPathException(f'Invalid path: {path}')
         if filename is not None:

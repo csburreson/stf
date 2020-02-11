@@ -6,9 +6,13 @@ except ModuleNotFoundError:
     print('\ntry:\n  pip install jsonpath-rw\n')
     print('more info: https://github.com/kennknowles/python-jsonpath-rw')
     raise SystemExit
-from stf import parse, config, util
+from stf import parse, config, util, debug
+from stf.util import files as futil
 from stf.util.colors import termcolor as tc
+from stf.util.colors import disable_colors
+from stf.util.misc import INFO
 import textwrap
+import sys
 
 
 jp_testOverview = jparse
@@ -36,7 +40,7 @@ bullet = tc('>>> ', 'aqua')
 
 def msToDatetime(ms):
     import datetime
-    return str(datetime.datetime.fromtimestamp(ms / 1000.0))
+    return str(datetime.datetime.utcfromtimestamp(ms / 1000.0))
 
 def dd(label, key):
     return f'<dt>{label}</dt><dd>{{{key}}}</dd>'
@@ -53,6 +57,9 @@ def getSummary(jdoc, output):
         return ''
     summary_fields = [
         ('Runset Name', 'runSet'),
+        ('Device Type', 'dtype'),
+        ('Device ID', 'dut_id'),
+        ('FPGA ChipID', 'fpgaChipID'),
         ('Date run', 'runDate'),
         ('Station', 'station'),
         ('STF Version', 'stfVersion'),
@@ -63,6 +70,7 @@ def getSummary(jdoc, output):
     testGroup = jdoc.metadata.test_group.replace('/', '')
     meas = jp_commsMeasurements.find(jdoc)[0].value
     fpgaVersion = meas['fpgaVersion']['measured_value']
+    fpgaChipID = meas['fpgaChipID']['measured_value']
 
     if output == 'html':
         swInfo = f'<strong>v{meas["softwareVersion"]["measured_value"]}</strong> - build {meas["softwareId"]["measured_value"]}'
@@ -70,6 +78,9 @@ def getSummary(jdoc, output):
             h += dd(label, key).format(**dict(
                 runSet=testGroup,
                 runDate=msToDatetime(jdoc.start_time_millis),
+                dut_id=jdoc.dut_id,
+                fpgaChipID=fpgaChipID,
+                dtype=jdoc.metadata.device.type,
                 station=jdoc.station_id,
                 stfVersion=jdoc.metadata.stf_version,
                 fpgaVersion=fpgaVersion,
@@ -82,6 +93,9 @@ def getSummary(jdoc, output):
             h += summaryLine(label, key).format(**dict(
                 runSet=testGroup,
                 runDate=msToDatetime(jdoc.start_time_millis),
+                dut_id=jdoc.dut_id,
+                fpgaChipID=fpgaChipID,
+                dtype=jdoc.metadata.device.type,
                 station=jdoc.station_id,
                 stfVersion=jdoc.metadata.stf_version,
                 fpgaVersion=fpgaVersion,
@@ -96,8 +110,8 @@ def vals(matches):
     return [x.value for x in matches]
 
 
-def print_phase_outcomes():
-    print(print_outcomes(jp_phaseOutcomes, jp_phaseNames, doc))
+def print_phase_outcomes(out):
+    print(print_outcomes(jp_phaseOutcomes, jp_phaseNames, doc), file=out)
 
 def print_outcomes(jp_oc, jp_name, doc, indent=0):
     out_outcomes = jp_oc.find(doc)
@@ -177,6 +191,77 @@ def get_instanceName(s):
     except ValueError:
         return s, 'base'
 
+def runset_summary_all(files, outputs):
+    jp_meas = jparse('$.phases.[2].measurements.*')
+
+    # create output buffers
+    o_s = {k: '' for k in outputs}
+    o_summary = {k: '' for k in outputs}
+    o_report = {k: '' for k in outputs}
+
+    #files = runset_getFiles(runset_name)
+    report = bullet + tc(f'Summary of Test Results \n\n', 'gray')
+    # for html output
+    outcome_colors = {
+        'PASS': 'green',
+        'FAIL': 'red',
+        'ERROR': 'orange'
+    }
+
+    summary = ''
+
+
+    #dash = (len(report) * '=')
+    #report = f'{dash}\n{report}\n{dash}'
+    s = ''
+    j = []
+
+    ### summary info
+    # list of tests?
+
+    ### details on test pass/fail
+    for f in files:
+        doc = json_load(f)
+        jdoc = jsonify(doc)
+        if not o_summary['html']:
+            o_summary['html'] = getSummary(jdoc, 'html')
+        if not o_summary['console']:
+            o_summary['console'] = getSummary(jdoc, 'console')
+
+        name = jdoc.metadata.test_name
+        inst = jdoc.metadata.test_instance
+        o_s['console'] += f'''{colorize_outcome(jdoc.outcome)}   {jdoc.metadata.test_name} v{jdoc.metadata.test_version}\n'''
+        o_s['consolebrief'] += f'''{colorize_outcome(jdoc.outcome)}   {name}\n'''
+        o_s['csv'] += f'"{jdoc.outcome}","{name}","{inst}","{jdoc.metadata.test_version}","{jdoc.metadata.stf_version}"\n'
+        c = outcome_colors.get(jdoc.outcome, 'black')
+        o_s['html'] += f'<tr><td><span style="color: {c}">{jdoc.outcome}</span></td><td>{name}</td><td>{inst}</td><td>{jdoc.metadata.test_version}</td></tr>\n'
+
+        j.append({
+            'outcome': jdoc.outcome,
+            'test_name': name,
+            'test_instance': inst,
+            'test_version': jdoc.metadata.test_version,
+            'stf_version': jdoc.metadata.stf_version
+        })
+
+    # speci
+    o_report['json'] = json.dumps(j, indent=2)
+
+    o_report['csv'] = "OUTCOME,TEST_NAME,TEST_INSTANCE,TEST_VERSION,STF_VERSION\n" + o_s['csv']
+
+    o_report['console'] = textwrap.dedent(o_s['console'])
+    o_report['consolebrief'] = textwrap.dedent(o_s['consolebrief'])
+
+    o_report['html'] = '<table><thead><th>Outcome</th><th>Test Name</th><th>Instance</th><th>Test Version</th></thead><tbody>{s}</tbody></table>'.format(s=o_s['html'])
+
+    for o, fname in outputs.items():
+        debug(f'outputs: {o} -> {fname}')
+        with open(fname, 'w') as f:
+            f.write(o_summary[o] + o_report[o])
+
+
+
+
 def runset_summary(runset_name, out='console'):
     jp_meas = jparse('$.phases.[2].measurements.*')
     files = runset_getFiles(runset_name)
@@ -229,21 +314,146 @@ def runset_summary(runset_name, out='console'):
 
     if out == 'csv':
         summary = ''
-        report = "OUTCOME,TEST_NAME,TEST_INSTANCE,TEST_VERSION,STF_VERSION\n"
+        report = "OUTCOME,TEST_NAME,TEST_INSTANCE,TEST_VERSION,STF_VERSION\n" + s
         #print(s)
     if out == 'json':
-        print(json.dumps(j, indent=2))
+        print(json.dumps(j, indent=2), file=out)
         return
+    if out in ['console', 'consolebrief']:
+        report = textwrap.dedent(s)
     if out == 'html':
-        print(summary)
-        print(f'<table><thead><th>Outcome</th><th>Test Name</th><th>Instance</th><th>Test Version</th></thead><tbody>{s}</tbody></table>')
-        return
-    print(summary + report + textwrap.dedent(s))
+        report = '<table><thead><th>Outcome</th><th>Test Name</th><th>Instance</th><th>Test Version</th></thead><tbody>{s}</tbody></table>'.format(s=s)
+    print(summary + report)
 
-def runset_report(runset_name):
+
+def runset_report_dir(runset_path):
+    # XXX: unused; couldn't get python to print to file for some reason...
+    # plus reports make more sense for a single result set
+    '''
+    runset_path is a path relative to results dir which we should crawl and
+    resursively generate reports
+
+    like:
+
+    alltests
+    alltests/2020.02.06_223344
+    alltests/2020.02.06_223344/degg-<mbid>
+
+    bonus (TODO):
+        support wildcards? or change script to use args like
+
+        --allsets       (all testsets)
+        --t 2020.02     (all tests run that day)
+        --device degg   (all degg devices)
+        --device <mbid> (all devices with mbid)
+    '''
+
+    
+    path = futil.getFilePath(config.get_path('results', filename=runset_path))
+    debug('path: {path}'.format(path=path))
+    runset_name = runset_path.split('/')[0]
+
+    files = runset_getFiles(None, path)
+    if not files:
+        paths = futil.getDirs(path)
+        for p in paths:
+            runset_report_dir(p)
+    else:
+        # not sure why this doesn't work?!
+        #report = futil.getFilePath(path, filename='report.txt')
+        #debug('reppath: {report}'.format(report=report))
+        #with open(report, 'w') as f:
+        #runset_report(runset_name, files=files, out=f)
+        runset_report(runset_name, files=files)
+
+def getFiles_resurse(runset_path):
+    debug(runset_path) 
+
+    files = runset_getFiles(None, runset_path)
+    if not files:
+        paths = futil.getDirs(runset_path)
+        for p in paths:
+            runset_summary_dir(p)
+    return files
+
+def runset_summary_dir(runset_path):
+    '''
+    runset_path is a path relative to results dir which we should crawl and
+    resursively generate reports
+
+    like:
+
+    alltests
+    alltests/2020.02.06_223344
+    alltests/2020.02.06_223344/degg-<mbid>
+
+    bonus (TODO):
+        support wildcards? or change script to use args like
+
+        --allsets       (all testsets)
+        --t 2020.02     (all tests run that day)
+        --device degg   (all degg devices)
+        --device <mbid> (all devices with mbid)
+    '''
+    path = futil.getFilePath('results', runset_path)
+    dirs = futil.getDirs(path)
+    if not dirs:
+        files = runset_getFiles(results_dir=path)
+        if files:
+            gen_summary(files)
+        else:
+            debug(f"SKIpPING {runset_path}")
+        return
+    for d in dirs:
+        if d == 'report':
+            continue
+        debug(f'XXX trying : {d}')
+        files = runset_getFiles(results_dir=d)
+        if not files:
+            runset_summary_dir(d)
+        else: 
+            gen_summary(files)
+
+    #if not dirs:
+    #    debug(f'XXX trying : {path}')
+    #    files = runset_getFiles(results_dir=path)
+
+    if not files:
+        files = runset_getFiles(results_dir=path)
+        if files:
+            gen_summary(files)
+        else:
+            debug(f"(no files) SKIPPING {runset_path}")
+
+    #debug(f'XXX gen_Summary: {path} -> {files}')
+    #gen_summary(files)
+ 
+def gen_summary(files):
+    out_path = futil.popPath(files[0])[0]
+    futil.mkdir(out_path, 'report')
+    rp = lambda f: futil.getFilePath(out_path, 'report', filename=f)
+    xx = futil.getFilePath(out_path, 'report', filename='<out>')
+    debug(f'repout: {xx}')
+    outputs = {
+        'json': rp('summary.json'),
+        'console': rp('summary.txt'),
+        'consolebrief': rp('summary-brief.txt'),
+        'html': rp('summary.html'),
+        'csv': rp('summary.csv'),
+    }
+    INFO(f'generating reports... {outputs}')
+
+    disable_colors()
+    runset_summary_all(files, outputs)
+
+def runset_report(runset_name, files=[], out=sys.stdout):
     jp_meas = jparse('$.phases.[2].measurements.*')
 
-    files = runset_getFiles(runset_name)
+    if not files:
+        # XXX: coverage?
+        files = runset_getFiles(runset_name)
+
+
     report = f'RUNSET RESULTS FOR {tc(runset_name, "gold")}\n'
 
     s = ''
@@ -292,14 +502,18 @@ def runset_report(runset_name):
 
         {failed_measurements}
         '''
-    print(report + textwrap.dedent(s))
+    #with open(outfile, 'w') as f:
+    print(report + textwrap.dedent(s), file=out)
 
-def runset_getFiles(runset_name, results_dir=None):
+def runset_getFiles(runset_name='', results_dir=None):
     if not results_dir:
         results_dir = config.get_path('results', filename=runset_name)
 
-    files = util.files.globFiles(results_dir, pattern='*.json')
-    if len(files) == 0:
-        print(f'No output files found for set "{runset_name}"')
-        raise SystemExit
+    # XXX: file pattern -- change output fname? include stf.json extension?
+    files = util.files.globFiles(results_dir, pattern='*degg*.json')
+    #if len(files) == 0:
+    #    print(f'No output files found for set "{runset_name}"')
+    #    debug('No output files found')
+    #    raise SystemExit
+    debug(f'files: {results_dir} -> {files}')
     return files

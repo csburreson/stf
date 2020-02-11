@@ -22,6 +22,7 @@ import re
 import os
 import json
 from .debug import DEBUG, debug
+from .util.misc import getTimeSlug, getUUID
 import stf
 import collections.abc
 from copy import deepcopy as dc
@@ -76,6 +77,8 @@ class SetConfig(object):
     def __init__(self, config_file, set_name):
         self.config_file = config_file
         self.set_name = set_name
+        self.time_slug = None
+        self.uuid = getUUID()
         debug(f'conf for {set_name}: {config_file}')
         with open(config_file, 'r') as f:
             self._config = json_load(f)
@@ -97,6 +100,7 @@ class SetConfig(object):
         debug('(SetConfig) tests: {}'.format(self.tests))
 
     def configure(self):
+        self.time_slug = getTimeSlug()
         #self.instances = []
         stf.debug('setconfig->configure')
         for testName, test_instances in self.testDict.items():
