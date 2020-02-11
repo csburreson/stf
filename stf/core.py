@@ -71,7 +71,7 @@ def getIcebootSession(**kw):
     session = None
     fail_count = 0
     # XXX:
-    kw = CONFIG.getIcebootOpts()
+    #kw = CONFIG.getIcebootOpts()
     while session is None and fail_count < 5:
         try:
             # this sleep prevents OSError from being thrown in some
