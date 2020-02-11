@@ -6,7 +6,9 @@
     },
     "expectedValues": {
       "exp_x": 0.999,
-      "exp_y": 1
+      "exp_y": 1,
+      "intercept_x": -50,
+      "intercept_y": 0
     },
     "args": {
     	"channel" : 0,
@@ -14,7 +16,7 @@
       "dac_val_fepulser_start" : 20000,
       "dac_val_fepulser_step" : 5000,
       "dac_val_fepulser_nstep" : 5,
-      "bins_before_peak" : 1,
-      "bins_after_peak" : 2
+      "bins_before_peak" : 4,
+      "bins_after_peak" : 8
     }
 }

@@ -1,4 +1,5 @@
 import stf
+import numpy as np
 from DEggTest.fepulser import get_waveform, set_dac, set_fepulser_dac, get_baseline_waveform
 
 @stf.measures(stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
@@ -14,12 +15,16 @@ def run_test(test, session, channel, dac_val,
     half_width = []
     for _ in range(n_waveforms):
         wf = get_waveform(session, channel, baseline_wv)
+        upsc = 10
+        wf_fine = np.interp(np.linspace(0, nsamples-1, nsamples*upsc),
+                            np.arange(nsamples), wf)
         # stf.debug(f'{wf}')
         # see tests/template.json for testconfig
-        half_width.append(len(wf[wf>wf.max()/2]))
+        half_width.append(len(wf_fine[wf_fine>wf_fine.max()/2])/upsc)
     test.measurements.meas = sum(half_width)/len(half_width)
 
     test.logger.info(f'FEPulser width: {test.measurements.meas}')
+    stf.debug(f'FEPulser width: {test.measurements.meas}')
 
 
 stf.register(

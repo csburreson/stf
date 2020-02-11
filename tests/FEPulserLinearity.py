@@ -2,7 +2,9 @@ import stf
 from DEggTest.fepulser import get_pulser_charge, set_dac, set_fepulser_dac, get_baseline_waveform
 import numpy as np
 
-@stf.measures(stf.M('r2').expectRange('{exp_x}', '{exp_y}', type=float))
+@stf.measures(stf.M('slope'),
+              stf.M('r2').expectRange('{exp_x}', '{exp_y}', type=float),
+              stf.M('intercept').expectRange('{intercept_x}', '{intercept_y}', type=float))
 def run_test(test, session, channel, dac_val, dac_val_fepulser_start,
              dac_val_fepulser_step, dac_val_fepulser_nstep, bins_before_peak, bins_after_peak,
              nsamples=180, n_waveforms=100, **kw):
@@ -31,9 +33,11 @@ def run_test(test, session, channel, dac_val, dac_val_fepulser_start,
     
     # see tests/template.json for testconfig
     test.measurements.r2 = 1-np.sum((qs-slope*dac_vals-intercept)**2)/np.sum((qs-qs.mean())**2)
+    test.measurements.slope = slope
+    test.measurements.intercept = intercept
 
-    test.logger.info(f'FEPulser slope: {slope}')
-    test.logger.info(f'FEPulser intercept: {intercept}')
+    test.logger.info(f'FEPulser slope: {test.measurements.slope}')
+    test.logger.info(f'FEPulser intercept: {test.measurements.intercept}')
     test.logger.info(f'FEPulser R2: {test.measurements.r2}')
 
 
