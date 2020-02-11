@@ -23,6 +23,7 @@ class Common(object):
     }
     @stf.measures(
         stf.M('fpgaVersion').equals(stf.config.settings.iceboot.fw_version),
+        stf.M('fpgaChipID'),
         stf.M('softwareId'),
         stf.M('softwareVersion')
     )
