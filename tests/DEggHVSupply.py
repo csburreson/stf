@@ -6,9 +6,7 @@ import stf
 import time
 
 @stf.measures(stf.M('DEggHVSupply0').expectRange('{expected_degghvsupply_min}','{expected_degghvsupply_max}',type=float),
-              stf.M('DEggCurrent0').expectRange('{expected_deggcurrent_min}','{expected_deggcurrent_max}',type=float),
-              stf.M('DEggHVSupply1').expectRange('{expected_degghvsupply_min}','{expected_degghvsupply_max}',type=float),
-              stf.M('DEggCurrent1').expectRange('{expected_deggcurrent_min}','{expected_deggcurrent_max}',type=float))
+              stf.M('DEggHVSupply1').expectRange('{expected_degghvsupply_min}','{expected_degghvsupply_max}',type=float))
 
 def run_test(test, session):
     '''this test checks the applied HV voltage is correct'''
@@ -31,15 +29,13 @@ def readVal(test, session, ch):
     time.sleep(0.2)
     observed_current = session.sloAdcReadChannel(9+ch*2)
     if ch == 0:
-        test.logger.info('Measured HV value for ch0: {}'.format(observed_hvvalue))
         test.measurements.DEggHVSupply0 = observed_hvvalue
+        test.logger.info('Measured HV value for ch0: {}'.format(observed_hvvalue))
         test.logger.info('Measured Current value for ch0: {}'.format(observed_current))
-        test.measurements.DEggCurrent0 = observed_current
-    else:
-        test.logger.info('Measured HV value for ch1: {}'.format(observed_hvvalue))
+    else:        
         test.measurements.DEggHVSupply1 = observed_hvvalue
+        test.logger.info('Measured HV value for ch1: {}'.format(observed_hvvalue))
         test.logger.info('Measured Current value for ch1: {}'.format(observed_current))
-        test.measurements.DEggCurrent1 = observed_current
     session.disableHV(ch)
 
 

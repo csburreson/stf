@@ -1,16 +1,21 @@
 import stf
-from DEggTest.fepulser import get_waveform
+from DEggTest.fepulser import get_waveform, set_dac, set_fepulser_dac, get_baseline_waveform
 
 @stf.measures(stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
 def run_test(test, session, channel, dac_val,
-             dac_val_fepulser, nsamples=128, n_waveforms=10, **kw):
+             dac_val_fepulser, nsamples=128, n_waveforms=100, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
         test.logger.error('Number of samples must be at least 16 and divisible by 4')
         return stf.FAIL
 
-    heights = [get_waveform(session, channel, nsamples, dac_val, dac_val_fepulser).max() for _ in range(n_waveforms)]
+    session.setDEggConstReadout(channel, 1, nsamples)
+    set_dac(session, channel, dac_val)
+    baseline_wv = get_baseline_waveform(session, channel)
+    set_fepulser_dac(session, channel, dac_val_fepulser)
+    heights = [get_waveform(session, channel, baseline_wv).max() for _ in range(n_waveforms)]
     # see tests/template.json for testconfig
     test.measurements.meas = sum(heights)/len(heights)
+    stf.debug(f'{test.measurements.meas}')
 
     test.logger.info(f'FEPulser height over baseline: {test.measurements.meas}')
 

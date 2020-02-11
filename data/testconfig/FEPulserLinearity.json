@@ -5,7 +5,7 @@
         }
     },
     "expectedValues": {
-      "exp_x": 0.8,
+      "exp_x": 0.999,
       "exp_y": 1
     },
     "args": {

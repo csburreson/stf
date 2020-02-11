@@ -1,0 +1,12 @@
+{
+    "config":{
+    },
+
+    "args":{
+    },
+
+    "expectedValues": {
+        "channel 06 light_sensor_dark_min":     0.0,
+        "channel 06 light_sensor_dark_max":     3000.0
+    }
+}

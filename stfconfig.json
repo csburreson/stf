@@ -41,7 +41,7 @@
         connection string business
     */
     "iceboot": {
-        "fw_version": "0xfd",
+        "fw_version": "0xfe",
         "host": "localhost",
         "port": 5012,
         "debug": false

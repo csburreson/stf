@@ -1,0 +1,17 @@
+{
+    "config":{
+    },
+
+    "args":{
+    },
+
+    "expectedValues": {
+        "channel 05 +1V8_A":                    1.8,
+        "channel 12 +1V1_power_rail_monitor":   1.1,
+        "channel 13 +1V35_power_rail_monitor":  1.35,
+        "channel 14 +2V5_power_rail_monitor":   2.5,
+        "channel 15 +3V3_power_rail_monitor":   3.3,
+
+        "voltage_rail_percent":                 4.0
+    }
+}
