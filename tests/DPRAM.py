@@ -5,13 +5,18 @@
 
 import stf
 import os
+from random import randint
 
 
 # DPRAM is 4kB or 2 kwords, or 1k 2-word patterns
 CNT = 16
 WCNT = 2 * CNT
 TEST_PATTERNS = [[0x5555, 0xAAAA] * CNT,
-                 [0xAAAA, 0x5555] * CNT]
+                 [0xAAAA, 0x5555] * CNT,
+                 [0x0000, 0xFFFF] * CNT]
+
+for _ in range(100):
+    TEST_PATTERNS.append([randint(0, 0xFFFF), randint(0, 0xFFFF)] * CNT)
 
 
 @stf.measures(stf.M('DPRAMIOSuccess').equals(True))

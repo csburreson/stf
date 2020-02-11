@@ -11,36 +11,26 @@ FLASH_STR = "FLASH_TEST_STRING"
 
 
 @stf.measures(stf.M('flashIOSuccess').equalsParam('flashIOSuccessValue', type=bool))
-def run_test(test, session, testFileName):
-    test.measurements.flashIOSuccess = False
-    if os.path.exists(testFileName):
-        test.logger.info("Test file %s: exists" % testFileName)
-        return
-
+def run_test(test, session):
     try:
-        with open(testFileName, "wb") as f:
-            f.write(FLASH_STR.encode())
-            f.close()
-    except:
-        test.logger.info("Unable to write test file %s" % testFileName)
-        return
-    
-    try:
-        test.measurements.flashIOSuccess = perform_test(test, session, testFileName)
+        test.measurements.flashIOSuccess = perform_test(test, session)
     except Exception as e:
         test.logger.info("Caught Exception running test: %s" % e)
         raise e
-    finally:
-        os.remove(testFileName)
 
 
-def perform_test(test, session, testFileName):
+def perform_test(test, session):
+
+    testFileName = "flashTestFile"
+    fileEntries = [x for x in session.flashLS() if x["Name"] == testFileName]
+    if len(fileEntries) != 0:
+        session.flashRemove(testFileName)
 
     fileEntries = [x for x in session.flashLS() if x["Name"] == testFileName]
     if len(fileEntries) != 0:
         return False
 
-    session.ymodemFlashUpload(testFileName, testFileName)
+    session.ymodemFlashUploadBytes(testFileName, FLASH_STR.encode())
     fileEntries = [x for x in session.flashLS() if x["Name"] == testFileName]
     if len(fileEntries) == 0:
         return False

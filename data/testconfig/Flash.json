@@ -8,6 +8,5 @@
         "flashIOSuccessValue": true
     },
     "args": {
-        "testFileName": "FLASH_TEST_FILE"
     }
 }
