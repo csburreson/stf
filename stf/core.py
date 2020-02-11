@@ -70,8 +70,9 @@ def getIcebootSession(**kw):
     dbg(f'  {CONFIG.settings.iceboot}')
     session = None
     fail_count = 0
+    # XXX:
+    kw = CONFIG.getIcebootOpts()
     while session is None and fail_count < 5:
-        del session
         try:
             # this sleep prevents OSError from being thrown in some
             # circumstances
@@ -172,6 +173,8 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
     conns = [(device_host, device_port)]
     threads = []
 
+    STF_USE_THREADS = False
+
     for host, port in conns:
         ### VERIFY CONFIG
         for test in setConfig.tests:
@@ -205,15 +208,19 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
             delete_pattern='*.json'
         )
         '''
-        t = threading.Thread(target=runset_thread, args=(setConfig, host, port, device_type))
-        t.start()
-        dbg(f'Creating thread... runset_thread -> runset="{setConfig.set_name}" args=( "{host}", "{port}", "{device_type}")')
-        threads.append(t)
+        if STF_USE_THREADS:
+            t = threading.Thread(target=runset_thread, args=(setConfig, host, port, device_type))
+            t.start()
+            dbg(f'Creating thread... runset_thread -> runset="{setConfig.set_name}" args=( "{host}", "{port}", "{device_type}")')
+            threads.append(t)
+        else:
+            runset_thread(setConfig, host, port, device_type)
 
-    dbg('Threads created... joining')
-    for t in threads:
-        t.join()
-        #runset_thread(setConfig, device_host, device_port, device_type)
+    if STF_USE_THREADS:
+        dbg('Threads created... joining')
+        for t in threads:
+            t.join()
+            #runset_thread(setConfig, device_host, device_port, device_type)
 
 
 def runset_thread(setConfig, device_host, device_port, device_type, list_tests=False, list_overrides=False):
@@ -258,7 +265,6 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
             debug(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
-            time.sleep(0.1)
 
 
 def run_single_test(name, instance, group, args, evs, timeslug, 
@@ -295,4 +301,6 @@ def run_single_test(name, instance, group, args, evs, timeslug,
 
 def getBoardID(host=None, port=None):
     session = getIcebootSession(host=host, port=port)
-    return session.flashID()
+    x = session.flashID()
+    del session
+    return x
