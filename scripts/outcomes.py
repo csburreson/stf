@@ -241,13 +241,12 @@ def runset_summary_all(files, outputs):
         })
 
     # speci
-    o_s['json'] = json.dumps(j, indent=2)
+    o_report['json'] = json.dumps(j, indent=2)
 
-    o_report['csv'] = "OUTCOME,TEST_NAME,TEST_INSTANCE,TEST_VERSION,STF_VERSION\n" + s
+    o_report['csv'] = "OUTCOME,TEST_NAME,TEST_INSTANCE,TEST_VERSION,STF_VERSION\n" + o_s['csv']
 
-    x = textwrap.dedent(s)
-    o_report['console'] = x
-    o_report['consolebrief'] = x
+    o_report['console'] = textwrap.dedent(o_s['console'])
+    o_report['consolebrief'] = textwrap.dedent(o_s['consolebrief'])
 
     o_report['html'] = '<table><thead><th>Outcome</th><th>Test Name</th><th>Instance</th><th>Test Version</th></thead><tbody>{s}</tbody></table>'.format(s=o_s['html'])
 
@@ -324,6 +323,8 @@ def runset_summary(runset_name, out='console'):
 
 
 def runset_report_dir(runset_path):
+    # XXX: unused; couldn't get python to print to file for some reason...
+    # plus reports make more sense for a single result set
     '''
     runset_path is a path relative to results dir which we should crawl and
     resursively generate reports

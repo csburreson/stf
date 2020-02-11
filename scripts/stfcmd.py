@@ -87,15 +87,22 @@ def cli():
     if not args.arg:
         p.error(f'"{args.cmd}" requires an argument')
 
+    # hack to allow results/... tabcomplete
+    if args.arg.startswith('results/'):
+        runset_path = '/'.join(args.arg.split('/')[1:])
+    else:
+        runset_path = args.arg
+
     # cmds that take args
     if args.cmd == 'report':
-        runset_report_dir(args.arg)
+        #runset_report_dir(args.arg)
+        runset_report(runset_path)
 
     if args.cmd == 'summary':
         if args.out:
-            runset_summary(args.arg, out=args.out)
+            runset_summary(runset_path, out=args.out)
         else:
-            runset_summary_dir(args.arg)
+            runset_summary_dir(runset_path)
 
 
     
