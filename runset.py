@@ -29,4 +29,5 @@ if __name__ == '__main__':
     if not args.tests and not args.configs:
         stf.config.setIcebootOpts(host=args.iceboot_host, port=args.iceboot_port, debug=args.iceboot_debug)
         print(f"Starting test run with iceboot settings:\n\thost={args.iceboot_host}\n\tport={args.iceboot_port}\n\tdebug={args.iceboot_debug}")
-    stf.run_set(setName, list_tests=args.tests, list_overrides=args.configs)
+    stf.run_set(setName, list_tests=args.tests, list_overrides=args.configs,
+        device_host=args.iceboot_host, device_port=args.iceboot_port)
