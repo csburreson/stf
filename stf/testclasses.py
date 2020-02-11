@@ -51,7 +51,7 @@ class Common(object):
             gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_name}')
         else:
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
-            session.ymodemFlashUpload(paths.fwfile, paths.fwfile_name)
+            session.ymodemFlashUpload(paths.fwfile_name, paths.fwfile)
 
         session.flashConfigureCycloneFPGA(paths.fwfile_name)
 
@@ -268,7 +268,13 @@ class MainboardTest(object):
         stf.dbg('expected values: {}'.format(expected_values))
 
         # XXX: move this to seutp function or re-implement this as a plug?
+        #try:
         self.session = getIcebootSession(host=dut_host, port=dut_port)
+        #except:
+        #    self.session = None
+        #    stf.dbg('Lots of OSErrors... sleeping for 10...')
+        #    time.sleep(10)
+        #    self.session = getIcebootSession(host=dut_host, port=dut_port)
 
         # XXX:rebootfirst
         '''
