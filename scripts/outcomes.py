@@ -59,6 +59,7 @@ def getSummary(jdoc, output):
         ('Runset Name', 'runSet'),
         ('Device Type', 'dtype'),
         ('Device ID', 'dut_id'),
+        ('FPGA ChipID', 'fpgaChipID'),
         ('Date run', 'runDate'),
         ('Station', 'station'),
         ('STF Version', 'stfVersion'),
@@ -69,6 +70,7 @@ def getSummary(jdoc, output):
     testGroup = jdoc.metadata.test_group.replace('/', '')
     meas = jp_commsMeasurements.find(jdoc)[0].value
     fpgaVersion = meas['fpgaVersion']['measured_value']
+    fpgaChipID = meas['fpgaChipID']['measured_value']
 
     if output == 'html':
         swInfo = f'<strong>v{meas["softwareVersion"]["measured_value"]}</strong> - build {meas["softwareId"]["measured_value"]}'
@@ -77,6 +79,7 @@ def getSummary(jdoc, output):
                 runSet=testGroup,
                 runDate=msToDatetime(jdoc.start_time_millis),
                 dut_id=jdoc.dut_id,
+                fpgaChipID=fpgaChipID,
                 dtype=jdoc.metadata.device.type,
                 station=jdoc.station_id,
                 stfVersion=jdoc.metadata.stf_version,
@@ -91,6 +94,7 @@ def getSummary(jdoc, output):
                 runSet=testGroup,
                 runDate=msToDatetime(jdoc.start_time_millis),
                 dut_id=jdoc.dut_id,
+                fpgaChipID=fpgaChipID,
                 dtype=jdoc.metadata.device.type,
                 station=jdoc.station_id,
                 stfVersion=jdoc.metadata.stf_version,

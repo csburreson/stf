@@ -64,9 +64,13 @@ class Common(object):
 
         test.measurements.softwareId = session.softwareId()
         test.measurements.softwareVersion = session.softwareVersion()
+        try:
+            test.measurements.fpgaChipID = session.fpgaChipID()
+        except AttributeError:
+            test.measurements.fpgaChipID = 'unset'
 
         x = test.measurements
-        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId}')
+        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId} FPGA ID: {x.fpgaChipID}')
         stf.debug('Starting main test phase...')
 
 
