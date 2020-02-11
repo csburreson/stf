@@ -9,6 +9,8 @@ except ModuleNotFoundError:
 from stf import parse, config, util, debug
 from stf.util import files as futil
 from stf.util.colors import termcolor as tc
+from stf.util.colors import disable_colors
+from stf.util.misc import INFO
 import textwrap
 import sys
 
@@ -257,7 +259,7 @@ def runset_summary_all(files, outputs):
 
 
 
-def runset_summary(runset_name, fout, out='console'):
+def runset_summary(runset_name, out='console'):
     jp_meas = jparse('$.phases.[2].measurements.*')
     files = runset_getFiles(runset_name)
     report = bullet + tc(f'Summary of Test Results \n\n', 'gray')
@@ -352,10 +354,12 @@ def runset_report_dir(runset_path):
         for p in paths:
             runset_report_dir(p)
     else:
-        report = futil.getFilePath(path, filename='report.txt')
-        debug('reppath: {report}'.format(report=report))
-        with open(report, 'w') as f:
-            runset_report(runset_name, files=files, out=f)
+        # not sure why this doesn't work?!
+        #report = futil.getFilePath(path, filename='report.txt')
+        #debug('reppath: {report}'.format(report=report))
+        #with open(report, 'w') as f:
+        #runset_report(runset_name, files=files, out=f)
+        runset_report(runset_name, files=files)
 
 def getFiles_resurse(runset_path):
     debug(runset_path) 
@@ -386,22 +390,19 @@ def runset_summary_dir(runset_path):
         --device degg   (all degg devices)
         --device <mbid> (all devices with mbid)
     '''
-    debug(f'here {runset_path}')
     path = futil.getFilePath('results', runset_path)
-    debug(f'here {path}')
     dirs = futil.getDirs(path)
     if not dirs:
         files = runset_getFiles(results_dir=path)
         if files:
             gen_summary(files)
         else:
-            print(f"SKIPING {runset_path}")
+            debug(f"SKIpPING {runset_path}")
         return
-    debug(f'XXX dirs: {dirs}')
     for d in dirs:
-        debug(f'XXX trying : {d}')
         if d == 'report':
             continue
+        debug(f'XXX trying : {d}')
         files = runset_getFiles(results_dir=d)
         if not files:
             runset_summary_dir(d)
@@ -413,8 +414,11 @@ def runset_summary_dir(runset_path):
     #    files = runset_getFiles(results_dir=path)
 
     if not files:
-        print(f"SKIPING {runset_path}")
-        return
+        files = runset_getFiles(results_dir=path)
+        if files:
+            gen_summary(files)
+        else:
+            debug(f"(no files) SKIPPING {runset_path}")
 
     #debug(f'XXX gen_Summary: {path} -> {files}')
     #gen_summary(files)
@@ -426,12 +430,15 @@ def gen_summary(files):
     xx = futil.getFilePath(out_path, 'report', filename='<out>')
     debug(f'repout: {xx}')
     outputs = {
-        #'json': rp('summary.json'),
+        'json': rp('summary.json'),
         'console': rp('summary.txt'),
         'consolebrief': rp('summary-brief.txt'),
         'html': rp('summary.html'),
         'csv': rp('summary.csv'),
     }
+    INFO(f'generating reports... {outputs}')
+
+    disable_colors()
     runset_summary_all(files, outputs)
 
 def runset_report(runset_name, files=[], out=sys.stdout):
@@ -497,7 +504,8 @@ def runset_getFiles(runset_name='', results_dir=None):
     if not results_dir:
         results_dir = config.get_path('results', filename=runset_name)
 
-    files = util.files.globFiles(results_dir, pattern='*.json')
+    # XXX: file pattern -- change output fname? include stf.json extension?
+    files = util.files.globFiles(results_dir, pattern='*degg*.json')
     #if len(files) == 0:
     #    print(f'No output files found for set "{runset_name}"')
     #    debug('No output files found')
