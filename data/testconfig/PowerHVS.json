@@ -5,13 +5,15 @@
     "args":{
     },
 
+    // Currents are not yet characterized. Initially set a wide range, but
+    // disallow value of zero, as this may indicate a read error. Expect to
+    // tighten these values later.
+    // Range of values from ADC 0.015625 μA <= x <= 1024 μA
     "expectedValues": {
-        "channel 08 SLO_HVS0_VMON":             1200.0,
-        "channel 09 SLO_HVS0_IMON":             0.0,
-        "channel 10 SLO_HVS1_VMON":             1200.0,
-        "channel 11 SLO_HVS1_IMON":             0.0,
+        "channel 09 SLO_HVS0_IMON_MIN":   0.16,
+        "channel 09 SLO_HVS0_IMON_MAX":  1000,
 
-        "voltage_percent":                      2.0,
-        "current_percent":                      50.0
+        "channel 11 SLO_HVS1_IMON_MIN":   0.16,
+        "channel 11 SLO_HVS1_IMON_MAX":  1000
     }
 }

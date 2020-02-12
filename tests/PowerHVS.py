@@ -50,21 +50,16 @@ def readSloAdcSingle(test, session, channel):
 
 # Test SLO_ADC single channel reads.
 @stf.measures(
-    stf.Measurement('chan_08').expectPercent(
-        "{channel 08 SLO_HVS0_VMON}",
-        "{voltage_rail_percent}"),
-    stf.Measurement('chan_09').expect(
-        "{channel 09 SLO_HVS0_IMON}"),
-    stf.Measurement('chan_10').expectPercent(
-        "{channel 10 SLO_HVS1_VMON}",
-        "{voltage_rail_percent}"),
-    stf.Measurement('chan_11').expect(
-        "{channel 11 SLO_HVS1_IMON}"),
+    stf.Measurement('chan_09').expectRange(
+        "{channel 09 SLO_HVS0_IMON_MIN}",
+        "{channel 09 SLO_HVS0_IMON_MAX}", type=float),
+    stf.Measurement('chan_11').expectRange(
+        "{channel 11 SLO_HVS1_IMON_MIN}",
+        "{channel 11 SLO_HVS1_IMON_MAX}", type=float)
 )
 def run_test(test, session, **kw):
-    test.measurements.chan_08 = readSloAdcSingle(test, session,  8)
+
     test.measurements.chan_09 = readSloAdcSingle(test, session,  9)
-    test.measurements.chan_10 = readSloAdcSingle(test, session, 10)
     test.measurements.chan_11 = readSloAdcSingle(test, session, 11)
 
 

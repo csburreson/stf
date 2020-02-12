@@ -50,21 +50,21 @@ def readSloAdcSingle(test, session, channel):
 
 # Test SLO_ADC single channel reads.
 @stf.measures(
-    stf.Measurement('chan_00').expectPercent(
-        "{channel 00 LVS_SLO_IMON_1V1}",
-        "{current_percent}"),
-    stf.Measurement('chan_01').expectPercent(
-        "{channel 01 LVS_SLO_IMON_1V35}",
-        "{current_percent}"),
-    stf.Measurement('chan_02').expectPercent(
-        "{channel 02 LVS_SLO_IMON_1V8}",
-        "{current_percent}"),
-    stf.Measurement('chan_03').expectPercent(
-        "{channel 03 LVS_SLO_IMON_2V5}",
-        "{current_percent}"),
-    stf.Measurement('chan_04').expectPercent(
-        "{channel 04 LVS_SLO_IMON_3V3}",
-        "{current_percent}"),
+    stf.Measurement('chan_00').expectRange(
+        "{channel 00 LVS_SLO_IMON_1V1_MIN}",
+        "{channel 00 LVS_SLO_IMON_1V1_MAX}", type=float),
+    stf.Measurement('chan_01').expectRange(
+        "{channel 01 LVS_SLO_IMON_1V35_MIN}",
+        "{channel 01 LVS_SLO_IMON_1V35_MAX}", type=float),
+    stf.Measurement('chan_02').expectRange(
+        "{channel 02 LVS_SLO_IMON_1V8_MIN}",
+        "{channel 02 LVS_SLO_IMON_1V8_MAX}", type=float),
+    stf.Measurement('chan_03').expectRange(
+        "{channel 03 LVS_SLO_IMON_2V5_MIN}",
+        "{channel 03 LVS_SLO_IMON_2V5_MAX}", type=float),
+    stf.Measurement('chan_04').expectRange(
+        "{channel 04 LVS_SLO_IMON_3V3_MIN}",
+        "{channel 04 LVS_SLO_IMON_3V3_MAX}", type=float)
 )
 def run_test(test, session, **kw):
     test.measurements.chan_00 = readSloAdcSingle(test, session,  0)
