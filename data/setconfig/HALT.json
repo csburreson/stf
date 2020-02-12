@@ -64,13 +64,13 @@
             }
         ],
 
-        "CameraComms": [],
+        //"CameraComms": [],
 
-        "CheckFirmware": [],
+        //"CheckFirmware": [],
 
         "DACScan": [],
 
-        "DEggHVSupply": [],
+        //"DEggHVSupply": [],
 
         "DPRAM": [],
 
@@ -155,7 +155,17 @@
 
         "Interlock": [],
 
-        "LightSensor": [],
+        "LightSensor": [
+            {
+                "instance": "lights-on",
+                    // Test assumes no light, but HALT test has chamber
+                    // lights on. Max value = 2048 mV.
+                    "expectedValues": {
+                      "channel 06 light_sensor_dark_min":     0.3125,
+                      "channel 06 light_sensor_dark_max":     2000
+                }
+            }
+        ],
 
         "MagnetometerSensor": [],
 

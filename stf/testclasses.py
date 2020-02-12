@@ -28,7 +28,7 @@ class Common(object):
         stf.M('softwareVersion')
     )
     #XXX: need long timeout for localhost from crappy inet cnxn
-    @stf.options(timeout_s=500)
+    @stf.options(timeout_s=500, repeat_limit=5)
     def checkCommsAndFirmware(test, session, **kw):
         gINFO = stf.ginfo(['framework', 'iceboot'])
         vn = session.fpgaVersion()
@@ -54,14 +54,30 @@ class Common(object):
             gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile_name, paths.fwfile)
 
-        session.flashConfigureCycloneFPGA(paths.fwfile_name)
-
+        resp = session.flashConfigureCycloneFPGA(paths.fwfile_name)
         vn = session.fpgaVersion()
-        test.measurements.fpgaVersion = hex(vn)
-        if vn == 0xFFFF:
+        stf.dbg(f'checkComms: vn={vn}; flashConfigure says "{resp}"')
+        time.sleep(1)
+
+        commsOk = False
+        commsChecks = 5
+        while commsChecks > 0:
+            vn = session.fpgaVersion()
+            test.measurements.fpgaVersion = hex(vn)
+            if vn == 0xFFFF:
+                commsChecks -= 1
+                stf.dbg('!!! comms error !!! sleeping for 2')
+                time.sleep(2)
+                resp = session.flashConfigureCycloneFPGA(paths.fwfile_name)
+                stf.dbg(f'checkComms {5 - commsChecks}: flashConfigure says {resp}')
+            else:
+                commsOk = True
+                break
+
+        if commsOk is False:
             test.logger.error('unable to configure firmware. quitting.')
             gINFO('unable to configure firmware. quitting.')
-            return stf.STOP
+            return stf.REPEAT
 
         test.measurements.softwareId = session.softwareId()
         test.measurements.softwareVersion = session.softwareVersion()
