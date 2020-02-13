@@ -179,15 +179,35 @@
 
         "ScalerScan": [
             {
-                "instance": "channel-0",
+                "instance": "base-channel-0",
                 "args": {
                     "channel" : 0
                 }
             },
             {
-                "instance": "channel-1",
+                "instance": "base-channel-1",
                 "args": {
                     "channel" : 1
+                }
+            },
+            {
+                "instance": "dacIncr20-channel-0",
+                "expectedValues": {
+                    "maxRate": 0
+                },
+                "args": {
+                    "channel" : 0,
+                    "dacIncrement": 20
+                }
+            },
+            {
+                "instance": "dacIncr20-channel-1",
+                "expectedValues": {
+                    "maxRate": 0
+                },
+                "args": {
+                    "channel" : 1,
+                    "dacIncrement": 20
                 }
             }
         ],
