@@ -64,13 +64,13 @@
             }
         ],
 
-        "CameraComms": [],
+        //"CameraComms": [],
 
-        "CheckFirmware": [],
+        //"CheckFirmware": [],
 
         "DACScan": [],
 
-        "DEggHVSupply": [],
+        //"DEggHVSupply": [],
 
         "DPRAM": [],
 
@@ -143,19 +143,35 @@
                 "instance": "channel-0",
                 "args": {
                     "channel" : 0
+                },
+                "expectedValues": {
+                    "clockdiff_max" : 100
                 }
             },
             {
                 "instance": "channel-1",
                 "args": {
                     "channel" : 1
+                },
+                "expectedValues": {
+                    "clockdiff_max" : 100
                 }
             }
         ],
 
         "Interlock": [],
 
-        "LightSensor": [],
+        "LightSensor": [
+            {
+                "instance": "lights-on",
+                    // Test assumes no light, but HALT test has chamber
+                    // lights on. Max value = 2048 mV.
+                    "expectedValues": {
+                      "channel 06 light_sensor_dark_min":     0.3125,
+                      "channel 06 light_sensor_dark_max":     2000
+                }
+            }
+        ],
 
         "MagnetometerSensor": [],
 
@@ -169,15 +185,35 @@
 
         "ScalerScan": [
             {
-                "instance": "channel-0",
+                "instance": "base-channel-0",
                 "args": {
                     "channel" : 0
                 }
             },
             {
-                "instance": "channel-1",
+                "instance": "base-channel-1",
                 "args": {
                     "channel" : 1
+                }
+            },
+            {
+                "instance": "dacIncr20-channel-0",
+                "expectedValues": {
+                    "maxRate": 0
+                },
+                "args": {
+                    "channel" : 0,
+                    "dacIncrement": 20
+                }
+            },
+            {
+                "instance": "dacIncr20-channel-1",
+                "expectedValues": {
+                    "maxRate": 0
+                },
+                "args": {
+                    "channel" : 1,
+                    "dacIncrement": 20
                 }
             }
         ],
