@@ -1,4 +1,5 @@
 import json
+import socket
 import time
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
@@ -211,9 +212,13 @@ class MainboardTest(object):
             try:
                 self.session.reboot()
             except (OSError, IOError):
-                stf.debug('oserror thrown by reboot (expected)')
+                stf.debug('oserror thrown by reboot (semi-expected)')
+            finally:
+                stf.debug('attempting to shutdown and close socket comms...')
+                self.session.close()
                 del self.session
             stf.debug('teardown complete')
+
 
     # DEPRECATED
     def addTest(self, testCallable):

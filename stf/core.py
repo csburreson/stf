@@ -76,8 +76,9 @@ def getIcebootSession(**kw):
         try:
             # this sleep prevents OSError from being thrown in some
             # circumstances
-            time.sleep(1)
             session = iceboot_session_cmd.init(IcebootOpts, **kw)
+            time.sleep(3)
+
         except (IOError, OSError):
             # this except doesn't seem to trigger anymore with the sleep, but
             # just in case...
@@ -281,23 +282,29 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     #T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
 
     # XXX: multiple devices
-    test.execute( {
-        'id': dut_id, 
-        'type': dut_type
-    }, {
-        'iceboot': {
-            'host': dut_host,
-            'port': dut_port,
-            'debug': CONFIG.settings.iceboot.debug
-        },
-        'instance': {
-            'args': args,
-            'expectedValues': evs,
-            'instance': instance,
-            'group': group,
-            'group_timeslug': timeslug
-        }
-    })
+    try:
+        test.execute( {
+            'id': dut_id, 
+            'type': dut_type
+        }, {
+            'iceboot': {
+                'host': dut_host,
+                'port': dut_port,
+                'debug': CONFIG.settings.iceboot.debug
+            },
+            'instance': {
+                'args': args,
+                'expectedValues': evs,
+                'instance': instance,
+                'group': group,
+                'group_timeslug': timeslug
+            }
+        })
+    except KeyboardInterrupt:
+        raise
+    except:
+        INFO(f'Exception raised during test {name}:{instance}')
+
 
 def getBoardID(host=None, port=None):
     session = getIcebootSession(host=host, port=port)
