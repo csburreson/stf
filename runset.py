@@ -10,9 +10,10 @@ if __name__ == '__main__':
     #cmd.add_argument('--run', action='store_true')
     #cmd.add_argument('--tests', action='store_true')
     #cmd.add_argument('--configs', action='store_true')
-    p.add_argument('--iceboot_host', '--host', '-H', type=str, default=None)
-    p.add_argument('--iceboot_port', '--port', '-p', type=str, default=None)
-    p.add_argument('--iceboot_debug', '-D', action='store_true', default=False)
+    cfg_conn = stf.config.getIcebootOpts()
+    p.add_argument('--iceboot_host', '--host', '-H', type=str, default=cfg_conn.host)
+    p.add_argument('--iceboot_port', '--port', '-P', type=str, default=cfg_conn.port)
+    p.add_argument('--iceboot_debug', '-D', action='store_true', default=cfg_conn.debug)
 
     args = p.parse_args()
     setName = args.set_name

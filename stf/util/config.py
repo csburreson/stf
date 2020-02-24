@@ -1,5 +1,5 @@
 import json
-from .misc import flatten, jsonify
+from .misc import flatten, jsonify, JsObject
 from .. import parse
 from ..debug import DEBUG
 import os
@@ -79,7 +79,7 @@ class JsonConfig(object):
 
         
     def getIcebootOpts(self):
-        return dict(
+        return JsObject(
             host=self.settings.iceboot.host,
             port=self.settings.iceboot.port,
             debug=self.settings.iceboot.debug,
