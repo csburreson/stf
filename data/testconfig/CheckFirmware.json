@@ -5,6 +5,6 @@
         }
     },
     "expectedValues": {
-        "expected_fw_vnum": "0x101"
+        "expected_fw_vnum": "0x103"
     }
 }
