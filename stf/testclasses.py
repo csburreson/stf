@@ -8,7 +8,6 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-#from .util.misc import INFO, check_mainboard_fwfile, getTimeSlug
 from .util import files, misc
 FAKE_ICEBOOT = False
 
