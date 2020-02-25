@@ -5,6 +5,7 @@ from stf.util.files import getFileSize
 import stf
 import uuid
 from datetime import datetime
+import time
 
 
 def flatten(d, separator='.'):
@@ -108,6 +109,35 @@ def INFO(s, **kw):
         if not (set(groups) & set(__SHOW_GROUPS)):
             return
     _PRINT(clr('INFO >>> ', 'gray') + clr(s, 'gold'))
+
+
+# decorator to try a fn a couple times and sleep between, accepts 
+def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError)):
+    '''
+    decorator to try a fn up to `repeat_limit` times with a sleep=`sleep` wait
+    
+    accepts `exc_cls` which is a TUPLE (important! not a list) of 
+    classes to except on and go ahead with retry
+    
+    optional msg will be printed to stf.debug if provided
+    '''
+    def actual_decorator(try_fn):
+        def wrap(*args, **kw):
+            # nonlocal so wrap fn can crawl up scope-chain to modify 
+            # repeat_limit
+            nonlocal repeat_limit
+            while repeat_limit:
+                try:
+                    return try_fn(*args, **kw)
+                except exc_cls as e:
+                    repeat_limit -= 1
+                    stf.debug(f'Exception: {e}; trying again after {sleep}s')
+                    if msg:
+                        stf.debug(msg)
+                    if sleep:
+                        time.sleep(sleep)
+        return wrap
+    return actual_decorator
 
 
 def check_mainboard_fwfile(flash):

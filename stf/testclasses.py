@@ -8,8 +8,7 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-from .util.misc import INFO, check_mainboard_fwfile, getTimeSlug
-from .util import files
+from .util import files, misc
 FAKE_ICEBOOT = False
 
 # class TestSet(object):
@@ -33,33 +32,37 @@ class Common(object):
     def checkCommsAndFirmware(test, session, **kw):
         gINFO = stf.ginfo(['framework', 'iceboot'])
         vn = session.fpgaVersion()
-        stf.dbg('running framework FW test, got vn: {} (expecting {})'.format(hex(vn), kw['expectedValues']['expected_fw_vnum']))
 
         paths = stf.config.settings.paths
 
         flash = session.flashLS()
 
         try:
-            fwfile_status = check_mainboard_fwfile(flash)
+            fwfile_status = misc.check_mainboard_fwfile(flash)
         except FileNotFoundError as e:
-            gINFO(f'FW File does not exist: {e}')
+            gINFO(f'FW File does not exist: {e}. Cannot proceed.')
             return stf.STOP
 
-        gINFO(f'checking flash for {paths.fwfile} ... status={fwfile_status})')
+        #gINFO(f'checking flash for {paths.fwfile} ... status={fwfile_status})')
 
         if fwfile_status == 'ok':
-            gINFO(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_name})')
+            stf.dbg(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_name})')
         elif fwfile_status == 'skip':
-            gINFO(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_name}')
+            stf.dbg(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_name}')
         else:
-            gINFO(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
+            stf.dbg(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
             session.ymodemFlashUpload(paths.fwfile_name, paths.fwfile)
 
         resp = session.flashConfigureCycloneFPGA(paths.fwfile_name)
         vn = session.fpgaVersion()
-        stf.dbg(f'checkComms: vn={vn}; flashConfigure says "{resp}"')
+        stf.dbg(f'checkComms: vn={hex(vn)}; flashConfigure says "{resp}"')
+        # XXX: check with jim; fpgaVersion should now wait for flashConfigure
+        # to complete (or flashConfigure blocks until configured and
+        # fpgaVersion will return proper val? so we don't need a sleep?
         time.sleep(1)
 
+        # XXX: might not need to check comms repeatedly anymore, and 
+        # if we do need to should refactor with try_repeat
         commsOk = False
         commsChecks = 5
         while commsChecks > 0:
@@ -88,7 +91,8 @@ class Common(object):
             test.measurements.fpgaChipID = 'unset'
 
         x = test.measurements
-        stf.debug(f'FPGA v{vn} Configured. IceBoot v{x.softwareVersion} git: {x.softwareId} FPGA ID: {x.fpgaChipID}')
+        evn = kw['expectedValues']['expected_fw_vnum']
+        stf.debug(f'FPGA v{hex(vn)} Configured (expecting={evn}). IceBoot v{x.softwareVersion} git: {x.softwareId} FPGA ID: {x.fpgaChipID}')
         stf.debug('Starting main test phase...')
 
 
@@ -111,7 +115,7 @@ class MainboardTest(object):
         # instance can be none
         self.instance = kw.get('instance', 'base')
 
-        stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
+        #stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
 
         #self.session = None
         # XXX: move to init or "configure" step or something
@@ -182,6 +186,7 @@ class MainboardTest(object):
 
     # Process any queued MCU internal logging records
     def logOutput(self, test):
+        '''may throw UnicodeDecodeError'''
         logOutputLines = self.session.printLogOutput()
         if len(logOutputLines) == 0:
             return
@@ -202,27 +207,44 @@ class MainboardTest(object):
             logFn('MCU log: ' + logLine)
 
 
+    @misc.try_repeat(exc_cls=(UnicodeDecodeError, OSError, IOError))
     def tearDown(self, test):
         if self.session:
             if hasattr(self.session, 'FAKE'):
                 return
+            stf.debug('tearing down test/iceboot ... initiating device reboot()')
             self.logOutput(test)
-            INFO('tearing down ... initiating reboot()')
-            # XXX:rebootafter
+            self.session.reboot()
+            stf.debug('attempting to shutdown and close socket comms...')
+            self.session.close()
+            del self.session
+            stf.debug('teardown complete')
+        
+    '''
+    # OLD teardown fn (pre try_repeat... probably won't need this)
+    def XXX_tearDown(self, test):
+        if self.session:
+            if hasattr(self.session, 'FAKE'):
+                return
             try:
+                stf.debug('tearing down test/iceboot ... initiating device reboot()')
+                self.logOutput(test)
                 self.session.reboot()
             except (OSError, IOError):
                 stf.debug('oserror thrown by reboot (semi-expected)')
+            except UnicodeDecodeError:
+                stf.debug('got UnicodeDecodeError when tearing down... trying to close session')
             finally:
-                stf.debug('attempting to shutdown and close socket comms...')
-                self.session.close()
-                del self.session
+                try:
+                    stf.debug('attempting to shutdown and close socket comms...')
+                    self.session.close()
+                    del self.session
+                except UnicodeDecodeError:
+                    stf.debug('got UnicodeDecodeError when closing iceboot session... continuing if possible')
+                    
             stf.debug('teardown complete')
+    '''
 
-
-    # DEPRECATED
-    def addTest(self, testCallable):
-        self.tests.append(testCallable)
 
     # used for test sets
     def reconfigure(self, name, group, args, evs, timeslug='', config={}):
@@ -249,11 +271,6 @@ class MainboardTest(object):
         )
 
     def getTestParams(self):
-        '''
-        self._PARAMS is dict of {
-        }
-        '''
-        # XXX: this requires @configure deco
         if hasattr(self, '_PARAMS'):
             return self._PARAMS
 
@@ -287,23 +304,13 @@ class MainboardTest(object):
         dut_host = x.get('host') or stf.config.settings.iceboot.host
         dut_port = x.get('port') or stf.config.settings.iceboot.port
 
-        # TODO: get test desc (or keep this in DB and link to test name)
-        desc = 'todo'
-
         stf.dbg('test args: {}'.format(test_args))
         stf.dbg('expected values: {}'.format(expected_values))
 
-        # XXX: move this to seutp function or re-implement this as a plug?
-        #try:
         self.session = getIcebootSession(host=dut_host, port=dut_port)
-        #except:
-        #    self.session = None
-        #    stf.dbg('Lots of OSErrors... sleeping for 10...')
-        #    time.sleep(10)
-        #    self.session = getIcebootSession(host=dut_host, port=dut_port)
 
-        # XXX:rebootfirst
         '''
+        # XXX:rebootfirst
         try:
             stf.debug('rebooting device...')
             self.session.reboot()
@@ -365,7 +372,6 @@ class MainboardTest(object):
                 group_timeslug,
                 output.json.filename
             )
-            stf.debug(f'jsonout path: {p}')
             T.add_output_callbacks(
                 JSON(p, indent=4, default=str)
             )
@@ -382,7 +388,5 @@ class MainboardTest(object):
         T.descriptor.metadata['board_softwareVersion'] = session.fpgaVersion
         T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
         '''
-        #self.T = T
 
-        INFO(f'Finished {self.test_name}')
         stf.dbg("finished execute for test: {}".format(self.test_name))

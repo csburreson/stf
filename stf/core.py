@@ -23,7 +23,7 @@ from . import db
 from stf.debug import dbg, DEBUG
 from stf import getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo 
 from .parse import SetConfig
-from .util import files 
+from .util import files, misc
 from .util.colors import termcolor as tc
 from .util.config import get_config
 
@@ -56,6 +56,7 @@ class FakeIceboot(object):
             return lambda: int(CONFIG.settings.iceboot.fw_version, 16)
         return fake
 
+@misc.try_repeat(repeat_limit=3, sleep=3, msg='unable to create connection... trying again', exc_cls=(OSError, IOError, UnicodeDecodeError))
 def getIcebootSession(**kw):
     if DEBUG.FAKE_ICEBOOT:
         return FakeIceboot(**kw)
@@ -68,10 +69,13 @@ def getIcebootSession(**kw):
 
     dbg('Starting iceboot session ...')
     dbg(f'  {CONFIG.settings.iceboot}')
+
+    session = iceboot_session_cmd.init(IcebootOpts, **kw)
+    return session
+    '''
     session = None
     fail_count = 0
-    # XXX:
-    #kw = CONFIG.getIcebootOpts()
+
     while session is None and fail_count < 5:
         try:
             # this sleep prevents OSError from being thrown in some
@@ -89,6 +93,7 @@ def getIcebootSession(**kw):
                 raise
 
     return session
+    '''
 
 
 def getDevices(device_type=None):
@@ -181,7 +186,7 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         for test in setConfig.tests:
             d = CONFIG.get_path('tests')
             testFile = f'{d}/{test}.py'
-            dbg('verifying testfile {} ...'.format(testFile))
+            #dbg('verifying testfile {} ...'.format(testFile))
             try:
                 with open(testFile) as f:
                     testCode = f.read()
@@ -195,11 +200,13 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
         setConfig.configure()
         
         #dbg('registered_tests: {}'.format(getRegisteredClassesByName().keys())) 
-        dbg(setConfig.instances)
+        #dbg(setConfig.instances)
 
         # maybe the results path should include results/setname/{dut_id}-{timeSlug} wehre timeSlug has minutes precision (or we just add sequence numbers...
         # maybe dut_id-suquence-timeslug? since the 
-        # XXX: just thought of this; should timeSlug be property of class at time of instantion? or passed from runset code? because it should be the same for all test outputs...
+        # XXX: just thought of this; should timeSlug be property of class at
+        # time of instantion? or passed from runset code? because it should be
+        # the same for all test outputs...
         '''
         files.ensureEmptyDir(
             root=CONFIG.get_path('results'),
@@ -225,9 +232,8 @@ def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=Fa
 
 
 def runset_thread(setConfig, device_host, device_port, device_type, list_tests=False, list_overrides=False):
-    def debug(s):
-        dbg('XXX: {}:{}:{} {}'.format(setConfig.set_name, device_host, device_port, s))
-    debug('Creating results dir for {setConfig.set_name}/{setConfig.time_slug}')
+    dbg('set:host:port => {}:{}:{}'.format(setConfig.set_name, device_host, device_port))
+    #debug('Creating results dir for {setConfig.set_name}/{setConfig.time_slug}')
 
     # check for board ID
     dut_id = getBoardID(host=device_host, port=device_port)
@@ -243,8 +249,8 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
 
     for test in setConfig.instances:
         testName = test['test_name']
-        debug('running: {}'.format(test['testinstance_name']))
-        debug('   with: {}'.format(test))
+        #debug('running: {}'.format(test['testinstance_name']))
+        #debug('   with: {}'.format(test))
 
         # XXX: refactor test/config listing to be insdie of setConfig
         # then modify runset script to just ask setConfig for this stuff
@@ -263,7 +269,7 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
         with open(testFile) as f:
             testCode = f.read()
             code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}")"""
-            debug(f'code: {code}')
+            #debug(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
@@ -274,7 +280,7 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     cName = tc(name, 'aqua')
     cInst = tc(instance, 'aqua')
 
-    INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
+    #INFO(f'Running {cName}:{cInst}', groups=['runset', 'framework'])
 
     # XXX: copy class info? clone method? maybe just 
     # return new Test object with test.reconfigure()?
@@ -306,6 +312,11 @@ def run_single_test(name, instance, group, args, evs, timeslug,
         INFO(f'Exception raised during test {name}:{instance}')
 
 
+# issue#51: unicode decode error kills framework
+# (not sure if this happens here, but now it shouldn't
+@misc.try_repeat(repeat_limit=3, sleep=1, exc_cls=(UnicodeDecodeError),
+    msg=('Got UnicodeDecodeError when attempting to call "flashID"... '
+         'trying again'))
 def getBoardID(host=None, port=None):
     session = getIcebootSession(host=host, port=port)
     x = session.flashID()
