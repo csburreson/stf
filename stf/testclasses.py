@@ -220,7 +220,8 @@ class MainboardTest(object):
             del self.session
             stf.debug('teardown complete')
         
-    # XXX: should wrap this with try_repeat?
+    '''
+    # OLD teardown fn (pre try_repeat... probably won't need this)
     def XXX_tearDown(self, test):
         if self.session:
             if hasattr(self.session, 'FAKE'):
@@ -242,6 +243,7 @@ class MainboardTest(object):
                     stf.debug('got UnicodeDecodeError when closing iceboot session... continuing if possible')
                     
             stf.debug('teardown complete')
+    '''
 
 
     # used for test sets
