@@ -138,26 +138,28 @@
 
         "FPGAMemTest": [],
 
-        "FPGATimestamping": [
-            {
-                "instance": "channel-0",
-                "args": {
-                    "channel" : 0
-                },
-                "expectedValues": {
-                    "clockdiff_max" : 100
-                }
-            },
-            {
-                "instance": "channel-1",
-                "args": {
-                    "channel" : 1
-                },
-                "expectedValues": {
-                    "clockdiff_max" : 100
-                }
-            }
-        ],
+// FPGATimestamping disabled pending STF issue
+// https://github.com/WIPACrepo/stf/issues/58
+//        "FPGATimestamping": [
+//            {
+//                "instance": "channel-0",
+//                "args": {
+//                    "channel" : 0
+//                },
+//                "expectedValues": {
+//                    "clockdiff_max" : 100
+//                }
+//            },
+//            {
+//                "instance": "channel-1",
+//                "args": {
+//                    "channel" : 1
+//                },
+//                "expectedValues": {
+//                    "clockdiff_max" : 100
+//                }
+//            }
+//        ],
 
         "Interlock": [],
 
