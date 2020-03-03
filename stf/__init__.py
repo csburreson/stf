@@ -1,9 +1,15 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-__version__ = '1.2.3'
+__version__ = '1.2.4'
 FRAMEWORK_VERSION = __version__
 FRAMEWORK_VERSIONNAME = 'Chernobyl'
+
+# exception class for folks to throw known exceptions
+# NOTE: move to util/exceptions.py and include other STF-based exceptions that
+# are common across tests (if there are any)
+class STFException(Exception):
+    pass
 
 
 global TESTABLE_CLASSES
