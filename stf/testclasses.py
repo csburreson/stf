@@ -18,6 +18,7 @@ FAKE_ICEBOOT = False
 
 class Common(object):
     # default test config options
+
     TEST_CONFIG = {
         'timeout_s': 10
     }
@@ -360,7 +361,10 @@ class MainboardTest(object):
             device=device,
             conn=config.get('iceboot', {})
         )
-        #T.configure(teardown_function=self.tearDown)
+        T.configure(
+            #teardown_function=self.tearDown
+            failure_exceptions=[stf.STFException]
+        )
 
         output = stf.config.settings.output
         if output.json.enabled:

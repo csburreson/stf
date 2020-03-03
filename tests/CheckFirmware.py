@@ -6,6 +6,7 @@ def run_test(test, session):
     fw_version = hex(session.fpgaVersion())
     test.logger.info('Got fw version: {}'.format(fw_version))
     test.measurements.fw_vnum = fw_version
+    raise stf.STFException('foobar')
     
 
 stf.register(
