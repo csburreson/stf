@@ -1,7 +1,10 @@
 {
-    "conf": {},
-    "args": {},
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
     "expectedValues": {
-        "expected_fw_vnum": "0x6a"
+        "expected_fw_vnum": "0x103"
     }
 }

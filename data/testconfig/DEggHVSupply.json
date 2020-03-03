@@ -1,0 +1,12 @@
+{
+    "config": {
+        "iceboot": {
+            //"host": "10.25.120.10"
+	    "host": "localhost"
+        }
+    },
+    "expectedValues": {
+        "expected_degghvsupply_min": 150.0,
+        "expected_degghvsupply_max": 300.0
+    }
+}

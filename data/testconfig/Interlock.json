@@ -1,0 +1,15 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+        "flashInterlockValue": true,
+        "configInterlockValue": true,
+        "hvInterlockValue": true,
+        "lidInterlockValue": true
+    },
+    "args": {
+    }
+}

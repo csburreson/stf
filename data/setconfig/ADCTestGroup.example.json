@@ -1,0 +1,30 @@
+{
+    "tests": {
+        // instance order is preserved (will execute ADCComms:fooInstance, followed by ADCComms:barInstance)
+        "ADCComms": [{
+            "instance": "base"
+        }, {
+            "instance": "fooInstance",
+            "args": {},
+            "expectedValues": {}
+        }, {
+            "instance": "barInstance",
+            "args": { "channel": 0 },
+            "expectedValues": {}
+        }],
+        "ADCNoiseLevel": [{
+            "instance": "noisyEnvironment",
+            "desc": "describe something about this instance override",
+            "expectedValues": {
+                "noise_min": 42.5,
+                "noise_max": 45.2
+            }
+        }, {
+            "instance": "tweakDacVal",
+            "desc": "different DAC val because Colin wrote this and doesn't know what the DAC val does",
+            "args": {
+                "dac_val" : 42 
+            }
+        }]
+    }
+}

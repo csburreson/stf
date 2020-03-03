@@ -1,0 +1,19 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "192.168.0.10"
+        }
+    },
+    "expectedValues": {
+        "noise_min": 0.5,
+        "noise_max": 3.0,
+        "one_pct_min": -10,
+        "one_pct_max": 0,
+        "ninetynine_pct_min": 0,
+        "ninetynine_pct_max": 10
+    },
+    "args": {
+    	"channel" : 0,
+        "dac_val" : 31000
+    }
+}

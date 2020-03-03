@@ -1,0 +1,22 @@
+{
+    "tests": [
+       //"ADCComms",
+       //"ADCNoiseLevel",
+       //"ADCTestPatterns",
+       //"BaselineStability",
+       "CheckFirmware",
+       "DACScan",
+       "DPRAM",
+       /*
+       "FEPulserCharge",
+       "FEPulserHeight",
+       "FEPulserLinearity",
+       "FEPulserWidth",
+       "FPGAMemTest",
+       "FPGATimestamping",
+       "SLO_ADC",
+       */
+       "Flash",
+       "Interlock"
+    ]
+}

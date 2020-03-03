@@ -1,0 +1,12 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+        "flashIOSuccessValue": true
+    },
+    "args": {
+    }
+}

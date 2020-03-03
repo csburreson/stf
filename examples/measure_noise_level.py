@@ -44,16 +44,11 @@ def setup(test, session):
     fpga_write(session, 'dpram_select', 4)
 
 
-@stf.register(version='1.0', config_file='data/testconfig/measure_noise_level.json')
-class MeasureNoiseLevel(stf.MainboardTest):
-    '''measure the noise level'''
-    TESTS = [
-        setup,
-        # can call test like this, which makes channel the 3rd arg (first kwarg)
-        measure_noise_level.with_args(channel=0),
-        measure_noise_level.with_args(channel=1),
-    ]
-    
+stf.register(
+    version='1.0',
+    run=measure_noise_level,
+    config_file='data/testconfig/measure_noise_level.json')
+
 
 if __name__ == '__main__':
     stf.run()

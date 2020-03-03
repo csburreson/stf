@@ -1,0 +1,11 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+      "accel_z_min": 9.7,
+      "accel_z_max": 9.9
+    }
+}

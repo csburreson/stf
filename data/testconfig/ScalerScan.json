@@ -1,0 +1,17 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+        "maxRate": 10
+    },
+    "args": {
+        "channel" : 1,
+        "biasDACValue": 30300,
+        "integrationTimeUS": 1000000,
+        "dacIncrement": 10
+    }
+}
+

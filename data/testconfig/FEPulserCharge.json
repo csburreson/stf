@@ -1,0 +1,18 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+      "exp_x": 700,
+      "exp_y": 740
+    },
+    "args": {
+    	"channel" : 0,
+      "dac_val" : 30000,
+      "dac_val_fepulser" : 30000,
+      "bins_before_peak" : 4,
+      "bins_after_peak" : 8
+    }
+}

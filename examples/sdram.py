@@ -1,3 +1,10 @@
+'''
+this test is essentially a timeout test
+
+it comes from actual code
+'''
+
+
 import stf
 from fpga_reg import *
 import numpy as np
@@ -14,7 +21,7 @@ def fpga_read(*args):
     stf.dbg('reading...')
     global sleep
     import time
-    time.sleep(0.5)
+    time.sleep(sleep)
     sleep += 1
     return 3 - sleep
 
@@ -46,7 +53,6 @@ def set_sdram_adr(session, adr, dpram_num):
 
 
 @stf.options(timeout_s=10)
-@stf.test
 def run_test(test, session, dpram_nums):
     for dpram_num in [0, 1]:
         print('\n---Testing SDRAM lane %d---\n' % dpram_num)
@@ -132,12 +138,12 @@ def run_test(test, session, dpram_nums):
 
 # register decorator accepts version and config file
 #   
-@stf.register(version='1.0', config_file='data/testconfig/sdram.json')
-class SDRAMTest(stf.MainboardTest):
-    '''
-    Docstring is included in test results as the test description
-    '''
-    TESTS = [run_test]
+stf.register(
+    version='1.0',
+    config_file='data/testconfig/sdram.json',
+    test_desc='tests SD Ram',
+    run=run_test
+)
 
 
 # this allows us to easily define tests

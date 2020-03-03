@@ -19,6 +19,7 @@ TerminalColors = {
     'GOLD': '\33[93m',
     'AQUA': '\33[96m',
     'LPURPLE': '\33[94m',
+    'BOLD': '\033[1m',
     # reset will unset the color/style applied
     'RESET': '\x1b[0m'
 }

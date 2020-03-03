@@ -1,0 +1,15 @@
+{
+    "config": {
+    },
+// Though the magnitude of the magnetic field on the Earth's surfacde varies
+// from 2.5e-5 to 6.5e-5 Tesla, initial testing has shown the LIS3MDL can be
+// influenced by nearby large metal objects, magnets, motors, etc. Accordingly,
+// the pass/fail criteria are initially set to 2 x the max Earth field
+// magnitude.
+    "expectedValues": {
+      // 0.5 x Min earth field value
+      "bField_min": 1.25e-5,
+      // 2 x Max earth field value
+      "bField_max": 1.3e-04
+    }
+}

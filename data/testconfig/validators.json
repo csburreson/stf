@@ -1,0 +1,17 @@
+{
+    // testing comments
+    "config": {},
+    "args": {},
+    "expectedValues": {
+        "foo": 42, /* inline comment */
+        "bar": /* inline comment before val */ 44,
+        "peak": 4422,
+        "groove_low": "groove",
+        "groove_high": "groovy",
+        "ok_status": "OK",
+        "somepattern": "^deadbeef$",
+        "expectedVal": 1000,
+        "percent": 10
+
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config":{
+    },
+
+    "args":{
+    },
+
+    // Expected values default for dark environment.
+    // ADC range 0 <= x <= 2048 mV
+    "expectedValues": {
+        // Light sensor covered value. Must be above zero.
+        "channel 06 light_sensor_dark_min":     0.3125,
+        // Office at night with lights off.
+        "channel 06 light_sensor_dark_max":     278.0
+    }
+}

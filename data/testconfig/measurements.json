@@ -1,0 +1,8 @@
+{
+    "expectedValues": {
+        "fooVal": "bar"
+    },
+    "args": {
+        "fooVal": "NAR!"
+    }
+}
