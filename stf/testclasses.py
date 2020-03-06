@@ -282,10 +282,11 @@ class MainboardTest(object):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    def execute(self, device, config={}):
+    def execute(self, device, config={}, timeslug=None, json_path=stf.config.get_path('json_results')):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
+        # NOTE: timeslug is intended to be used ONLY for running single tests
         inst = config.get('instance', {})
         if inst:
             test_args = inst.get('args', {})
@@ -298,7 +299,8 @@ class MainboardTest(object):
             test_args = ps.get('args', {})
             expected_values = ps.get('expectedValues', {})
             group = ''
-            group_timeslug = ''
+            # hack: use group timeslug
+            group_timeslug = timeslug
             instance_name = 'base'
 
         x = config.get('iceboot', {})
@@ -369,6 +371,9 @@ class MainboardTest(object):
         output = stf.config.settings.output
         if output.json.enabled:
             # issue X: support timeSlugs in path 
+            p = files.join(json_path, output.json.filename)
+            stf.debug(f"ADDING callback for {p} ")
+            '''
             p = files.join(
                 stf.config.get_path('json_results'),
                 # this can be empty str
@@ -376,6 +381,7 @@ class MainboardTest(object):
                 group_timeslug,
                 output.json.filename
             )
+            '''
             T.add_output_callbacks(
                 JSON(p, indent=4, default=str)
             )
@@ -386,6 +392,7 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
+        stf.debug(f"EXECUTE {self.test_name}")
         '''
         INFO(f'{dir(T)}')
         T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion

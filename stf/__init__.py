@@ -1,7 +1,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-__version__ = '1.2.4'
+__version__ = '1.3a'
 FRAMEWORK_VERSION = __version__
 FRAMEWORK_VERSIONNAME = 'Chernobyl'
 
@@ -18,6 +18,7 @@ global CLASS_CONTEXT
 CLASS_CONTEXT = {}
 
 def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
+    print(f"adding test class {name} {cls}")
     global TESTABLE_CLASSES
     TESTABLE_CLASSES[name] = cls
     CLASS_CONTEXT[name] = (code_obj, test_globals, test_locals)

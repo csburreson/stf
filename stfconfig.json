@@ -12,7 +12,7 @@
         "json": {
             "enabled": true,
             // note: directory created by runset_thread in stf/core.py
-            "filename": "{metadata[device][type]}-{dut_id}/{metadata[test_name]}-{metadata[test_instance]}-v{metadata[test_version]}_{metadata[device][type]}-{dut_id}.json"
+            "filename": "{metadata[test_name]}-{metadata[test_instance]}-v{metadata[test_version]}_{metadata[device][type]}-{dut_id}.json"
         },
         // not implemented
         "database": null,

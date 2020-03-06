@@ -125,22 +125,26 @@ def run(dhost=CONFIG.settings.iceboot.host,
     '''
     #mainboard = getDevices('mainboard')
     #device = mainboard[0]
-    dut_id = getBoardID(host=dhost, port=dport)
+
+    # deadbeef is for STF_FAKEICEBOOT=1
+    dut_id = getBoardID(host=dhost, port=dport) or 'deadbeef'
     device = {
         'id': dut_id,
         'type': dtype
     }
     # must ensure output directory exists for this device
-    device_dir = '{type}-{id}'.format(**device)
-    files.mkdir(
+    timeslug = misc.getTimeSlug()
+    device_dir = f'{dtype}-{dut_id}/{timeslug}'
+    json_path = files.mkdir(
         CONFIG.get_path('results'),
         device_dir
     )
+    dbg(f'json_path: {json_path}')
 
     ran = False
     for testClass in getRegisteredClasses():
         dbg("Running {}".format(testClass.test_name))
-        testClass.execute(device, {'iceboot': dict(host=dhost, port=dport)})
+        testClass.execute(device, {'iceboot': dict(host=dhost, port=dport)}, json_path=json_path)
         ran = True
 
     if not ran:
@@ -240,12 +244,13 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
 
     # NOTE: must match config.output.json.filename
     device_dir = '{}-{}'.format(device_type, dut_id)
-    files.mkdir(
+    json_path = files.mkdir(
         CONFIG.get_path('results'),
         setConfig.set_name,
         setConfig.time_slug,
         device_dir
     )
+    debug(f'json_path: {json_path}')
 
     for test in setConfig.instances:
         testName = test['test_name']
@@ -268,14 +273,15 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
 
         with open(testFile) as f:
             testCode = f.read()
-            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}")"""
+            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}", "{json_path}")"""
             #debug(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
 
 def run_single_test(name, instance, group, args, evs, timeslug, 
-                    dut_id, dut_type='degg', dut_host=None, dut_port=None):
+                    dut_id, dut_type='degg', dut_host=None, dut_port=None,
+                    json_path=None):
     test = getRegisteredClass(name)
     cName = tc(name, 'aqua')
     cInst = tc(instance, 'aqua')
@@ -305,7 +311,8 @@ def run_single_test(name, instance, group, args, evs, timeslug,
                 'group': group,
                 'group_timeslug': timeslug
             }
-        })
+        },
+        json_path=json_path)
     except KeyboardInterrupt:
         raise
     except:
