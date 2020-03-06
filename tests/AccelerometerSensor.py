@@ -1,11 +1,17 @@
 import stf
 import numpy as np
 
+# Derive a unique exception to indicate sensor I2C read error
+class SensorI2CReadError(stf.STFException):
+    pass
+
 @stf.measures(stf.M('accel_mag').expectRange('{accel_mag_min}', '{accel_mag_max}', type=float))
 def run_test(test, session):
     # Test magnitude of acceleration read over I2C bus via python interface:
     #  session.readAccelerometerXYZ()
     my_accel = session.readAccelerometerXYZ()
+    if (my_accel is None):
+        raise SensorI2CReadError('read ADXL355 acceleration error')
     my_accel_mag = np.sqrt(my_accel[0]*my_accel[0] + my_accel[1]*my_accel[1] + my_accel[2]*my_accel[2])
     test.measurements.accel_mag = my_accel_mag
     test.logger.info('Read accelerometer: {}, Magnitude: {}'.format(my_accel,my_accel_mag))

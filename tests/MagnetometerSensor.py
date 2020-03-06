@@ -13,12 +13,18 @@
 import stf
 import numpy as np
 
+# Derive a unique exception to indicate sensor I2C read error
+class SensorI2CReadError(stf.STFException):
+    pass
+
 @stf.measures(stf.M('bField').expectRange('{bField_min}', '{bField_max}',
     type=float))
 def run_test(test, session):
     # Test magnetometer read over I2C bus via python interface:
     bField = session.readMagnetometerXYZ() # Units: Tesla
     stf._PRINT(bField)
+    if (bField is None):
+        raise SensorI2CReadError('read LIS3MDL MagField error')
     vector = np.array(bField)
     magnitude = np.linalg.norm(vector)
     test.measurements.bField = magnitude

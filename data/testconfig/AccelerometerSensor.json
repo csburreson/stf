@@ -5,7 +5,7 @@
         }
     },
     "expectedValues": {
-      "accel_mag_min": 9.7,
-      "accel_mag_max": 9.9
+      "accel_mag_min": 7.6,
+      "accel_mag_max": 12.24
     }
 }

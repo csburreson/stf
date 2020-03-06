@@ -1,10 +1,16 @@
 import stf
 
+# Derive a unique exception to indicate sensor I2C read error
+class SensorI2CReadError(stf.STFException):
+    pass
+
 @stf.measures(stf.M('pressure').expectRange('{pressure_min_hpa}', '{pressure_max_hpa}', type=float))
 def run_test(test, session):
     # Test pressure read over I2C bus via python interface:
     #  session.readPressure()
     my_pressure = session.readPressure()
+    if (my_pressure is None):
+        raise SensorI2CReadError('read LPS22HB pressure error')
     test.measurements.pressure = my_pressure
     test.logger.info('Read pressure sensor: {}'.format(my_pressure))
 
