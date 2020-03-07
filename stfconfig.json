@@ -5,6 +5,9 @@
         json output is our preferred default for the time being
         in the future, we may wish to add a "database" output option
     */
+    "general": {
+        "timesync": "verify"
+    },
     "output": {
         "console": {
             "enabled": true

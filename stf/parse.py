@@ -22,7 +22,8 @@ import re
 import os
 import json
 from .debug import DEBUG, debug
-from .util.misc import getTimeSlug, getUUID
+from .util.misc import getUUID
+from .util.time import getTimeSlug
 import stf
 import collections.abc
 from copy import deepcopy as dc

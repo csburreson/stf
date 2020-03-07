@@ -4,7 +4,7 @@ from stf import _PRINT
 from stf.util.files import getFileSize
 import stf
 import uuid
-from datetime import datetime
+from datetime import datetime # XXX: move to util.time
 import time
 
 
@@ -169,10 +169,6 @@ def check_mainboard_fwfile(flash):
     stf.debug(f"FW File not present in flash! (rv=missing)")
     return 'missing'
 
-def getTimeSlug(t=None):
-    if not t:
-        t = datetime.utcnow()
-    return t.strftime('%Y.%m.%d_%H%M%S')
 
 
 def getUUID():

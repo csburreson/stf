@@ -1,5 +1,4 @@
 import json
-import time
 import openhtf as htf
 # XXX: this monkey-patch fixes JSON serialization problems with numpy arrays in
 # test.measurements
@@ -21,9 +20,9 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo 
+from stf import getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo
 from .parse import SetConfig
-from .util import files, misc
+from .util import files, misc, exceptions, time
 from .util.colors import termcolor as tc
 from .util.config import get_config
 
@@ -72,28 +71,6 @@ def getIcebootSession(**kw):
 
     session = iceboot_session_cmd.init(IcebootOpts, **kw)
     return session
-    '''
-    session = None
-    fail_count = 0
-
-    while session is None and fail_count < 5:
-        try:
-            # this sleep prevents OSError from being thrown in some
-            # circumstances
-            session = iceboot_session_cmd.init(IcebootOpts, **kw)
-            time.sleep(3)
-
-        except (IOError, OSError):
-            # this except doesn't seem to trigger anymore with the sleep, but
-            # just in case...
-            fail_count += 1
-            dbg("OSERROR!!!")
-            session = None
-            if fail_count == 5:
-                raise
-
-    return session
-    '''
 
 
 def getDevices(device_type=None):
@@ -133,7 +110,7 @@ def run(dhost=CONFIG.settings.iceboot.host,
         'type': dtype
     }
     # must ensure output directory exists for this device
-    timeslug = misc.getTimeSlug()
+    timeslug = time.getTimeSlug()
     device_dir = f'{dtype}-{dut_id}/{timeslug}'
     json_path = files.mkdir(
         CONFIG.get_path('results'),
@@ -156,6 +133,22 @@ def _run(testClass, device):
 
 def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False, device_type='degg',
             device_host=CONFIG.settings.iceboot.host, device_port=CONFIG.settings.iceboot.port):
+
+    ts_mode = CONFIG.settings.general.timesync 
+    if ts_mode == 'verify':
+        dbg('timesync=verify... checking WebAPI')
+        if not time.check_systime_accurate():
+            dbg('FAIL')
+            # should get a better API resource... or have a try_repeat there
+            # raise exceptions.STFRefuseToRun('System time inaccurate')
+        dbg('PASS')
+
+    elif ts_mode == 'user':
+        '''get input'''
+        pass
+        
+        
+
     if set_name:
        config_file = CONFIG.get_path('setconfig', filename=f'{set_name}.json')
        if not files.exists(config_file):
@@ -250,7 +243,7 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
         setConfig.time_slug,
         device_dir
     )
-    debug(f'json_path: {json_path}')
+    dbg(f'json_path: {json_path}')
 
     for test in setConfig.instances:
         testName = test['test_name']
