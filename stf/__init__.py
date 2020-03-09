@@ -18,7 +18,6 @@ global CLASS_CONTEXT
 CLASS_CONTEXT = {}
 
 def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
-    print(f"adding test class {name} {cls}")
     global TESTABLE_CLASSES
     TESTABLE_CLASSES[name] = cls
     CLASS_CONTEXT[name] = (code_obj, test_globals, test_locals)
