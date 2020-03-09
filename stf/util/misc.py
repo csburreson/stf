@@ -173,3 +173,29 @@ def check_mainboard_fwfile(flash):
 
 def getUUID():
     return uuid.uuid1()
+
+
+def get_meta_arg():
+    import openhtf
+    import argparse
+    from openhtf.util.argv import ModuleParser
+    ap = ModuleParser()
+
+    #ap = argparse.ArgumentParser()
+
+    # optional: set off key=value pairs to insert into metadata
+    ap.add_argument('--meta', default=None, 
+        nargs=argparse.REMAINDER)
+    # optional: path to JSON file adding metadata
+    ap.add_argument('--metafile', default=None, 
+        nargs=1)
+
+    ap.add_argument('--testconfig', default=None,
+        nargs=1)
+
+
+    
+    args = ap.parse_known_args()
+    stf.debug(f"args: {args}")
+    return args[0]
+

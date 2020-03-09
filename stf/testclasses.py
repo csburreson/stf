@@ -123,6 +123,8 @@ class MainboardTest(object):
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
 
+        self.meta = kw.get('meta', {})
+
         # for instance derivations, args and evs are already figured out from base instance
         # and passed directly here
         if self.instance != 'base':
@@ -357,6 +359,7 @@ class MainboardTest(object):
                 'args': test_args,
                 'expectedValues': expected_values
             },
+            user_metadata=self.meta,
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
             stf_config=stf.config.settings.dict(),
