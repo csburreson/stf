@@ -175,7 +175,7 @@ def getUUID():
     return uuid.uuid1()
 
 
-def get_meta_arg():
+def get_run_args():
     import openhtf
     import argparse
     from openhtf.util.argv import ModuleParser
@@ -189,13 +189,27 @@ def get_meta_arg():
     # optional: path to JSON file adding metadata
     ap.add_argument('--metafile', default=None, 
         nargs=1)
-
     ap.add_argument('--testconfig', default=None,
         nargs=1)
 
-
-    
     args = ap.parse_known_args()
     stf.debug(f"args: {args}")
     return args[0]
 
+def get_runset_args():
+    import openhtf
+    import argparse
+    from openhtf.util.argv import ModuleParser
+    CFG = stf.util.config.get_config()
+    cfg_conn = CFG.getIcebootOpts()
+    ap = ModuleParser()
+    p = argparse.ArgumentParser(prog='runset')
+    p.add_argument('set_name', type=str, nargs='?')
+    p.add_argument('--iceboot_host', '--host', '-H', type=str, default=cfg_conn.host)
+    p.add_argument('--iceboot_port', '--port', '-P', type=str, default=cfg_conn.port)
+    p.add_argument('--iceboot_debug', '-D', action='store_true', default=cfg_conn.debug)
+    args = p.parse_known_args()
+    return args[0]
+
+    args = p.parse_args()
+     

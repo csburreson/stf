@@ -86,7 +86,7 @@ def register(**kw):
     #stf.dbg('testGlobals{}'.format(testGlobals.keys()))
     #func.func.__locals__.update(testLocals)
 
-    args = stf.util.misc.get_meta_arg() 
+    args = stf.util.misc.get_run_args() 
     meta = {}
     if args.testconfig:
         stf.debug(f'OVERRIDE config file: {args.testconfig}')

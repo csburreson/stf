@@ -4,18 +4,7 @@ import os
 import argparse
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(prog='runset')
-    p.add_argument('set_name', type=str, nargs='?')
-    cmd = p.add_mutually_exclusive_group()
-    #cmd.add_argument('--run', action='store_true')
-    #cmd.add_argument('--tests', action='store_true')
-    #cmd.add_argument('--configs', action='store_true')
-    cfg_conn = stf.config.getIcebootOpts()
-    p.add_argument('--iceboot_host', '--host', '-H', type=str, default=cfg_conn.host)
-    p.add_argument('--iceboot_port', '--port', '-P', type=str, default=cfg_conn.port)
-    p.add_argument('--iceboot_debug', '-D', action='store_true', default=cfg_conn.debug)
-
-    args = p.parse_args()
+    args = stf.util.misc.get_runset_args()
     setName = args.set_name
 
     #if not args.run and not setName:
