@@ -1,9 +1,14 @@
 import json
 from urllib.request import Request, urlopen 
-from datetime import datetime
+from datetime import datetime, timedelta
+from stf.util import files
+import stf
 
-
+# Maxmimum difference between sysclock and webapi to allow
 MAX_DIFF_SECONDS = 10
+
+# should this be equal to a testset in length at least?
+TIMESYNC_EXPIRE_TIME = timedelta(minutes=20)
 
 # APIs:
 
@@ -34,26 +39,48 @@ def get_time(url='http://worldtimeapi.org/api/timezone/Zulu'):
     this function should be run only once per runset...
     considering using a tmp file that contains maybe the timestamp?
     '''
+    path = files.Path(files.join(stf.config.get_path('tmp'), 'timesync.stf.tmp'))
+    try:
+        file_stat = path.stat()
+        # IMPORTANT: use system time for this and only this calculation)
+        file_ctime = datetime.fromtimestamp(file_stat.st_ctime)
+        if abs(datetime.now() - file_ctime) > TIMESYNC_EXPIRE_TIME:
+            path.unlink()
+        else:
+            # if file was written recently, all is well
+            return 'verified'
+    except FileNotFoundError:
+        pass
 
     # my brain realizes now that if multiple tests are being run on site
     # we should cache a file and see if we've verified the time already
     # on this machine. maybe the file contains the verified timestamp
     # and if it's older than an hour we ignore and overwrite it with a fresh check
 
-    # XXX: tmp file to prevent multiple
-
     response = urlopen(Request(url)).read()
     # check response.status_code ? retry? or try_repeat this fn if needed...
     timestamp = json.loads(response).get('unixtime')
     nowlocal = datetime.utcfromtimestamp(timestamp)
+    if not path.exists():
+        path.touch()
     return nowlocal
 
 
 def check_systime_accurate():
     now = datetime.utcnow()
-    nowlocal = get_time()
+    try:
+        nowlocal = get_time()
+    except (urllib.error.URLError, ValueError) as e:
+        stf.debug(f'Exception: {e}')
+        return None
+
+    # shortcut in case we just checked
+    if nowlocal == 'verified':
+        stf.debug('Timesync verified by cached file')
+        return True
 
     if not nowlocal:
+        stf.debug('Unable to fetch time')
         '''unable to fetch time'''
         return False
 

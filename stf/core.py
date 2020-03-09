@@ -103,6 +103,8 @@ def run(dhost=CONFIG.settings.iceboot.host,
     #mainboard = getDevices('mainboard')
     #device = mainboard[0]
 
+    # raises STFRefuseToRun exception
+    check_system_clock()    
     # deadbeef is for STF_FAKEICEBOOT=1
     dut_id = getBoardID(host=dhost, port=dport) or 'deadbeef'
     device = {
@@ -131,23 +133,30 @@ def run(dhost=CONFIG.settings.iceboot.host,
 def _run(testClass, device):
       return True
 
-def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False, device_type='degg',
-            device_host=CONFIG.settings.iceboot.host, device_port=CONFIG.settings.iceboot.port):
-
+def check_system_clock():
     ts_mode = CONFIG.settings.general.timesync 
     if ts_mode == 'verify':
         dbg('timesync=verify... checking WebAPI')
-        if not time.check_systime_accurate():
+        check = time.check_systime_accurate()
+        if not check is True:
             dbg('FAIL')
+            if check == None:
+                msg = 'Cannot verify systime using webapi. Cannot proceed'
+            if check == False:
+                msg = 'System time is inaccurate. Cannot proceed'
             # should get a better API resource... or have a try_repeat there
-            # raise exceptions.STFRefuseToRun('System time inaccurate')
+            raise exceptions.STFRefuseToRun(msg)
         dbg('PASS')
 
     elif ts_mode == 'user':
         '''get input'''
         pass
-        
-        
+
+def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False, device_type='degg',
+            device_host=CONFIG.settings.iceboot.host, device_port=CONFIG.settings.iceboot.port):
+
+    # raises STFRefuseToRun exception
+    check_system_clock()    
 
     if set_name:
        config_file = CONFIG.get_path('setconfig', filename=f'{set_name}.json')
