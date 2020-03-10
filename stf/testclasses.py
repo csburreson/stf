@@ -1,9 +1,7 @@
 import json
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
-from .core import dbg, getIcebootSession
-from .core import FRAMEWORK_VERSION
-#from .decorators test as testify
+from .core import getIcebootSession
 import stf
 FAKE_ICEBOOT = False
 
@@ -56,8 +54,11 @@ class Common(object):
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
-        dbg('creating MainboardTest class for: {}'.format(test_name))
+        stf.dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
+
+        # optional description
+        self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
 
         # not needed? 
         # used for connecting to device
@@ -76,10 +77,10 @@ class MainboardTest(object):
         # XXX: move to init or "configure" step or something
         conf_file = kw['conf_file']
         with open(conf_file, 'r') as f:
-            dbg("(@configure) loaded {}".format(conf_file))
+            stf.dbg("(@configure) loaded {}".format(conf_file))
             self._PARAMS = json.load(f)
             self._PARAM_CONF_FILE = conf_file
-            dbg("(@configure) {}".format(self._PARAMS))
+            stf.dbg("(@configure) {}".format(self._PARAMS))
 
         self.session = None
 
@@ -87,7 +88,7 @@ class MainboardTest(object):
         # create iceboot session here?
         # or as a test phase?
     def setupIceboot(self, test):
-        self.session = stf.getIcebootSession(fake=FAKE_ICEBOOT,
+        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
             **self.config.get('iceboot', {
                 'host': 'localhost',
                 'port': 5012
@@ -150,9 +151,9 @@ class MainboardTest(object):
 
         # get test arguments (from json file)
         test_args = ps.get('args', {})
-        dbg('test args: {}'.format(test_args))
+        stf.dbg('test args: {}'.format(test_args))
         test_args.update(ps.get('expectedValues', {}))
-        dbg('test args: {}'.format(test_args))
+        stf.dbg('test args: {}'.format(test_args))
 
         # get test configuration options (defaults hardcoded, override in test config file
         # with "conf" top-level key
@@ -166,7 +167,7 @@ class MainboardTest(object):
         else:
             fw_file = stf.ENV.FIRMWARE_FILE_PATH
         
-        self.session = stf.getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT,
+        self.session = getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT,
             **self.config.get('iceboot', {
                 'host': 'localhost',
                 'port': 5012,
@@ -185,16 +186,16 @@ class MainboardTest(object):
 
         T = htf.Test(htf.PhaseGroup(
                 #setup=[self.setupIceboot],
-                setup=[self.setup]
+                setup=[self.setup],
                 main=phases,
                 teardown=[self.tearDown]
                 # openhtf fields
             ),
             test_name=self.test_name,
             test_version=self.version,
-            test_desc=desc or 'no description',
+            test_desc=self.desc,
             # custom metadata fields
-            framework_version=FRAMEWORK_VERSION,
+            framework_version=stf.FRAMEWORK_VERSION,
             device=device,
             testOptions={
                 'params': test_args
@@ -244,19 +245,19 @@ class MainboardTest(object):
                 #args = self.getTestParams(qualified_testname)
                 fn_name = x.func.__name__
                 if fn_name == '_checkpoint':
-                    dbg('CHECKPOINT')
+                    stf.dbg('CHECKPOINT')
                     phases.append(x)
                     continue
                 args = self.getTestParams()
                 test_args[fn_name] = args
 
-                dbg(fn_name)
+                stf.dbg(fn_name)
                 #dbg('{}.{}'.format(self.__class__.name, fn_name))
-                dbg('optname: {}'.format(x.options.name))
+                stf.dbg('optname: {}'.format(x.options.name))
                 phases.append(x.with_args(session=self.session, **args))
             except AttributeError:
                 # XXX
-                dbg('AttrErr')
+                stf.dbg('AttrErr')
                 #x = test(x)
                 phases.append(x)
 
