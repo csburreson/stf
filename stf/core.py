@@ -55,7 +55,10 @@ class FakeIceboot(object):
             return lambda: int(CONFIG.settings.iceboot.fw_version, 16)
         return fake
 
-@misc.try_repeat(repeat_limit=3, sleep=3, msg='unable to create connection... trying again', exc_cls=(OSError, IOError, UnicodeDecodeError))
+@misc.try_repeat(repeat_limit=3, sleep=3, 
+    msg='unable to create connection... trying again', 
+    exc_cls=(OSError, IOError, UnicodeDecodeError), 
+    fail_exception=exceptions.STFCommsError)
 def getIcebootSession(**kw):
     if DEBUG.FAKE_ICEBOOT:
         return FakeIceboot(**kw)
@@ -70,7 +73,59 @@ def getIcebootSession(**kw):
     dbg(f'  {CONFIG.settings.iceboot}')
 
     session = iceboot_session_cmd.init(IcebootOpts, **kw)
+    #session = IcebootSessionWrapper(IcebootOpts, **kw)
     return session
+
+
+class IcebootSessionWrapper(object):
+    def __init__(self, opts, **kw):
+        #getIcebootSession(**kw)
+        self.kw = kw
+        self.__refresh()
+
+    def __getattr__(self,attr):
+        orig_attr = self.session.__getattribute__(attr)
+        if callable(orig_attr):
+            #if attr == 'close' or attr == 'reboot':
+            #    return
+            #@misc.try_repeat(repeat_limit=5, sleep=2, msg='cmd failed 5 times')
+            def hooked(*args, **kwargs):
+                try:
+                    result = orig_attr(*args, **kwargs)
+                    # prevent wrapped_class from becoming unwrapped
+                    try:
+                        if result == self.session:
+                            return self
+                    except ValueError:
+                        pass
+                    return result
+                # sometime we lose the session object 
+                except AttributeError as e:
+                    dbg(f"error\n>><<>> >> {e}")
+                    self.__refresh()
+                    result = self.session.__getattribute__(attr)(*args, **kwargs)
+                    #self.session.connect
+                    #result = orig_attr(attr)(*args, **kwargs)
+                    # prevent wrapped_class from becoming unwrapped
+                    if result == self.session:
+                        return self
+                    return result
+            return hooked
+        else:
+            return orig_attr
+
+    def __refresh(self):
+        #try:
+            #self.session.close()
+        #except AttributeError:
+        #    pass
+
+        class IcebootOpts:
+            host = CONFIG.settings.iceboot.host
+            port = CONFIG.settings.iceboot.port
+            debug = CONFIG.settings.iceboot.debug
+            fpgaConfigurationFile = None
+        self.session = iceboot_session_cmd.init(IcebootOpts, **self.kw)
 
 
 def getDevices(device_type=None):
@@ -294,6 +349,24 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     # return new Test object with test.reconfigure()?
     #test.reconfigure(instance, group, args, evs, timeslug, {})
     #T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
+    test.execute( {
+        'id': dut_id, 
+        'type': dut_type
+    }, {
+        'iceboot': {
+            'host': dut_host,
+            'port': dut_port,
+            'debug': CONFIG.settings.iceboot.debug
+        },
+        'instance': {
+            'args': args,
+            'expectedValues': evs,
+            'instance': instance,
+            'group': group,
+            'group_timeslug': timeslug
+        }
+    },
+    json_path=json_path)
 
     # XXX: multiple devices
     try:
@@ -317,8 +390,33 @@ def run_single_test(name, instance, group, args, evs, timeslug,
         json_path=json_path)
     except KeyboardInterrupt:
         raise
-    except:
-        INFO(f'Exception raised during test {name}:{instance}')
+    except Exception as e:
+        INFO(f'Exception raised in framework code during test {name}:{instance} \n{e}')
+    '''
+    except (OSError, UnicodeDecodeError) as e:
+        # 
+        INFO('Exception {e} raised; trying execute again')
+        # NOTE: this will and probably should overwrite previous text output
+        # file
+        test.execute( {
+            'id': dut_id, 
+            'type': dut_type
+        }, {
+            'iceboot': {
+                'host': dut_host,
+                'port': dut_port,
+                'debug': CONFIG.settings.iceboot.debug
+            },
+            'instance': {
+                'args': args,
+                'expectedValues': evs,
+                'instance': instance,
+                'group': group,
+                'group_timeslug': timeslug
+            }
+        },
+        json_path=json_path)
+        '''
 
 
 # issue#51: unicode decode error kills framework

@@ -107,6 +107,7 @@ def register(**kw):
             raise stf.util.exceptions.STFInvalidArgs('Invalid META args')
 
     desc = kw.get('test_desc')
+
     # get test description from the function's docstring if test_desc is not present
     #desc = desc or func.__doc__
     cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc, meta=meta)
@@ -117,7 +118,7 @@ def register(**kw):
 
 # allows @stf.test decorator
 def make_test(f):
-    @htf.TestPhase()
+    @stf.options()
     def deco(*args, **kw):
         return f(*args, **kw)
     # preserve original test name
@@ -128,5 +129,18 @@ def make_test(f):
         deco.registered = True
         #deco.options.name = f.__name__
     except AttributeError:
+        stf.debug('here')
         pass
     return deco
+
+
+'''
+# XXX: why can't we wrap OpenHTF phases with something like this?
+        def foo(f):
+            def wrap(*args, **kw):
+                try:
+                    return f(*args, **kw)
+                except OSError:
+                    return stf.REPEAT
+            return wrap
+'''

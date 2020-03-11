@@ -2,6 +2,7 @@ from copy import deepcopy
 from .colors import termcolor as clr
 from stf import _PRINT
 from stf.util.files import getFileSize
+from stf.util import exceptions
 import stf
 import uuid
 from datetime import datetime # XXX: move to util.time
@@ -112,7 +113,8 @@ def INFO(s, **kw):
 
 
 # decorator to try a fn a couple times and sleep between, accepts 
-def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError)):
+def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError), 
+               fail_exception=exceptions.STFRefuseToRun):
     '''
     decorator to try a fn up to `repeat_limit` times with a sleep=`sleep` wait
     
@@ -136,6 +138,8 @@ def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError)):
                         stf.debug(msg)
                     if sleep:
                         time.sleep(sleep)
+            if fail_exception:
+                raise fail_exception(f'Failed to execute {try_fn.__name__}')
         return wrap
     return actual_decorator
 

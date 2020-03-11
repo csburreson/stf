@@ -8,7 +8,7 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-from .util import files, misc
+from .util import files, misc, exceptions
 FAKE_ICEBOOT = False
 
 # class TestSet(object):
@@ -29,7 +29,7 @@ class Common(object):
         stf.M('softwareVersion')
     )
     #XXX: need long timeout for localhost from crappy inet cnxn
-    @stf.options(timeout_s=500, repeat_limit=5)
+    @stf.options(timeout_s=30, repeat_limit=5)
     def checkCommsAndFirmware(test, session, **kw):
         gINFO = stf.ginfo(['framework', 'iceboot'])
         vn = session.fpgaVersion()
@@ -81,11 +81,12 @@ class Common(object):
 
         if commsOk is False:
             test.logger.error('unable to configure firmware. quitting.')
-            gINFO('unable to configure firmware. quitting.')
+            #gINFO('unable to configure firmware. quitting.')
             return stf.REPEAT
 
         test.measurements.softwareId = session.softwareId()
         test.measurements.softwareVersion = session.softwareVersion()
+        # FIXME: this try/except can likely go away?
         try:
             test.measurements.fpgaChipID = session.fpgaChipID()
         except AttributeError:
@@ -110,7 +111,7 @@ class MainboardTest(object):
         #self.test_params = kw.get('params', {})
         self.test_name = test_name
         if not callable(test_fn):
-            raise Exception('Invalid "test_fn" parameter. Expecting callable')
+            raise stf.util.exceptions.RefuseToRun('Invalid "test_fn" parameter. Expecting callable')
         self.test_fn = test_fn
         self.version = version
         # instance can be none
@@ -145,13 +146,13 @@ class MainboardTest(object):
         conf_file_path = files.getFilePath(conf_file)
         if not conf_file_path:
             # TODO: STFException -> STFTestConfigException
-            raise Exception('TestConfigException: config file not found {conf_file}')
+            raise exceptions.STFInvalidTestConfig('TestConfigException: config file not found {conf_file}')
 
         with open(conf_file_path, 'r') as f:
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
-                raise Exception('Invalid test configuration file! Is this valid JSON?')
+                exceptions.STFInvalidTestConfig('Invalid test configuration file! Is this valid JSON?')
             self._PARAM_CONF_FILE = conf_file_path
             #if 'config' in self._PARAMS:
             #    cfg = self._PARAMS['config']
@@ -180,6 +181,7 @@ class MainboardTest(object):
         #    import time
         #    time.sleep(5)
         self.session = getIcebootSession()
+        #self.session = IcebootSessionWrapper()
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
@@ -216,8 +218,11 @@ class MainboardTest(object):
             if hasattr(self.session, 'FAKE'):
                 return
             stf.debug('tearing down test/iceboot ... initiating device reboot()')
-            self.logOutput(test)
-            self.session.reboot()
+            try:
+                self.logOutput(test)
+                self.session.reboot()
+            except OSError:
+                pass
             stf.debug('attempting to shutdown and close socket comms...')
             self.session.close()
             del self.session
@@ -335,16 +340,22 @@ class MainboardTest(object):
             for v in m.validators:
                 setattr(v, 'expectedValues', expected_values)
 
+
+
         phases = [
             Common.checkCommsAndFirmware.with_args(session=self.session, 
                 expectedValues={'expected_fw_vnum':stf.config.settings.iceboot.fw_version}),
             self.test_fn.with_args(session=self.session, **test_args)
-            #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
+            # THIS is how to apply PhaseOptions to a phase called with "with_args":
+            #stf.options(timeout_s=1)(self.test_fn.with_args(session=self.session, **test_args))
+
+            # probably need to wrap this in stf.options to apply timeout as well
+            #run_test.with_plugs(session=IcebootSession).with_args(**test_args))
         ]
 
         T = htf.Test(htf.PhaseGroup(
                 main=phases,
-                teardown=[self.tearDown]
+                teardown=[self.tearDown],
             ),
             # openhtf fields
             test_name=self.test_name,
@@ -395,7 +406,7 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
-        stf.debug(f"EXECUTE {self.test_name}")
+        stf.debug(f"EXECUTE {self.test_name}:{instance_name}")
         '''
         INFO(f'{dir(T)}')
         T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
@@ -403,4 +414,3 @@ class MainboardTest(object):
         T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
         '''
 
-        stf.dbg("finished execute for test: {}".format(self.test_name))
