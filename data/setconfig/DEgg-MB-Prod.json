@@ -68,7 +68,7 @@
 
         "DACScan": [],
 
-        //"DEggHVSupply": [],
+        "DEggHVSupply": [],
 
         "DPRAM": [],
 
@@ -175,7 +175,7 @@
 
         "MagnetometerSensor": [],
 
-        //"PowerHVS": [],
+        "PowerHVS": [],
 
         "PowerLVS": [],
 
@@ -197,6 +197,10 @@
                 }
             }
         ],
+
+        // As the local test environment temperature is difficult to predict,
+        // run the relative temperature test "TempCompare" rather than the
+        // absolute temperature tests.
 
         //"TempAccelerometerSensor": [],
 
