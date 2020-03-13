@@ -218,41 +218,13 @@ class MainboardTest(object):
             if hasattr(self.session, 'FAKE'):
                 return
             stf.debug('tearing down test/iceboot ... initiating device reboot()')
-            try:
-                self.logOutput(test)
-                self.session.reboot()
-            except OSError:
-                pass
+            self.logOutput(test)
+            self.session.reboot()
             stf.debug('attempting to shutdown and close socket comms...')
             self.session.close()
             del self.session
             stf.debug('teardown complete')
         
-    '''
-    # OLD teardown fn (pre try_repeat... probably won't need this)
-    def XXX_tearDown(self, test):
-        if self.session:
-            if hasattr(self.session, 'FAKE'):
-                return
-            try:
-                stf.debug('tearing down test/iceboot ... initiating device reboot()')
-                self.logOutput(test)
-                self.session.reboot()
-            except (OSError, IOError):
-                stf.debug('oserror thrown by reboot (semi-expected)')
-            except UnicodeDecodeError:
-                stf.debug('got UnicodeDecodeError when tearing down... trying to close session')
-            finally:
-                try:
-                    stf.debug('attempting to shutdown and close socket comms...')
-                    self.session.close()
-                    del self.session
-                except UnicodeDecodeError:
-                    stf.debug('got UnicodeDecodeError when closing iceboot session... continuing if possible')
-                    
-            stf.debug('teardown complete')
-    '''
-
 
     # used for test sets
     def reconfigure(self, name, group, args, evs, timeslug='', config={}):

@@ -369,6 +369,7 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     json_path=json_path)
 
     # XXX: multiple devices
+    '''
     try:
         test.execute( {
             'id': dut_id, 
@@ -392,7 +393,6 @@ def run_single_test(name, instance, group, args, evs, timeslug,
         raise
     except Exception as e:
         INFO(f'Exception raised in framework code during test {name}:{instance} \n{e}')
-    '''
     except (OSError, UnicodeDecodeError) as e:
         # 
         INFO('Exception {e} raised; trying execute again')
