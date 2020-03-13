@@ -5,24 +5,21 @@
     "args":{
     },
 
-    // Currents are not yet characterized. Initially set a wide range, but
-    // disallow value of zero, as this may indicate a read error. Expect to
-    // tighten these values later.
-    // Range of values seen in test 31 mA <= x <= 895 mA
+    // Value ranges updated from HALT testing
     "expectedValues": {
-        "channel 00 LVS_SLO_IMON_1V1_MIN":    10,
-        "channel 00 LVS_SLO_IMON_1V1_MAX":    1000,
+        "channel 00 LVS_SLO_IMON_1V1_MIN":    50,
+        "channel 00 LVS_SLO_IMON_1V1_MAX":    1200,
 
-        "channel 01 LVS_SLO_IMON_1V35_MIN":   10,
-        "channel 01 LVS_SLO_IMON_1V35_MAX":   1000,
+        "channel 01 LVS_SLO_IMON_1V35_MIN":   50,
+        "channel 01 LVS_SLO_IMON_1V35_MAX":   500,
 
-        "channel 02 LVS_SLO_IMON_1V8_MIN":    10,
-        "channel 02 LVS_SLO_IMON_1V8_MAX":    1000,
+        "channel 02 LVS_SLO_IMON_1V8_MIN":    200,
+        "channel 02 LVS_SLO_IMON_1V8_MAX":    500,
 
         "channel 03 LVS_SLO_IMON_2V5_MIN":    10,
         "channel 03 LVS_SLO_IMON_2V5_MAX":    1000,
 
-        "channel 04 LVS_SLO_IMON_3V3_MIN":    10,
-        "channel 04 LVS_SLO_IMON_3V3_MAX":    1000
+        "channel 04 LVS_SLO_IMON_3V3_MIN":    3,
+        "channel 04 LVS_SLO_IMON_3V3_MAX":    450
     }
 }

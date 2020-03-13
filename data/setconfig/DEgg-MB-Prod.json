@@ -1,0 +1,213 @@
+// Runset definition for DEgg Mainboard + ICM Production testing.
+
+{
+    "tests": {
+        "AccelerometerSensor": [],
+
+        "ADCComms": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "ADCNoiseLevel": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "ADCTestPatterns": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "BaselineStability": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "CameraComms": [],
+
+        "DACScan": [],
+
+        "DEggHVSupply": [],
+
+        "DPRAM": [],
+
+        "FEPulserCharge": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "FEPulserHeight": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "FEPulserLinearity": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "FEPulserWidth": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        "Flash": [],
+
+        "FPGAMemTest": [],
+
+// FPGATimestamping disabled pending STF issue
+// https://github.com/WIPACrepo/stf/issues/58
+//        "FPGATimestamping": [
+//            {
+//                "instance": "channel-0",
+//                "args": {
+//                    "channel" : 0
+//                },
+//                "expectedValues": {
+//                    "clockdiff_max" : 100
+//                }
+//            },
+//            {
+//                "instance": "channel-1",
+//                "args": {
+//                    "channel" : 1
+//                },
+//                "expectedValues": {
+//                    "clockdiff_max" : 100
+//                }
+//            }
+//        ],
+
+        "Interlock": [],
+
+        "LightSensor": [
+            {
+                "instance": "lights-on",
+                    // Test assumes no light, but HALT test has chamber
+                    // lights on. Max value = 2048 mV.
+                    "expectedValues": {
+                      "channel 06 light_sensor_dark_min":     0.3125,
+                      "channel 06 light_sensor_dark_max":     2000
+                }
+            }
+        ],
+
+        "MagnetometerSensor": [],
+
+        "PowerHVS": [],
+
+        "PowerLVS": [],
+
+        "PowerRails": [],
+
+        "PressureSensor": [],
+
+        "ScalerScan": [
+            {
+                "instance": "base-channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "base-channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
+        // As the local test environment temperature is difficult to predict,
+        // run the relative temperature test "TempCompare" rather than the
+        // absolute temperature tests.
+
+        //"TempAccelerometerSensor": [],
+
+        "TempCompare": []
+
+        //"TempMagnetometerSensor": [],
+
+        //"TempPressureSensor": []
+    }
+}
