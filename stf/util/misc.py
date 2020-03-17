@@ -190,15 +190,17 @@ def get_run_args():
     # optional: set off key=value pairs to insert into metadata
     ap.add_argument('--meta', default=None, 
         nargs=argparse.REMAINDER)
-    # optional: path to JSON file adding metadata
+    # optional: path to JSON file adding metadata (i.e. site data)
     ap.add_argument('--metafile', default=None, 
         nargs=1)
     ap.add_argument('--testconfig', default=None,
-        nargs=1)
+        nargs=1, help='Path to json config file for test')
+    ap.add_argument('--mbsnum', '--prodid', default=None,
+        nargs=1, help='Mainboard serial number or device\'s production ID')
 
     args = ap.parse_known_args()
     stf.debug(f"args: {args}")
-    return args[0]
+    return args
 
 def get_runset_args():
     import openhtf

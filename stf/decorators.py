@@ -86,13 +86,17 @@ def register(**kw):
     #stf.dbg('testGlobals{}'.format(testGlobals.keys()))
     #func.func.__locals__.update(testLocals)
 
-    args = stf.util.misc.get_run_args() 
+    args, extra = stf.util.misc.get_run_args() 
     meta = {}
+
+    dut_serial = None
     if args.testconfig:
         stf.debug(f'OVERRIDE config file: {args.testconfig}')
         conf_file = args.testconfig[0]
     if args.metafile:
         stf.debug('XXX: NOT IMPLEMENTED')
+    if args.mbsnum:
+        dut_serial = args.mbsnum[0]
     if args.meta:
         try:
             for x in args.meta:
@@ -105,12 +109,15 @@ def register(**kw):
                     stf.debug(f'WARNING: skipping meta arg "{x}"')
         except (AttributeError, ValueError):
             raise stf.util.exceptions.STFInvalidArgs('Invalid META args')
+    if extra:
+        meta['_stf_unused_args'] = extra
+
 
     desc = kw.get('test_desc')
 
     # get test description from the function's docstring if test_desc is not present
     #desc = desc or func.__doc__
-    cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc, meta=meta)
+    cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc, meta=meta, dut_serial=dut_serial)
 
     stf.addTestClass(fname, cls, testLocals, testGlobals, code_obj=code_obj)
 

@@ -164,7 +164,7 @@ def run(dhost=CONFIG.settings.iceboot.host,
     dut_id = getBoardID(host=dhost, port=dport) or 'deadbeef'
     device = {
         'id': dut_id,
-        'type': dtype
+        'type': dtype,
     }
     # must ensure output directory exists for this device
     timeslug = time.getTimeSlug()
@@ -178,6 +178,7 @@ def run(dhost=CONFIG.settings.iceboot.host,
     ran = False
     for testClass in getRegisteredClasses():
         dbg("Running {}".format(testClass.test_name))
+        device['dut_serial'] = testClass.prodid
         testClass.execute(device, {'iceboot': dict(host=dhost, port=dport)}, json_path=json_path)
         ran = True
 
@@ -351,7 +352,8 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     #T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
     test.execute( {
         'id': dut_id, 
-        'type': dut_type
+        'type': dut_type,
+        'dut_serial': test.prodid
     }, {
         'iceboot': {
             'host': dut_host,

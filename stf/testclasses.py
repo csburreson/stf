@@ -119,6 +119,9 @@ class MainboardTest(object):
 
         #stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
 
+        # production id (i.e. serial number)
+        self.prodid = kw.get('dut_serial', None)
+
         #self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
@@ -286,32 +289,16 @@ class MainboardTest(object):
         dut_host = x.get('host') or stf.config.settings.iceboot.host
         dut_port = x.get('port') or stf.config.settings.iceboot.port
 
-        stf.dbg('test args: {}'.format(test_args))
-        stf.dbg('expected values: {}'.format(expected_values))
+        stf.debug(f"Running... {self.test_name}:{instance_name}")
+        stf.dbg('  test args: {}'.format(test_args))
+        stf.dbg('  expected values: {}'.format(expected_values))
 
         self.session = getIcebootSession(host=dut_host, port=dut_port)
-
-        '''
-        # XXX:rebootfirst
-        try:
-            stf.debug('rebooting device...')
-            self.session.reboot()
-            stf.debug("POST REBOOT")
-            time.sleep(5)
-            stf.debug("REBOOT POST FSLEEP")
-        except OSError:
-            stf.debug("NEW SESSION")
-            #del self.session
-            #del self.session
-            time.sleep(2)
-            self.session = getIcebootSession(**stf.config.getIcebootOpts())
-        '''
 
         # add expectedValues directly to the measurement validator class
         for m in self.test_fn.measurements:
             for v in m.validators:
                 setattr(v, 'expectedValues', expected_values)
-
 
 
         phases = [
@@ -378,7 +365,7 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
-        stf.debug(f"EXECUTE {self.test_name}:{instance_name}")
+        stf.debug(f"FINISHED {self.test_name}:{instance_name}")
         '''
         INFO(f'{dir(T)}')
         T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
