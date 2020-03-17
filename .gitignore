@@ -3,3 +3,4 @@
 *.pyc
 results/*
 stfconfig.local.json
+tmp/*

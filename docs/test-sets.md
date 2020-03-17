@@ -93,7 +93,7 @@ Interlock:base
 SLO_ADC
 ```
 
-## Examining runset configs
+## Running a set 
 
 Run the `runset.py` script with no arguments to see all available runsets:
 
@@ -110,45 +110,6 @@ No set name provided, choose one of:
 
 This is simply a listing of `<STF_HOME>/data/setconfig/*.json` with the extension stripped off.
 
-Use `python runset.py <setname> [--tests | --configs]` to get information about runsets.
-
-`--tests` will list out the name of every test instance to be created by the config.
-
-
-```
-$  python3 runset.py --tests baseinstance.example
-ADCNoiseLevel:base
-ADCNoiseLevel:noisy
-ADCNoiseLevel:DACtweak
-Interlock:base
-SLO_ADC
-```
-
-`--configs` will list out the tests instances with configuration overrides applied to the default testconfig.
-
-For example:
-
-```
-$  python3 runset.py --configs baseinstance.example
-ADCNoiseLevel:base
-  args: {'channel': 0, 'dac_val': 31000}
-  expv: {'noise_min': 0.5, 'noise_max': 3.0}
-ADCNoiseLevel:noisy
-  args: {'channel': 0, 'dac_val': 31000}
-  expv: {'noise_min': 42, 'noise_max': 44}
-ADCNoiseLevel:DACtweak
-  args: {'channel': 0, 'dac_val': 42000}
-  expv: {'noise_min': 0.5, 'noise_max': 3.0}
-Interlock:base
-  args: {}
-  expv: {'flashInterlockValue': True, 'configInterlockValue': False, 'hvInterlockValue': True, 'lidInterlockValue': True}
-SLO_ADC
-  args: {'test_context': 'room'}
-  expv: {'channel 00 LVS_SLO_IMON_1V1': 0.0, 'channel 01 LVS_SLO_IMON_1V35': 0.0, 'channel 02 LVS_SLO_IMON_1V8': 0.0, 'channel 03 LVS_SLO_IMON_2V5': 0.0, 'channel 04 LVS_SLO_IMON_3V3': 0.0, 'channel 05 +1V8_A': 1.8, 'channel 06 light_sensor_dark_min': 0.0, 'channel 06 light_sensor_dark_max': 0.0, 'channel 07 temperature_room_min': 17.0, 'channel 07 temperature_room_max': 31.0, 'channel 07 temperature_+5': 80.0, 'channel 07 temperature_-20': -20.0, 'channel 07 temperature_-40': -40.0, 'channel 08 SLO_HVS0_VMON': 2000.0, 'channel 09 SLO_HVS0_IMON': 0.0, 'channel 10 SLO_HVS1_VMON': 2000.0, 'channel 11 SLO_HVS1_IMON': 0.0, 'channel 12 +1V1_power_rail_monitor': 1.1, 'channel 13 +1V35_power_rail_monitor': 1.35, 'channel 14 +2V5_power_rail_monitor': 2.5, 'channel 15 +3V3_power_rail_monitor': 3.3, 'voltage_rail_percent': 3.0, 'temperature_soak_percent': 2.0}
-```
-
-## Running a set 
-
 Use `python runset.py <setname>` to run a runset.
 
 This will attempt to run all tests in a row and create output files for each
@@ -156,7 +117,36 @@ test instance.
 
 Try `python runset.py --help` for a list of  options, including iceboot options
 
-NOTE: the `--quiet` option (an alias for disabling Iceboot debug) will also
-suppress HTF `ConsoleOutput`. 
+
+## Runset Args
+
+Args:
+* `--host` `--iceboot_host`: the host for the iceboot session
+* `--port` `--iceboot_port`: the port for the iceboot session
+* `--iceboot_debug` `-D`: enable debugging prints from the iceboot session
+* `--prodid` `--mbsnum`: incorporate production id (mb serial number) into output
+* `--meta`: add arbitrary key=value metadata 
+* `-v[vv]`: verbosity level for OpenHTF logging
+
+Use `python runset.py <setname> --host localhost --port 4444` to run a runset while specifying the host and port for an iceboot session.
+
+You can also add `--prodid` to add a serial number to the device under test (this will appear in the Results metadata).
+`--mbsnum` is an alias for this.
+
+One can also add `-D` or `--iceboot_debug` to enable Iceboot Session Debugging strings.
+
+Users can also add metadata with the `--meta` flag.
+
+It works like this:
+
+`python runset.py --meta foo=bar x=y n=42`
+
+Every space-delimited argument after the `--meta` option will be interpreted as `key=value` and included in the results output.
+
+This may be useful for running a runset and including the current temperature or LED light status.
+
+Finally, all unused command line arguments will also be included in the output (though in an unparsed form).
+
+
  
 

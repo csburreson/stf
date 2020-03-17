@@ -1,5 +1,6 @@
 import os
 import glob
+import pathlib
 
 def popPath(path):
     
@@ -120,6 +121,9 @@ def mkdir(*path):
         os.makedirs(os.path.join(*path))
     except FileExistsError:
         pass
+    finally:
+        return os.path.join(*path)
         
 join = os.path.join
 exists = os.path.exists
+Path = pathlib.Path

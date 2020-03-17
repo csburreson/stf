@@ -8,7 +8,7 @@ from .core import getIcebootSession
 from .validators import *
 import stf
 from .util.colors import termcolor as clr
-from .util import files, misc
+from .util import files, misc, exceptions
 FAKE_ICEBOOT = False
 
 # class TestSet(object):
@@ -29,7 +29,7 @@ class Common(object):
         stf.M('softwareVersion')
     )
     #XXX: need long timeout for localhost from crappy inet cnxn
-    @stf.options(timeout_s=500, repeat_limit=5)
+    @stf.options(timeout_s=30, repeat_limit=5)
     def checkCommsAndFirmware(test, session, **kw):
         gINFO = stf.ginfo(['framework', 'iceboot'])
         vn = session.fpgaVersion()
@@ -81,11 +81,12 @@ class Common(object):
 
         if commsOk is False:
             test.logger.error('unable to configure firmware. quitting.')
-            gINFO('unable to configure firmware. quitting.')
+            #gINFO('unable to configure firmware. quitting.')
             return stf.REPEAT
 
         test.measurements.softwareId = session.softwareId()
         test.measurements.softwareVersion = session.softwareVersion()
+        # FIXME: this try/except can likely go away?
         try:
             test.measurements.fpgaChipID = session.fpgaChipID()
         except AttributeError:
@@ -110,7 +111,7 @@ class MainboardTest(object):
         #self.test_params = kw.get('params', {})
         self.test_name = test_name
         if not callable(test_fn):
-            raise Exception('Invalid "test_fn" parameter. Expecting callable')
+            raise stf.util.exceptions.RefuseToRun('Invalid "test_fn" parameter. Expecting callable')
         self.test_fn = test_fn
         self.version = version
         # instance can be none
@@ -118,10 +119,15 @@ class MainboardTest(object):
 
         #stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
 
+        # production id (i.e. serial number)
+        self.prodid = kw.get('dut_serial', None)
+
         #self.session = None
         # XXX: move to init or "configure" step or something
         self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
+
+        self.meta = kw.get('meta', {})
 
         # for instance derivations, args and evs are already figured out from base instance
         # and passed directly here
@@ -143,13 +149,13 @@ class MainboardTest(object):
         conf_file_path = files.getFilePath(conf_file)
         if not conf_file_path:
             # TODO: STFException -> STFTestConfigException
-            raise Exception('TestConfigException: config file not found {conf_file}')
+            raise exceptions.STFInvalidTestConfig('TestConfigException: config file not found {conf_file}')
 
         with open(conf_file_path, 'r') as f:
             try:
                 self._PARAMS = stf.parse.json_load(f)
             except json.decoder.JSONDecodeError:
-                raise Exception('Invalid test configuration file! Is this valid JSON?')
+                exceptions.STFInvalidTestConfig('Invalid test configuration file! Is this valid JSON?')
             self._PARAM_CONF_FILE = conf_file_path
             #if 'config' in self._PARAMS:
             #    cfg = self._PARAMS['config']
@@ -178,6 +184,7 @@ class MainboardTest(object):
         #    import time
         #    time.sleep(5)
         self.session = getIcebootSession()
+        #self.session = IcebootSessionWrapper()
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
@@ -221,31 +228,6 @@ class MainboardTest(object):
             del self.session
             stf.debug('teardown complete')
         
-    '''
-    # OLD teardown fn (pre try_repeat... probably won't need this)
-    def XXX_tearDown(self, test):
-        if self.session:
-            if hasattr(self.session, 'FAKE'):
-                return
-            try:
-                stf.debug('tearing down test/iceboot ... initiating device reboot()')
-                self.logOutput(test)
-                self.session.reboot()
-            except (OSError, IOError):
-                stf.debug('oserror thrown by reboot (semi-expected)')
-            except UnicodeDecodeError:
-                stf.debug('got UnicodeDecodeError when tearing down... trying to close session')
-            finally:
-                try:
-                    stf.debug('attempting to shutdown and close socket comms...')
-                    self.session.close()
-                    del self.session
-                except UnicodeDecodeError:
-                    stf.debug('got UnicodeDecodeError when closing iceboot session... continuing if possible')
-                    
-            stf.debug('teardown complete')
-    '''
-
 
     # used for test sets
     def reconfigure(self, name, group, args, evs, timeslug='', config={}):
@@ -282,10 +264,11 @@ class MainboardTest(object):
         return self.session
 
     ### TODO: implement option to ignore test "config" key? or at least iceboot
-    def execute(self, device, config={}):
+    def execute(self, device, config={}, timeslug=None, json_path=stf.config.get_path('json_results')):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
+        # NOTE: timeslug is intended to be used ONLY for running single tests
         inst = config.get('instance', {})
         if inst:
             test_args = inst.get('args', {})
@@ -298,49 +281,40 @@ class MainboardTest(object):
             test_args = ps.get('args', {})
             expected_values = ps.get('expectedValues', {})
             group = ''
-            group_timeslug = ''
+            # hack: use group timeslug
+            group_timeslug = timeslug
             instance_name = 'base'
 
         x = config.get('iceboot', {})
         dut_host = x.get('host') or stf.config.settings.iceboot.host
         dut_port = x.get('port') or stf.config.settings.iceboot.port
 
-        stf.dbg('test args: {}'.format(test_args))
-        stf.dbg('expected values: {}'.format(expected_values))
+        stf.debug(f"Running... {self.test_name}:{instance_name}")
+        stf.dbg('  test args: {}'.format(test_args))
+        stf.dbg('  expected values: {}'.format(expected_values))
 
         self.session = getIcebootSession(host=dut_host, port=dut_port)
-
-        '''
-        # XXX:rebootfirst
-        try:
-            stf.debug('rebooting device...')
-            self.session.reboot()
-            stf.debug("POST REBOOT")
-            time.sleep(5)
-            stf.debug("REBOOT POST FSLEEP")
-        except OSError:
-            stf.debug("NEW SESSION")
-            #del self.session
-            #del self.session
-            time.sleep(2)
-            self.session = getIcebootSession(**stf.config.getIcebootOpts())
-        '''
 
         # add expectedValues directly to the measurement validator class
         for m in self.test_fn.measurements:
             for v in m.validators:
                 setattr(v, 'expectedValues', expected_values)
 
+
         phases = [
             Common.checkCommsAndFirmware.with_args(session=self.session, 
                 expectedValues={'expected_fw_vnum':stf.config.settings.iceboot.fw_version}),
             self.test_fn.with_args(session=self.session, **test_args)
-            #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
+            # THIS is how to apply PhaseOptions to a phase called with "with_args":
+            #stf.options(timeout_s=1)(self.test_fn.with_args(session=self.session, **test_args))
+
+            # probably need to wrap this in stf.options to apply timeout as well
+            #run_test.with_plugs(session=IcebootSession).with_args(**test_args))
         ]
 
         T = htf.Test(htf.PhaseGroup(
                 main=phases,
-                teardown=[self.tearDown]
+                teardown=[self.tearDown],
             ),
             # openhtf fields
             test_name=self.test_name,
@@ -355,6 +329,7 @@ class MainboardTest(object):
                 'args': test_args,
                 'expectedValues': expected_values
             },
+            user_metadata=self.meta,
             # custom metadata fields
             stf_version=stf.FRAMEWORK_VERSION,
             stf_config=stf.config.settings.dict(),
@@ -369,6 +344,9 @@ class MainboardTest(object):
         output = stf.config.settings.output
         if output.json.enabled:
             # issue X: support timeSlugs in path 
+            p = files.join(json_path, output.json.filename)
+            stf.debug(f"ADDING callback for {p} ")
+            '''
             p = files.join(
                 stf.config.get_path('json_results'),
                 # this can be empty str
@@ -376,6 +354,7 @@ class MainboardTest(object):
                 group_timeslug,
                 output.json.filename
             )
+            '''
             T.add_output_callbacks(
                 JSON(p, indent=4, default=str)
             )
@@ -386,6 +365,7 @@ class MainboardTest(object):
             )
 
         T.execute(test_start=lambda: device['id'])
+        stf.debug(f"FINISHED {self.test_name}:{instance_name}")
         '''
         INFO(f'{dir(T)}')
         T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
@@ -393,4 +373,3 @@ class MainboardTest(object):
         T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
         '''
 
-        stf.dbg("finished execute for test: {}".format(self.test_name))

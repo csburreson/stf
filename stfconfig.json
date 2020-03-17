@@ -5,6 +5,9 @@
         json output is our preferred default for the time being
         in the future, we may wish to add a "database" output option
     */
+    "general": {
+        "timesync": "verify"
+    },
     "output": {
         "console": {
             "enabled": true
@@ -12,7 +15,7 @@
         "json": {
             "enabled": true,
             // note: directory created by runset_thread in stf/core.py
-            "filename": "{metadata[device][type]}-{dut_id}/{metadata[test_name]}-{metadata[test_instance]}-v{metadata[test_version]}_{metadata[device][type]}-{dut_id}.json"
+            "filename": "{metadata[test_name]}-{metadata[test_instance]}-v{metadata[test_version]}_{metadata[device][type]}-{dut_id}.json"
         },
         // not implemented
         "database": null,
@@ -34,7 +37,8 @@
         "setconfig": "{data}/setconfig",
         "fwfile_name": "degg_fw_v{config.iceboot.fw_version}.rbf",
         "fwfile": "{config.paths.data}/{fwfile_name}",
-        "json_results": "{stf_home}/results/"
+        "json_results": "{stf_home}/results/",
+        "tmp": "{stf_home}/tmp/"
     },
     /*
     iceboot options include the current FW version and normal iceboot

@@ -1,5 +1,4 @@
 import json
-import time
 import openhtf as htf
 # XXX: this monkey-patch fixes JSON serialization problems with numpy arrays in
 # test.measurements
@@ -21,9 +20,9 @@ from .tools.python.iceboot import iceboot_session_cmd
 from . import db
 
 from stf.debug import dbg, DEBUG
-from stf import getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo 
+from stf import getRegisteredClasses, getRegisteredClassesByName, getClassContext, getRegisteredClass, _PRINT, delClassContext, INFO, ginfo
 from .parse import SetConfig
-from .util import files, misc
+from .util import files, misc, exceptions, time
 from .util.colors import termcolor as tc
 from .util.config import get_config
 
@@ -56,7 +55,10 @@ class FakeIceboot(object):
             return lambda: int(CONFIG.settings.iceboot.fw_version, 16)
         return fake
 
-@misc.try_repeat(repeat_limit=3, sleep=3, msg='unable to create connection... trying again', exc_cls=(OSError, IOError, UnicodeDecodeError))
+@misc.try_repeat(repeat_limit=3, sleep=3, 
+    msg='unable to create connection... trying again', 
+    exc_cls=(OSError, IOError, UnicodeDecodeError), 
+    fail_exception=exceptions.STFCommsError)
 def getIcebootSession(**kw):
     if DEBUG.FAKE_ICEBOOT:
         return FakeIceboot(**kw)
@@ -71,29 +73,59 @@ def getIcebootSession(**kw):
     dbg(f'  {CONFIG.settings.iceboot}')
 
     session = iceboot_session_cmd.init(IcebootOpts, **kw)
+    #session = IcebootSessionWrapper(IcebootOpts, **kw)
     return session
-    '''
-    session = None
-    fail_count = 0
 
-    while session is None and fail_count < 5:
-        try:
-            # this sleep prevents OSError from being thrown in some
-            # circumstances
-            session = iceboot_session_cmd.init(IcebootOpts, **kw)
-            time.sleep(3)
 
-        except (IOError, OSError):
-            # this except doesn't seem to trigger anymore with the sleep, but
-            # just in case...
-            fail_count += 1
-            dbg("OSERROR!!!")
-            session = None
-            if fail_count == 5:
-                raise
+class IcebootSessionWrapper(object):
+    def __init__(self, opts, **kw):
+        #getIcebootSession(**kw)
+        self.kw = kw
+        self.__refresh()
 
-    return session
-    '''
+    def __getattr__(self,attr):
+        orig_attr = self.session.__getattribute__(attr)
+        if callable(orig_attr):
+            #if attr == 'close' or attr == 'reboot':
+            #    return
+            #@misc.try_repeat(repeat_limit=5, sleep=2, msg='cmd failed 5 times')
+            def hooked(*args, **kwargs):
+                try:
+                    result = orig_attr(*args, **kwargs)
+                    # prevent wrapped_class from becoming unwrapped
+                    try:
+                        if result == self.session:
+                            return self
+                    except ValueError:
+                        pass
+                    return result
+                # sometime we lose the session object 
+                except AttributeError as e:
+                    dbg(f"error\n>><<>> >> {e}")
+                    self.__refresh()
+                    result = self.session.__getattribute__(attr)(*args, **kwargs)
+                    #self.session.connect
+                    #result = orig_attr(attr)(*args, **kwargs)
+                    # prevent wrapped_class from becoming unwrapped
+                    if result == self.session:
+                        return self
+                    return result
+            return hooked
+        else:
+            return orig_attr
+
+    def __refresh(self):
+        #try:
+            #self.session.close()
+        #except AttributeError:
+        #    pass
+
+        class IcebootOpts:
+            host = CONFIG.settings.iceboot.host
+            port = CONFIG.settings.iceboot.port
+            debug = CONFIG.settings.iceboot.debug
+            fpgaConfigurationFile = None
+        self.session = iceboot_session_cmd.init(IcebootOpts, **self.kw)
 
 
 def getDevices(device_type=None):
@@ -125,22 +157,29 @@ def run(dhost=CONFIG.settings.iceboot.host,
     '''
     #mainboard = getDevices('mainboard')
     #device = mainboard[0]
-    dut_id = getBoardID(host=dhost, port=dport)
+
+    # raises STFRefuseToRun exception
+    check_system_clock()    
+    # deadbeef is for STF_FAKEICEBOOT=1
+    dut_id = getBoardID(host=dhost, port=dport) or 'deadbeef'
     device = {
         'id': dut_id,
-        'type': dtype
+        'type': dtype,
     }
     # must ensure output directory exists for this device
-    device_dir = '{type}-{id}'.format(**device)
-    files.mkdir(
+    timeslug = time.getTimeSlug()
+    device_dir = f'{dtype}-{dut_id}/{timeslug}'
+    json_path = files.mkdir(
         CONFIG.get_path('results'),
         device_dir
     )
+    dbg(f'json_path: {json_path}')
 
     ran = False
     for testClass in getRegisteredClasses():
         dbg("Running {}".format(testClass.test_name))
-        testClass.execute(device, {'iceboot': dict(host=dhost, port=dport)})
+        device['dut_serial'] = testClass.prodid
+        testClass.execute(device, {'iceboot': dict(host=dhost, port=dport)}, json_path=json_path)
         ran = True
 
     if not ran:
@@ -150,8 +189,31 @@ def run(dhost=CONFIG.settings.iceboot.host,
 def _run(testClass, device):
       return True
 
+def check_system_clock():
+    ts_mode = CONFIG.settings.general.timesync 
+    if ts_mode == 'verify':
+        dbg('timesync=verify... checking WebAPI')
+        check = time.check_systime_accurate()
+        if not check is True:
+            dbg('FAIL')
+            if check == None:
+                msg = 'Cannot verify systime using webapi. Cannot proceed'
+            if check == False:
+                msg = 'System time is inaccurate. Cannot proceed'
+            # should get a better API resource... or have a try_repeat there
+            raise exceptions.STFRefuseToRun(msg)
+        dbg('PASS')
+
+    elif ts_mode == 'user':
+        '''get input'''
+        pass
+
 def run_set(set_name=None, config_file=None, list_tests=False, list_overrides=False, device_type='degg',
             device_host=CONFIG.settings.iceboot.host, device_port=CONFIG.settings.iceboot.port):
+
+    # raises STFRefuseToRun exception
+    check_system_clock()    
+
     if set_name:
        config_file = CONFIG.get_path('setconfig', filename=f'{set_name}.json')
        if not files.exists(config_file):
@@ -240,12 +302,13 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
 
     # NOTE: must match config.output.json.filename
     device_dir = '{}-{}'.format(device_type, dut_id)
-    files.mkdir(
+    json_path = files.mkdir(
         CONFIG.get_path('results'),
         setConfig.set_name,
         setConfig.time_slug,
         device_dir
     )
+    dbg(f'json_path: {json_path}')
 
     for test in setConfig.instances:
         testName = test['test_name']
@@ -268,14 +331,15 @@ def runset_thread(setConfig, device_host, device_port, device_type, list_tests=F
 
         with open(testFile) as f:
             testCode = f.read()
-            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}")"""
+            code = f"""\nstf.core.run_single_test("{testName}", "{test['instance_name']}", "{setConfig.set_name}", {test['args']}, {test['expectedValues']}, "{setConfig.time_slug}", "{dut_id}", "{device_type}", "{device_host}", "{device_port}", "{json_path}")"""
             #debug(f'code: {code}')
             cc = getClassContext(testName)
             exec(compile(testCode + code, testFile, 'exec'), cc[2])
 
 
 def run_single_test(name, instance, group, args, evs, timeslug, 
-                    dut_id, dut_type='degg', dut_host=None, dut_port=None):
+                    dut_id, dut_type='degg', dut_host=None, dut_port=None,
+                    json_path=None):
     test = getRegisteredClass(name)
     cName = tc(name, 'aqua')
     cInst = tc(instance, 'aqua')
@@ -286,8 +350,28 @@ def run_single_test(name, instance, group, args, evs, timeslug,
     # return new Test object with test.reconfigure()?
     #test.reconfigure(instance, group, args, evs, timeslug, {})
     #T = test.deriveInstance(instance, group, args, evs, timeslug=timeslug, config={})
+    test.execute( {
+        'id': dut_id, 
+        'type': dut_type,
+        'dut_serial': test.prodid
+    }, {
+        'iceboot': {
+            'host': dut_host,
+            'port': dut_port,
+            'debug': CONFIG.settings.iceboot.debug
+        },
+        'instance': {
+            'args': args,
+            'expectedValues': evs,
+            'instance': instance,
+            'group': group,
+            'group_timeslug': timeslug
+        }
+    },
+    json_path=json_path)
 
     # XXX: multiple devices
+    '''
     try:
         test.execute( {
             'id': dut_id, 
@@ -305,11 +389,36 @@ def run_single_test(name, instance, group, args, evs, timeslug,
                 'group': group,
                 'group_timeslug': timeslug
             }
-        })
+        },
+        json_path=json_path)
     except KeyboardInterrupt:
         raise
-    except:
-        INFO(f'Exception raised during test {name}:{instance}')
+    except Exception as e:
+        INFO(f'Exception raised in framework code during test {name}:{instance} \n{e}')
+    except (OSError, UnicodeDecodeError) as e:
+        # 
+        INFO('Exception {e} raised; trying execute again')
+        # NOTE: this will and probably should overwrite previous text output
+        # file
+        test.execute( {
+            'id': dut_id, 
+            'type': dut_type
+        }, {
+            'iceboot': {
+                'host': dut_host,
+                'port': dut_port,
+                'debug': CONFIG.settings.iceboot.debug
+            },
+            'instance': {
+                'args': args,
+                'expectedValues': evs,
+                'instance': instance,
+                'group': group,
+                'group_timeslug': timeslug
+            }
+        },
+        json_path=json_path)
+        '''
 
 
 # issue#51: unicode decode error kills framework

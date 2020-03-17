@@ -2,9 +2,10 @@ from copy import deepcopy
 from .colors import termcolor as clr
 from stf import _PRINT
 from stf.util.files import getFileSize
+from stf.util import exceptions
 import stf
 import uuid
-from datetime import datetime
+from datetime import datetime # XXX: move to util.time
 import time
 
 
@@ -112,7 +113,8 @@ def INFO(s, **kw):
 
 
 # decorator to try a fn a couple times and sleep between, accepts 
-def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError)):
+def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError), 
+               fail_exception=exceptions.STFRefuseToRun):
     '''
     decorator to try a fn up to `repeat_limit` times with a sleep=`sleep` wait
     
@@ -136,6 +138,8 @@ def try_repeat(repeat_limit=3, sleep=1, msg=None, exc_cls=(UnicodeDecodeError)):
                         stf.debug(msg)
                     if sleep:
                         time.sleep(sleep)
+            if fail_exception:
+                raise fail_exception(f'Failed to execute {try_fn.__name__}')
         return wrap
     return actual_decorator
 
@@ -169,11 +173,49 @@ def check_mainboard_fwfile(flash):
     stf.debug(f"FW File not present in flash! (rv=missing)")
     return 'missing'
 
-def getTimeSlug(t=None):
-    if not t:
-        t = datetime.utcnow()
-    return t.strftime('%Y.%m.%d_%H%M%S')
 
 
 def getUUID():
     return uuid.uuid1()
+
+
+def get_run_args():
+    import openhtf
+    import argparse
+    from openhtf.util.argv import ModuleParser
+    ap = ModuleParser()
+
+    #ap = argparse.ArgumentParser()
+
+    # optional: set off key=value pairs to insert into metadata
+    ap.add_argument('--meta', default=None, 
+        nargs=argparse.REMAINDER)
+    # optional: path to JSON file adding metadata (i.e. site data)
+    ap.add_argument('--metafile', default=None, 
+        nargs=1)
+    ap.add_argument('--testconfig', default=None,
+        nargs=1, help='Path to json config file for test')
+    ap.add_argument('--mbsnum', '--prodid', default=None,
+        nargs=1, help='Mainboard serial number or device\'s production ID')
+
+    args = ap.parse_known_args()
+    stf.debug(f"args: {args}")
+    return args
+
+def get_runset_args():
+    import openhtf
+    import argparse
+    from openhtf.util.argv import ModuleParser
+    CFG = stf.util.config.get_config()
+    cfg_conn = CFG.getIcebootOpts()
+    ap = ModuleParser()
+    p = argparse.ArgumentParser(prog='runset')
+    p.add_argument('set_name', type=str, nargs='?')
+    p.add_argument('--iceboot_host', '--host', '-H', type=str, default=cfg_conn.host)
+    p.add_argument('--iceboot_port', '--port', '-P', type=str, default=cfg_conn.port)
+    p.add_argument('--iceboot_debug', '-D', action='store_true', default=cfg_conn.debug)
+    args = p.parse_known_args()
+    return args[0]
+
+    args = p.parse_args()
+     

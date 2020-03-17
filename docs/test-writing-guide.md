@@ -15,6 +15,7 @@ Also check out some of the example tests (will update with more):
 
 [examples/validators.py](https://github.com/WIPACrepo/stf/blob/master/examples/validators.py)
 
+
 ## Test File
 
 A test file must import the stf framework, define a test function, and call `stf.register` on the test and **should** have a config file.
@@ -156,7 +157,7 @@ def test_fn(test, session, **kwargs):
 
 ## Test Config
 
-A test config is a JSON file which consists of an outer object (dictionary) with three keys: `args`, `expectedValues` and `config`.
+A test config is a JSON file which consists of an outer object (dictionary) with two keys: `args` and `expectedValues`
 
 Each of these keys holds another object/dict of keys pointing to any valid JSON type.
 
@@ -166,8 +167,6 @@ made during testing (`expectedValues`)
 You *should* use a config file, even if it's blank.
 
 If your test really really does not need a config, use the `stf.NOCONFIG` option for the `config_file` parameter to `.register`.
-
-*NOTE* Currently a config also allows you to override iceboot options, but this feature may go away
 
 example empty file: 
 ```
@@ -189,8 +188,44 @@ Arguments can be accessed from the kwargs keyword or mentioned as explicit kw ar
 
 `expectedValues` are used by validators and aren't accessible directly from the test function.
 
+## Running a test
 
-## Passing a test
+To run a test, simply invoke the python file containing the test and register call as such:
+
+`python tests/CheckFirmware.py`
+
+Test arguments include:
+* `-v[vv]` output verbosity
+* `--testconfig` path to alternative test configuration file (instead of using default or "registered" file)
+* `--prodid` or `--mbsnum` -- add a "Production ID" or MB Serial Number (same option)
+* `--meta k=v [k2=v2...]` add an arbitrary number of key=value metadata bits to the results output (note that everything after --meta will be interpreted as key=value)
+
+Also note that all unused arguments will also appear in the results output
+
+
+## Test Outcomes (pass/fail/error/timeout)
+
+An STF test can have one of four outcomes:
+
+* `PASS` -> no errors and any measurements were recorded and validated
+* `FAIL` -> the test failed due to a known issue
+* `ERROR` -> an unexpected exception was thrown by the test code or underlying lib
+* `TIMEOUT` -> Test execution was halted after the timeout_s value was exceeded (currently 3 minutes)
+
+### Test Failures
+
+An STF Test will fail when any of the following conditions are met:
+* returning `stf.FAIL` from the test (explict)
+* raising an `stf.STFException` or subclass of that exception (other exceptions result in ERROR outcome rather than FAIL)
+* not setting a required measurment as defined in the `@stf.measures` decorator
+* a requiremed measurement with a validator fails to validate
+
+Not that unexpected errors/exceptions will result in an `ERROR` outcome.
+
+Tests that run more than 3 minutes will be killed and this will result in a `TIMEOUT` outcome.
+
+
+### Passing a test
 
 A test will pass if it successfully completes with no errors and has made any (optional) declared measurements.
 
@@ -218,6 +253,28 @@ def test_fn(test, session, **k):
 
     if something.isBad:
         return stf.FAIL
+```
+
+
+FAIL due to exception :
+```
+def test_fn(test, session, **k):
+    ... # do some stuff...
+
+    try:
+        something():
+    except:
+        raise stf.STFException("Failed to do 'something'")
+```
+
+
+ERROR due to exception:
+```
+def test_fn(test, session, **k):
+    ... # do some stuff...
+
+    something() # assuming something raises an exception and the exception is not a subclass of STFException
+        
 ```
 
 measurements (more on that below)
@@ -272,6 +329,19 @@ def run_test(test, session, arg1=None, **kw):
     # OK if we get here, framework takes care of comparing xxx to bar
     # if they don't match or xxx weren't recorded, the test will fail
 ```
+
+## Failing a test
+
+An STF Test will fail when any of the following conditions are met:
+* returning `stf.FAIL` from the test (explict)
+* raising an `stf.STFException` or subclass of that exception (other exceptions result in ERROR outcome rather than FAIL)
+* not setting a required measurment as defined in the `@stf.measures` decorator
+* a requiremed measurement with a validator fails to validate
+
+Not that unexpected errors/exceptions will result in an `ERROR` outcome.
+
+Tests that run more than 3 minutes will be killed and this will result in a `TIMEOUT` outcome.
+
 
 ## Best Practices
 
