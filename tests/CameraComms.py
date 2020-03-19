@@ -5,7 +5,7 @@
 import stf
 import time
 
-TEST_REGISTER = 55 #0x55
+TEST_REGISTER = 0x55
 
 @stf.measures(stf.M('RegisterValue1').equalsParam('ExpectedRegisterValue'),
               stf.M('RegisterValue2').equalsParam('ExpectedRegisterValue'),
