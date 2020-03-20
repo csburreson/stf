@@ -282,6 +282,7 @@ class MainboardTest(object):
             expected_values = ps.get('expectedValues', {})
             group = ''
             # hack: use group timeslug
+            # XXX: timeslug is none for individual tests
             group_timeslug = timeslug
             instance_name = 'base'
 
@@ -325,6 +326,7 @@ class MainboardTest(object):
             # HEY: test_group is referenced by config
             # HEY: test_group is referenced by runset/scripts
             test_group=group,
+            test_group_id=group_timeslug,
             test_config={
                 'args': test_args,
                 'expectedValues': expected_values
