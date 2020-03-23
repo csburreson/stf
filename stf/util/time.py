@@ -1,5 +1,6 @@
 import json
-from urllib.request import Request, urlopen 
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 from datetime import datetime, timedelta
 from stf.util import files
 import stf
@@ -45,7 +46,11 @@ def get_time(url='http://worldtimeapi.org/api/timezone/Zulu'):
         # IMPORTANT: use system time for this and only this calculation)
         file_ctime = datetime.fromtimestamp(file_stat.st_ctime)
         if abs(datetime.now() - file_ctime) > TIMESYNC_EXPIRE_TIME:
-            path.unlink()
+            try:
+                path.unlink()
+            except Exception as e:
+                stf.debug('Unable to unlink file ', path)
+                stf.debug(f'Exception: {e}')
         else:
             # if file was written recently, all is well
             return 'verified'
@@ -62,7 +67,12 @@ def get_time(url='http://worldtimeapi.org/api/timezone/Zulu'):
     timestamp = json.loads(response).get('unixtime')
     nowlocal = datetime.utcfromtimestamp(timestamp)
     if not path.exists():
-        path.touch()
+        try:
+            path.touch()
+        except:
+            # Missing parent directory, no write permission, file system full, etc.
+            stf.debug(f'unable to touch file ', path)
+            stf.debug(f'Exception: {e}')
     return nowlocal
 
 
@@ -70,7 +80,7 @@ def check_systime_accurate():
     now = datetime.utcnow()
     try:
         nowlocal = get_time()
-    except (urllib.error.URLError, ValueError) as e:
+    except (URLError, ValueError) as e:
         stf.debug(f'Exception: {e}')
         return None
 
