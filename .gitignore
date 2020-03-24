@@ -4,3 +4,4 @@
 results/*
 stfconfig.local.json
 tmp/*
+!tmp/.placeholder.txt

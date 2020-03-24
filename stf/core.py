@@ -197,7 +197,7 @@ def check_system_clock():
         if not check is True:
             dbg('FAIL')
             if check == None:
-                msg = 'Cannot verify systime using webapi. Cannot proceed'
+                msg = 'Cannot verify systime using webapi. Check Internet connection. Cannot proceed'
             if check == False:
                 msg = 'System time is inaccurate. Cannot proceed'
             # should get a better API resource... or have a try_repeat there
