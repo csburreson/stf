@@ -61,8 +61,12 @@ def get_time(url='http://worldtimeapi.org/api/timezone/Zulu'):
     # we should cache a file and see if we've verified the time already
     # on this machine. maybe the file contains the verified timestamp
     # and if it's older than an hour we ignore and overwrite it with a fresh check
+    try:
+        response = urlopen(Request(url)).read()
+    except Exception as e:
+        stf.debug(f'URL {url} Exception: {e}')
+        raise
 
-    response = urlopen(Request(url)).read()
     # check response.status_code ? retry? or try_repeat this fn if needed...
     timestamp = json.loads(response).get('unixtime')
     nowlocal = datetime.utcfromtimestamp(timestamp)
