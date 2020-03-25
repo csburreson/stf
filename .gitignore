@@ -1,7 +1,7 @@
 *.swp
 *.swo
 *.pyc
-results/*
 stfconfig.local.json
+results/*
 tmp/*
-!tmp/.placeholder.txt
+!*/.placeholder.txt
