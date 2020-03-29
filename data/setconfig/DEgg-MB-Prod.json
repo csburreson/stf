@@ -34,6 +34,21 @@
             }
         ],
 
+        "ADCNoiseSpectrum": [
+            {
+                "instance": "channel-0",
+                "args": {
+                    "channel" : 0
+                }
+            },
+            {
+                "instance": "channel-1",
+                "args": {
+                    "channel" : 1
+                }
+            }
+        ],
+
         "ADCTestPatterns": [
             {
                 "instance": "channel-0",

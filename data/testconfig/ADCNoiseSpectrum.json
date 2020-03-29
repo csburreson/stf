@@ -1,0 +1,15 @@
+{
+    "args": {
+      // Channel range: 0, 1
+    	"channel" : 0,
+      // Number of scans
+    	"scanCount" : 100,
+      // Samples per scan. Must divisible by 4, and >= 16
+    	"scanSamples" : 2048
+    },
+
+    "expectedValues": {
+        "noise_power_min": 0.0,
+        "noise_power_max": 2000000.0
+    }
+}
