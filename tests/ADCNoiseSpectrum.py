@@ -1,4 +1,4 @@
-# Validate ADC noise spectrum
+# Save, validate ADC noise spectrum
 # Shamelessly plagiarized from STM32Tools python/DEggTest/adcFFT.py
 # by J. Weber
 
@@ -10,8 +10,10 @@ MIN_SAMPLES = 16
 MAX_CHANNEL = 1
 DIGITIZER_FREQ = 240000000
 
-@stf.measures(stf.M('noise_power').expectRange(
-    '{noise_power_min}', '{noise_power_max}', type=float))
+@stf.measures(
+    stf.M('noise_spectrum'),
+    stf.M('max_noise_power').expectRange(
+        '{noise_power_min}', '{noise_power_max}', type=float))
 def run_test(test, session, channel, scanCount, scanSamples):
 
     # Validate input arguments
@@ -62,17 +64,21 @@ def run_test(test, session, channel, scanCount, scanSamples):
     
     #plt.xlabel("Frequency")
     #plt.ylabel("Power (A.U.)")
-    #plt.title("Channel: %s count:%s samples:%d" % (channel, scanCount, nSamples))
+    #plt.title("Channel: %s count:%s samples:%d" %
+        (channel, scanCount, nSamples))
     ll = int(len(freqs) / 2)
     x = freqs[int(0.01*ll):ll]
     y = output[int(0.01*ll):ll]
     if len(x) == 0 or len(x) != len(y):
         raise stf.STFException('num freqs %d num powers %d' % (len(x),len(y)))
+    #noise_spectrum = np.stack((x, y))
+    noise_spectrum = { 'frequency': x, 'power': y }
+    test.measurements.noise_spectrum = noise_spectrum
 
     # Index of max noise power
     ix = np.argmax( y )
     test.logger.info('max noise %.3e at %.3f MHz' % (y[ix], x[ix]/1.0e6))
-    test.measurements.noise_power = y[ix]
+    test.measurements.max_noise_power = y[ix]
 
     #plt.plot(x, y, "r-")
     #plt.show()
