@@ -65,7 +65,7 @@ def run_test(test, session, channel, scanCount, scanSamples):
     #plt.xlabel("Frequency")
     #plt.ylabel("Power (A.U.)")
     #plt.title("Channel: %s count:%s samples:%d" %
-        (channel, scanCount, nSamples))
+    #   (channel, scanCount, nSamples))
     ll = int(len(freqs) / 2)
     x = freqs[int(0.01*ll):ll]
     y = output[int(0.01*ll):ll]
