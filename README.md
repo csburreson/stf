@@ -13,11 +13,9 @@ The stf module lives in `stf/` and includes all the core code that test writers 
 - **openhtf**
 - **Protoc**
 
-*dev note*
-**test dependencies**
-an import for **matplotlib** in one of the tests' libraries requires that you have matplotlib installed to run the test.
+See the [System Requirements](system-requirements.md) for more information
 
-any test can implicitly add a dependency to the workspace... so be careful 
+NOTE that any test can implicitly add a dependency to the workspace... so be careful 
 
 ### install
 
@@ -67,6 +65,8 @@ https://wipacrepo.github.io/stf/
 #### Working with Git Submodules
 [Git Submodule Hints](https://wipacrepo.github.io/stf/git-submodule-hints.html)
 
+#### Submitting Test Results
+[sendresults.py script](submit.md)
 
 ### debug environment variables
 
@@ -76,7 +76,6 @@ The following variables must be either set (on) or unset (off)
 * `STF_DEBUG` - if set, enables `stf.debug` print statements (regardless of -v args)
 * `STF_SKIPFW` - if set, skips copying of firmware (for development)
 * `STF_FAKEICEBOOT` - if set, creates a fake iceboot object... mainly for framework development
-* `STF_ALLOWPRINT=false` - if *SET TO False or 0*, disables printing outside of test functions
 
 Note that the framework will convert any "print" statements within a test into `test.logger.info` statements.
 

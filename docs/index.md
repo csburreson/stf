@@ -12,15 +12,8 @@
 
 ### [Test Set Guide](test-sets.md)
 
+### [Submitting Test Results](submit.md)
+
 ### [Git Submodule Hints](git-submodule-hints.md)
 
 
-(todo)
-
-### [Test Output](testOutput.md)
-
-### [Development/Debug Settings](debug.md)
-
-### [Future plans](future.md)
-
-### [Loose Functional Spec](funcSpec.md)
