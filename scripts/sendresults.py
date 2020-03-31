@@ -10,8 +10,11 @@ import time
 DEBUG = False
 
 def send_report(d, timeslug=None):
-    url = 'https://hercules.icecube.wisc.edu/prodcal/data/testsets'
-    data = {'resultDoc': d, 'timeslug': timeslug}
+    global args
+    url = '{}://{}/{}/data/testsets/'.format(args.scheme, args.host, args.basepath)
+    print('Sending to: {}'.format(url))
+    data = {'resultDoc': d, 'timeslug': timeslug,
+        'user': args.user, 'password': args.password}
     response = requests.post(url, json=data)
 
     if DEBUG:
@@ -60,6 +63,11 @@ if __name__ == '__main__':
     import os
     ap = argparse.ArgumentParser(description='Ingest STF Results Files')
     ap.add_argument('files', nargs='+', default='.')
+    ap.add_argument('--user', help='REQUIRED')
+    ap.add_argument('--password', help='REQUIRED')
+    ap.add_argument('--host', nargs='?', default='hercules.icecube.wisc.edu', help='Defaults to hercules')
+    ap.add_argument('--scheme', nargs='?', default='https', help='(dev) defaults to https')
+    ap.add_argument('--basepath', '-b',  default='prodcal', help='(dev) location of flask app on server')
     args = ap.parse_args()
     
     for fname in args.files:
