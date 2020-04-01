@@ -6,6 +6,7 @@
     },
     "expectedValues": {},
     "args": {
-    	"channel" : 0
+    	"channel" : 0,
+    	"n_waveforms" : 800
     }
 }
