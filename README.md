@@ -13,7 +13,7 @@ The stf module lives in `stf/` and includes all the core code that test writers 
 - **openhtf**
 - **Protoc**
 
-See the [System Requirements](system-requirements.md) for more information
+See the [System Requirements](https://wipacrepo.github.io/stf/system-requirements.html) for more information
 
 NOTE that any test can implicitly add a dependency to the workspace... so be careful 
 
@@ -66,7 +66,7 @@ https://wipacrepo.github.io/stf/
 [Git Submodule Hints](https://wipacrepo.github.io/stf/git-submodule-hints.html)
 
 #### Submitting Test Results
-[sendresults.py script](submit.md)
+[sendresults.py script](https://wipacrepo.github.io/stf/submit.html)
 
 ### debug environment variables
 
