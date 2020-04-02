@@ -15,7 +15,7 @@ Network availability is required to access:
 https://github.com/WIPACrepo/stf
 * Internet time URL
 http://worldtimeapi.org/api/timezone/Zulu
-* MongoDB database ingest URL TBD
+* MongoDB database ingest URL https:hercules.icecube.wisc.edu
 * Database visualization URL https://hercules.icecube.wisc.edu/prodcal/runset_summary
 * Network access to devices under test (DUT), e.g. DEgg mainboard TCP/IP network
   port. DUTs with serial (ICM) access may require serial redirect software.

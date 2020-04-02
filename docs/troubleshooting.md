@@ -255,8 +255,7 @@ IceBoot traverses multiple hops, e.g:
 [tunnels](https://wiki.icecube.wisc.edu/index.php/DRTS#Communicating_with_the_the_DEgg_Board)
 has proven unstable at times.
 * 1 hop from remote test host to pub.icecube.wisc.edu, another hop to a
-(serial
-redirect](https://wiki.icecube.wisc.edu/index.php/DRTS#Communicating_with_the_the_DEgg_Board).
+[serial redirect](https://wiki.icecube.wisc.edu/index.php/DRTS#Communicating_with_the_the_DEgg_Board).
 Each hop adds serial buffering to the network path, which may compromise
 communications. If these issues are suspected, reduce the number of hops in the
 network path. Running STF on a host with locally connected test targets has

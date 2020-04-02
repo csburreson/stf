@@ -26,15 +26,17 @@ If you only perform the basic git clone invocation, and forget the
 $ git clone git@github.com:WIPACrepo/stf.git # NOTE: WILL NOT CLONE SUBMODULES
 ~~~~
 
-Then you will be left with an empty *stf/tools* directory. To fix this:
+Then you will be left with an empty *stf/tools* directory. To fix this from the
+`STF_HOME` top level directory:
 ~~~~
+$ git submodule init # Inform git that this workspace has submodules
 $ git submodule init # Inform git that this workspace has submodules
 $ git submodule update  # clone the submodules to the version pinned to the stf repo.
 ~~~~
 
 ## Updating Submodules
 
-A counter intuitive behavior for sum is the checked out submodules do not
+A counter intuitive behavior for some users is checked out submodules do not
 automatically track changes in the parent repository. Instead, updating
 submodules is a manual operation.
 
@@ -53,7 +55,7 @@ often desired when a change has been made to the
 repository, and the updated contents are desired in the *stf/tools* directory.
 
 Here's how to manually update all STF submodules, including `stf/tools` to the
-latest versions:
+latest versions from the `STF_HOME` top level directory:
 ```
 $ git submodule foreach git pull origin master
 ```
