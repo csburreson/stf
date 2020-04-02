@@ -215,7 +215,7 @@ class MainboardTest(object):
             logFn('MCU log: ' + logLine)
 
 
-    @misc.try_repeat(exc_cls=(UnicodeDecodeError, OSError, IOError))
+    @misc.try_repeat(exc_cls=(UnicodeDecodeError, OSError, IOError),fail_exception=None)
     def tearDown(self, test):
         if self.session:
             if hasattr(self.session, 'FAKE'):

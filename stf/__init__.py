@@ -1,7 +1,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-__version__ = '1.3b'
+__version__ = '1.3.1'
 FRAMEWORK_VERSION = __version__
 FRAMEWORK_VERSIONNAME = 'Chernobyl'
 
