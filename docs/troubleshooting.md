@@ -237,6 +237,16 @@ Internet time server, by default. If not true, STF will raise a
 `STFRefuseToRun` exception. There will be a message in the test 
 [results](#inspect-test-results).
 
+First, verify the timeserver is available from any browsers: 
+http://worldtimeapi.org/api/timezone/Zulu . The output should be similar to
+```
+{"week_number":14,"utc_offset":"+00:00","utc_datetime":"2020-04-02T12:58:37.835551+00:00","unixtime":1585832317,"timezone":"Zulu","raw_offset":0,"dst_until":null,"dst_offset":0,"dst_from":null,"dst":false,"day_of_year":93,"day_of_week":4,"datetime":"2020-04-02T12:58:37.835551+00:00","client_ip":"96.37.95.237","abbreviation":"UTC"}
+```
+and not contain any errors. There have been occasions where this server
+responds with an HTTP error. This leads to a `STFRefuseToRun` exception in the
+test output.
+
+
 Use `curl` to verify network access to the Internet timeserver from the STF
 test host shell:
 ```
@@ -256,9 +266,15 @@ IceBoot traverses multiple hops, e.g:
 has proven unstable at times.
 * 1 hop from remote test host to pub.icecube.wisc.edu, another hop to a
 [serial redirect](https://wiki.icecube.wisc.edu/index.php/DRTS#Communicating_with_the_the_DEgg_Board).
+
 Each hop adds serial buffering to the network path, which may compromise
 communications. If these issues are suspected, reduce the number of hops in the
-network path. Running STF on a host with locally connected test targets has
-zero hops and eliminates the problem completely.
+network path. Running STF on a host with locally connected mainboard test targets has
+zero hops and eliminates the problem completely. If a locally connected test
+target is not possible, use a network switch or router, and avoid SSH tunnels.
+
+If the communications path must use ICM/serial communications, it is
+recommended to first validate communications using the test target ethernet
+interface, before using the ICM/serial interface.
 
 
