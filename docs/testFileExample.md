@@ -1,5 +1,5 @@
 
-# Overview of test files
+# Test File Examples
 
 ## Minimal Test Function
 
@@ -52,76 +52,10 @@ example empty file:
 }
 ```
 
-## Passing a test
+## Other Examples
 
-A test will pass if it successfully completes with no errors and has made any (optional) declared measurements.
-
-One can explicitly return `stf.FAIL` or `stf.PASS` though the latter will only be valid if the test has no measurements or has made any that it declared
-
-Note that returning stf.PASS will not result in a pass if declared measurements were not made.
-
-examples:
-
-```
-def test_fn(test, session, **k):
-    ... # do some stuff...
-
-    if something.isBad:
-        return stf.FAIL
-
-    return stf.PASS
-```
+The STF [examples](../examples) directory contains simple example concepts.
 
 
-explicit pass return value not required:
-```
-def test_fn(test, session, **k):
-    ... # do some stuff...
-
-    if something.isBad:
-        return stf.FAIL
-```
-
-measurements (more on that below)
-```
-@stf.measures(stf.Measurement('foo'))
-def test_fn(test, session, **k):
-    ... # do some stuff...
-
-    test.measurements.foo = something()
-```
-
-All the above tests would pass
-
-## Measurements
-
-Decorate your test with `@stf.measures(...)` to declare measurements.
-
-The `measures` decorator accepts stf.Measurement (or stf.M for short) objects.
-
-You can record measurements you have declared by using the *test* argument:
-`test.measurements.<name-of-declared-measurement>`
-
-Measurements can be validated with the following validators:
-  * `.equals(val)` compares recorded measurement against val (usually a literal)
-  * `.equalsParam('{expectedValueKey}')` compares the value of an item in the "expectedValue" of the test config JSON file
-  * `.in_range(x, y)` valid if measurement if equal to or between x and y
-  * `.in_range('{exp_x}', {exp_y})` same, but uses "expectedValue" from testConfig
-```
-import stf
-
-@stf.measures(stf.Measurement('xxx').equalsParam('{foo}'))
-def run_test(test, session, arg1=None, **kw):
-    # see tests/template.json for testconfig
-    test.measurements.xxx = 'bar' 
-
-    if arg1 is None:
-        test.logger.error('misconfigured arg!')
-        return stf.FAIL
-    else:
-        test.logger.info('Got arg1: {}'.format(arg1))
-
-    # OK if we get here, framework takes care of comparing xxx to bar
-    # if they don't match or xxx weren't recorded, the test will fail
-```
+The STF [tests](../tests) directory is full of functional test examples.
 

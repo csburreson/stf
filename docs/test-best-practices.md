@@ -1,5 +1,33 @@
 # Test Best Practices
 
+## Syntax Validation
+_Never_ commit invalid Python nor JSON to the repository. There are numerous tools to
+validate each prior to commit. 
+
+### Python
+Python code can be test compiled:
+```
+$ python -m py_compile script.py
+```
+or checked with [Pylint](https://github.com/PyCQA/pylint/).
+
+### JSON
+All STF configuration files use the [JSON](https://www.json.org/json-en.html)
+format. As an STF extension, C and C++ style comments are allowed (and
+encouraged) to make the files more readable. JSON syntax errors may lead to
+unexpected and indeterminate test results.
+When modifiying a JSON file, it is good practice to parse check the file. This
+is often a builtin capability of some editors, browsers. However these may not
+tolerate JSON comments. An example of a comment tolerant JSON parse checker is
+the `json_verify` tool in the `yajl` package on
+RedHat/CentOS/Fedora/ScienticLinux systems:
+```
+$ json_verify -c <stfconfig.json
+JSON is valid
+```
+
+## Best Practices
+
 The following STF test case best practices help test operators understand what a
 test does, and why it passes or fails.  Without this understanding, test
 operators may need to consult the test author.

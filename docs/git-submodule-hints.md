@@ -32,6 +32,12 @@ $ git submodule init # Inform git that this workspace has submodules
 $ git submodule update  # clone the submodules to the version pinned to the stf repo.
 ~~~~
 
+## Updating Submodules
+
+A counter intuitive behavior for sum is the checked out submodules do not
+automatically track changes in the parent repository. Instead, updating
+submodules is a manual operation.
+
 After cloning, the *stf/tools* workspace is in a *detached HEAD* state, which
 indicates the submodule version is pinned to the last version of the 
 [WIPACrepo/STM32Tools](https://github.com/WIPACrepo/STM32Tools)
@@ -46,16 +52,9 @@ often desired when a change has been made to the
 [WIPACrepo/STM32Tools](https://github.com/WIPACrepo/STM32Tools)
 repository, and the updated contents are desired in the *stf/tools* directory.
 
-Here's how to update *stf/tools* to the latest version in the 
-[WIPACrepo/STM32Tools](https://github.com/WIPACrepo/STM32Tools)
-repository (tip of the *master* branch). This assumes the *stf/tools* directory is
-already populated with an older version of the 
-[WIPACrepo/STM32Tools](https://github.com/WIPACrepo/STM32Tools)
-repository:
-~~~~
-$ pushd stf/tools # change directory to stf/tools
-$ git checkout master # leave detached HEAD state, switch to master branch
-$ git pull  # pull latest version of master branch
-$ popd # return to original directory
-~~~~
+Here's how to manually update all STF submodules, including `stf/tools` to the
+latest versions:
+```
+$ git submodule foreach git pull origin master
+```
 

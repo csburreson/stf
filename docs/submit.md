@@ -5,7 +5,7 @@
 The script is located in `STF_HOME/scripts/` 
 
 It does not depend on the STF framework code, and simply submits 
-STF results files to a webserver.
+STF results files to a webserver, and on to a backend (MongoDB) database.
 
 It does require the requests library
 `pip install requests`

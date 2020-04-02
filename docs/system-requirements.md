@@ -24,7 +24,7 @@ No inbound network access is required.
 
 ## Python
 STF requires installation of Python3. The local python3 executable name does
-not matter. First, it is recommended to install the Python [pip](https://pypi.org/project/pip/) package manager to install additional Python packages required by STF.
+not matter. First, it is recommended to install the Python [pip](https://pypi.org/project/pip/) package manager to install additional Python packages required by STF. On some systems, the Python3 version of pip is `pip3`.
 
 Note: some distbutions provide separate Python2 and Python 3 binaries,
 packages; with Python2 being the default. Take care to install Python3
@@ -33,10 +33,10 @@ packages.
 STF requires the following Python3 packages:
 * STF https://github.com/WIPACrepo/stf, which also installs Upgrade STM32Tools
   repository https://github.com/WIPACrepo/STM32Tools as a git submodule.
-* openhtf test framework
-* numpy array computing
-* matplotlib plotting library
-
+* openhtf test framework, install `pip[3] install openhtf`
+* numpy array computing, install `pip[3] install numpy`
+* matplotlib plotting library, install `pip[3] install matplotlib`
+* requests, install `pip[3] install requests`
 
 
 ## Software

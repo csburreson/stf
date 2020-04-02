@@ -1,3 +1,6 @@
+# STF Run Sets (Test Sets)
+
+Note the terms "run set" and "test set" are equivalent.
 
 A runset file which is essentially a manifest of tests and override parameters.
 
@@ -94,6 +97,9 @@ SLO_ADC
 ```
 
 ## Running a set 
+
+Note: It is suggested to review the documentation for running a
+[single test](running-tests.md) prior to this section.
 
 Run the `runset.py` script with no arguments to see all available runsets:
 

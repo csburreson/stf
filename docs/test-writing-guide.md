@@ -5,16 +5,7 @@ An stf test is a normal python function which receives special arguments and is 
 
 Minimally, you need a test function, a few lines of boilerplate code, and an optional test config file to write a valid test.
 
-Also check out some of the example tests (will update with more):
-
-[exampples/simple.py](https://github.com/WIPACrepo/stf/blob/master/examples/simple.py)
-
-[examples/timeout.py](https://github.com/WIPACrepo/stf/blob/master/examples/timeout.py)
-
-[examples/measurements.py](https://github.com/WIPACrepo/stf/blob/master/examples/measurements.py)
-
-[examples/validators.py](https://github.com/WIPACrepo/stf/blob/master/examples/validators.py)
-
+Also check out some of the [example](../examples) tests (will update with more).
 
 ## Test File
 
@@ -87,6 +78,11 @@ stf.register(
     config_file=None
 )
 ```
+
+## Printing Output Restrictions
+Note that the framework will convert any "print" statements within a test into `test.logger.info` statements.
+
+Any print statements outside of your test function (or from iceboot) will show up unless ALLOWPRINT is disabled
 
 ## Test Function
 
