@@ -19,6 +19,8 @@ See
 [Test Best Practices](docs/test-best-practices.md),
 [Test File Example](docs/testFileExample.md) for single test writing information.
 
+See [Running Tests](docs/running-tests.md) for help running individual tests.
+
 See [Test Sets, aka Run Sets](docs/test-sets.md) for information on specifying
 sets of tests, which may be used as high level master scripts.
 
