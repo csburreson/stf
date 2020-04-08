@@ -21,15 +21,45 @@
 
         "ADCNoiseLevel": [
             {
-                "instance": "channel-0",
+                "instance": "channel-0-dac-5000",
                 "args": {
-                    "channel" : 0
+                    "channel" : 0,
+                    "dac_val" : 5000
                 }
             },
             {
-                "instance": "channel-1",
+                "instance": "channel-0-dac-31000",
                 "args": {
-                    "channel" : 1
+                    "channel" : 0,
+                    "dac_val" : 31000
+                }
+            },
+            {
+                "instance": "channel-0-dac-55000",
+                "args": {
+                    "channel" : 0,
+                    "dac_val" : 55000
+                }
+            },
+            {
+                "instance": "channel-1-dac-5000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 5000
+                }
+            },
+            {
+                "instance": "channel-1-dac-31000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 31000
+                }
+            },
+            {
+                "instance": "channel-1-dac-55000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 55000
                 }
             }
         ],
