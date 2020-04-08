@@ -60,13 +60,13 @@ def run_test(test, session, channel, scanCount, scanSamples):
 
     # Return sample frequencies
     time_step = 1. / DIGITIZER_FREQ
-    freqs = np.fft.fftfreq(len(output), time_step)
+    freqs = np.abs( np.fft.fftfreq(len(output), time_step) )
     
     #plt.xlabel("Frequency")
     #plt.ylabel("Power (A.U.)")
     #plt.title("Channel: %s count:%s samples:%d" %
     #   (channel, scanCount, nSamples))
-    ll = int(len(freqs) / 2)
+    ll = int(len(freqs) / 2) + 1
     x = freqs[int(0.01*ll):ll]
     y = output[int(0.01*ll):ll]
     if len(x) == 0 or len(x) != len(y):
