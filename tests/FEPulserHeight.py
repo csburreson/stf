@@ -1,7 +1,9 @@
 import stf
+import numpy as np
 from DEggTest.fepulser import get_waveform, set_dac, set_fepulser_dac, get_baseline_waveform
 
-@stf.measures(stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
+@stf.measures(stf.M('pulser_waveform'),
+              stf.M('meas').expectRange('{exp_x}', '{exp_y}', type=float))
 def run_test(test, session, channel, dac_val,
              dac_val_fepulser, nsamples=128, n_waveforms=100, **kw):
     if nsamples < 16 or nsamples % 4 != 0:
@@ -12,9 +14,21 @@ def run_test(test, session, channel, dac_val,
     set_dac(session, channel, dac_val)
     baseline_wv = get_baseline_waveform(session, channel)
     set_fepulser_dac(session, channel, dac_val_fepulser)
-    heights = [get_waveform(session, channel, baseline_wv).max() for _ in range(n_waveforms)]
+    waveformSum = None
+    heights = []
+    for _ in range(n_waveforms):
+        wf = get_waveform(session, channel, baseline_wv)
+        heights.append(wf.max())
+        if waveformSum is None:
+            waveformSum = wf
+        else:
+            waveformSum = np.add(waveformSum, wf)
+    waveformAvg = [float(x/n_waveforms) for x in waveformSum]
+
     # see tests/template.json for testconfig
     test.measurements.meas = sum(heights)/len(heights)
+    test.measurements.pulser_waveform = {"Bin": [x for x in range(len(waveformAvg))],
+                                         "Waveform (ADC Units)": waveformAvg}
     stf.debug(f'{test.measurements.meas}')
 
     test.logger.info(f'FEPulser height over baseline: {test.measurements.meas}')

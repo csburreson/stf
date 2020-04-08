@@ -8,9 +8,10 @@ import os
 import time
 
 # Measure the rate of ADC counts at some level above baseline
-@stf.measures(stf.M('rate').expectRange(0, '{maxRate}', type=int))
+@stf.measures(stf.M('trigger_rate'),
+              stf.M('rate').expectRange(0, '{maxRate}', type=int))
 def run_test(test, session, channel, biasDACValue,
-             integrationTimeUS, dacIncrement):
+             integrationTimeUS, dacIncrement, histogramBins):
     
     # Get a baseline
     session.setDAC('A', biasDACValue)
@@ -38,6 +39,23 @@ def run_test(test, session, channel, biasDACValue,
     time.sleep(integrationTime * 2.2)
     count = session.getScalerCount(channel)
     test.measurements.rate =  float(count) / integrationTime
+
+    integrationTimeUS *= 0.1
+    integrationTime = 1e-6 * integrationTimeUS
+    session.enableScalers(channel, integrationTimeUS, 240) # 1 us deadtime
+    rates = []
+    adcValues = []
+    for i in range(histogramBins):
+        adc = baseline + i
+        if adc > 16383:
+            raise Exception("Threshold is above max ADC range")
+        session.setDEggTriggerConditions(channel, adc)
+        time.sleep(integrationTime * 2.2)
+        adcValues.append(i)
+        rates.append(float(session.getScalerCount(channel)) / integrationTime)
+
+    test.measurements.trigger_rate = {"ADC (count above baseline)": adcValues,
+                                      "Rate (Hz)": rates}
 
 
 stf.register(
