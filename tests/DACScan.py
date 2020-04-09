@@ -20,11 +20,12 @@ from DEggTest.fpga_reg import fpga_write
               stf.M('fit_slope').expectRange('{slope_min}', '{slope_max}',
                                              type=float))
 def run_test(test, session, channel, n_settings,
+             adc_fit_range_min, adc_fit_range_max,
              wfm_period=3, wfm_len=1000, wfms_per_setting=10):
     scan_results = do_dac_scan(session, channel, wfm_period,
                                wfm_len, n_settings, wfms_per_setting)
 
-    fit_res, Rsq = line_fit(scan_results)
+    fit_res, Rsq = line_fit(scan_results, adc_fit_range_min, adc_fit_range_max)
     slope = fit_res[0]
     y_int = fit_res[1]
     x_int = -y_int/slope
@@ -56,7 +57,7 @@ def configure_mainboard(session, channel, wfm_len):
     fpga_write(session, f'test_conf[{channel}]', int(wfm_len//4))
 
 
-def line_fit(scan_res):
+def line_fit(scan_res, adc_fit_range_min, adc_fit_range_max):
     ''' returns (polyfit result, r^2)'''
 
     settings = np.array(scan_res['dac_settings'])
@@ -64,9 +65,9 @@ def line_fit(scan_res):
     maxs = np.array(scan_res['maxs'])
     means = np.array(scan_res['means'])
 
-    # do not include saturating settings in the fit
-    adc_max = 0x3fff
-    fit_inds = np.logical_and(mins > 0, maxs < adc_max)
+    # do not include saturating/clipping settings in the fit
+    fit_inds = np.logical_and(mins > adc_fit_range_min,
+                              maxs < adc_fit_range_max)
 
     pfit_res = np.polyfit(settings[fit_inds], means[fit_inds], 1)
 

@@ -7,7 +7,7 @@
     "expectedValues": {
         "Rsq_min" : 0.99999,
         "Rsq_max" : 1, 
-        "intercept_min": 0,
+        "intercept_min": -1000,
         "intercept_max": 20000,
         "slope_min": 0.25,
         "slope_max": 0.5
@@ -15,6 +15,8 @@
     },
     "args": {
     	"channel" : 0,
-        "n_settings": 100
+        "n_settings": 100,
+        "adc_fit_range_min": 500,
+        "adc_fit_range_max": 15500
     }
 }
