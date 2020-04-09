@@ -22,23 +22,27 @@ def run_test(test, session, channel, biasDACValue,
     session.testDEggCPUTrig(channel)
     readout = session.testDEggWaveformReadout()
     if readout is None or len(readout["waveform"]) == 0:
-        raise Exception("Unable to acquire a CPU trigger")
+        raise stf.STFException("Unable to acquire a CPU trigger")
     baseline = int(sum(x for x in readout["waveform"]) / 
                                     len(readout["waveform"]))
 
     if baseline == 0:
-        raise Exception("Baseline is zero")
+        raise stf.STFException("Baseline is zero")
 
     session.enableScalers(channel, integrationTimeUS, 240) # 1 us deadtime
     session.enableDEggTrigger(channel)
     adc = baseline + dacIncrement
     if adc > 16383:
-        raise Exception("Threshold is above max ADC range")
+        raise stf.STFException("Threshold is above max ADC range")
     session.setDEggTriggerConditions(channel, adc)
     integrationTime = 1e-6 * integrationTimeUS
     time.sleep(integrationTime * 2.2)
     count = session.getScalerCount(channel)
-    test.measurements.rate =  float(count) / integrationTime
+    rate =  float(count) / integrationTime
+    if rate is None:
+        raise stf.STFException('scalar rate calculation error')
+
+    test.measurements.rate =  rate
 
     integrationTimeUS *= 0.1
     integrationTime = 1e-6 * integrationTimeUS
@@ -48,7 +52,7 @@ def run_test(test, session, channel, biasDACValue,
     for i in range(histogramBins):
         adc = baseline + i
         if adc > 16383:
-            raise Exception("Threshold is above max ADC range")
+            raise stf.STFException("Threshold is above max ADC range")
         session.setDEggTriggerConditions(channel, adc)
         time.sleep(integrationTime * 2.2)
         adcValues.append(i)
