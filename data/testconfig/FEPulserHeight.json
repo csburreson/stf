@@ -4,6 +4,7 @@
             "host": "localhost"
         }
     },
+    // Expected values for HV board NOT installed, units: V
     "expectedValues": {
       "exp_x": 205,
       "exp_y": 230

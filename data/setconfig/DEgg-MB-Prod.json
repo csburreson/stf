@@ -150,12 +150,22 @@
                 "instance": "channel-0",
                 "args": {
                     "channel" : 0
+                },
+                // Expected values for HV board installed, units: V
+                "expectedValues": {
+                    "exp_x": 143,
+                    "exp_y": 162
                 }
             },
             {
                 "instance": "channel-1",
                 "args": {
                     "channel" : 1
+                },
+                // Expected values for HV board installed, units: V
+                "expectedValues": {
+                    "exp_x": 143,
+                    "exp_y": 162
                 }
             }
         ],
