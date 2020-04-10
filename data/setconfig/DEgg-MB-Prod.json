@@ -135,12 +135,22 @@
                 "instance": "channel-0",
                 "args": {
                     "channel" : 0
+                },
+                // values for HV board installed
+                "expectedValues": {
+                  "exp_x": 490,
+                  "exp_y": 518
                 }
             },
             {
                 "instance": "channel-1",
                 "args": {
                     "channel" : 1
+                },
+                // values for HV board installed
+                "expectedValues": {
+                  "exp_x": 490,
+                  "exp_y": 518
                 }
             }
         ],

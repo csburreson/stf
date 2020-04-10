@@ -4,6 +4,7 @@
             "host": "localhost"
         }
     },
+    // default values for HV board not installed
     "expectedValues": {
       "exp_x": 700,
       "exp_y": 740
