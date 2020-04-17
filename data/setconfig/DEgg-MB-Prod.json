@@ -138,8 +138,8 @@
                 },
                 // values for HV board installed
                 "expectedValues": {
-                  "exp_x": 490,
-                  "exp_y": 518
+                  "exp_x": 448,
+                  "exp_y": 532
                 }
             },
             {
@@ -149,8 +149,8 @@
                 },
                 // values for HV board installed
                 "expectedValues": {
-                  "exp_x": 490,
-                  "exp_y": 518
+                  "exp_x": 448,
+                  "exp_y": 532
                 }
             }
         ],
