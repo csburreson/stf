@@ -1,6 +1,5 @@
 # Jim Braun
 #
-# Tests that interlocks have the expected values
 #
 
 import stf
