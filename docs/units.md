@@ -1,6 +1,6 @@
-== Units in STF ==
+# Units in STF 
 
-=== Units === 
+## Units
 
 Units are based on OpenHTF units:
 
@@ -17,12 +17,13 @@ UnitDescriptor(name='picofarad', code='4T', suffix='pF'))
 >>> [ ... giant list of all units ]
 ```
 
-=== Use In Test ===
+## Using In Test
+
 just call "with_units" on a Measurement object -- no imports required
 
+`stf.Measurement('foo').with_units('picofarad')`
 
-
-=== Example ===
+## Example 
 
 example: FEPulserCharge.py
 ```
@@ -46,7 +47,7 @@ def run_test(test, session, channel, dac_val,
 ```
 
 
-=== Custom Units ===
+## Custom Units 
 
 It is posisble to create custom units. Please contact the maintainer,
 csburreson if you think you need custom units
