@@ -21,30 +21,90 @@
 
         "ADCNoiseLevel": [
             {
-                "instance": "channel-0",
+                "instance": "channel-0-dac-5000",
                 "args": {
-                    "channel" : 0
+                    "channel" : 0,
+                    "dac_val" : 5000
                 }
             },
             {
-                "instance": "channel-1",
+                "instance": "channel-0-dac-31000",
                 "args": {
-                    "channel" : 1
+                    "channel" : 0,
+                    "dac_val" : 31000
+                }
+            },
+            {
+                "instance": "channel-0-dac-55000",
+                "args": {
+                    "channel" : 0,
+                    "dac_val" : 55000
+                }
+            },
+            {
+                "instance": "channel-1-dac-5000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 5000
+                }
+            },
+            {
+                "instance": "channel-1-dac-31000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 31000
+                }
+            },
+            {
+                "instance": "channel-1-dac-55000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 55000
                 }
             }
         ],
 
         "ADCNoiseSpectrum": [
             {
-                "instance": "channel-0",
+                "instance": "channel-0-dac-5000",
                 "args": {
-                    "channel" : 0
+                    "channel" : 0,
+                    "dac_val" : 5000
                 }
             },
             {
-                "instance": "channel-1",
+                "instance": "channel-0-dac-31000",
                 "args": {
-                    "channel" : 1
+                    "channel" : 0,
+                    "dac_val" : 31000
+                }
+            },
+            {
+                "instance": "channel-0-dac-55000",
+                "args": {
+                    "channel" : 0,
+                    "dac_val" : 55000
+                }
+            },
+            {
+                "instance": "channel-1-dac-5000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 5000
+                }
+            },
+            {
+                "instance": "channel-1-dac-31000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 31000
+                }
+            },
+            {
+                "instance": "channel-1-dac-55000",
+                "args": {
+                    "channel" : 1,
+                    "dac_val" : 55000
                 }
             }
         ],
@@ -105,12 +165,22 @@
                 "instance": "channel-0",
                 "args": {
                     "channel" : 0
+                },
+                // values for HV board installed
+                "expectedValues": {
+                  "exp_x": 448,
+                  "exp_y": 532
                 }
             },
             {
                 "instance": "channel-1",
                 "args": {
                     "channel" : 1
+                },
+                // values for HV board installed
+                "expectedValues": {
+                  "exp_x": 448,
+                  "exp_y": 532
                 }
             }
         ],
@@ -120,12 +190,22 @@
                 "instance": "channel-0",
                 "args": {
                     "channel" : 0
+                },
+                // Expected values for HV board installed, units: V
+                "expectedValues": {
+                    "exp_x": 143,
+                    "exp_y": 162
                 }
             },
             {
                 "instance": "channel-1",
                 "args": {
                     "channel" : 1
+                },
+                // Expected values for HV board installed, units: V
+                "expectedValues": {
+                    "exp_x": 143,
+                    "exp_y": 162
                 }
             }
         ],

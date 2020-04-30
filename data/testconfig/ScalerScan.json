@@ -8,7 +8,7 @@
         "maxRate": 10
     },
     "args": {
-        "channel" : 1,
+        "channel" : 0,
         "biasDACValue": 30300,
         "integrationTimeUS": 1000000,
         "dacIncrement": 14,

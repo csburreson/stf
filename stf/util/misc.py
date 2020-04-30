@@ -151,6 +151,7 @@ def check_mainboard_fwfile(flash):
     can return 'ok', 'corrupt', 'missing' or 'skip'
     '''
     fname = stf.config.settings.paths.fwfile
+    fwfile_name = stf.config.settings.paths.fwfile_name
     fwvnum = stf.config.settings.iceboot.fw_version
     if stf.config.DEBUG.SKIP_FW:
         stf.debug(f'[SKIPPED] Checking flash for name={fname}')
@@ -162,7 +163,7 @@ def check_mainboard_fwfile(flash):
         if not ('Name' in doc and 'Size' in doc):
             continue
         stf.debug(f"  name={doc['Name']}, size={doc['Size']}")
-        if fwvnum in doc['Name']:
+        if doc['Name'] == fwfile_name and fwvnum in doc['Name']:
             if doc['Size'] == str(fsize):
                 stf.debug(f"  found correct version with correct fsize (rv=ok)")
                 return 'ok'

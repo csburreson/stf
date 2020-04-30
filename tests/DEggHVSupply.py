@@ -25,8 +25,10 @@ def readVal(test, session, ch):
     session.setDEggHV(ch, 200)
     session.enableHV(ch)
     time.sleep(0.2)
+    # Read HV supply per-channel voltage monitors, EU = Volts
     observed_hvvalue = session.sloAdcReadChannel(8+ch*2)
     time.sleep(0.2)
+    # Read HV supply per-channel current monitors, EU = muA
     observed_current = session.sloAdcReadChannel(9+ch*2)
     if ch == 0:
         test.measurements.DEggHVSupply0 = observed_hvvalue

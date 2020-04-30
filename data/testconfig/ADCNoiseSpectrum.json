@@ -5,7 +5,13 @@
       // Number of scans
     	"scanCount" : 100,
       // Samples per scan. Must divisible by 4, and >= 16
-    	"scanSamples" : 2048
+    	"scanSamples" : 2048,
+
+      // Default DAC setting
+      "dac_val" : 31000,
+
+      // Num waveform bins
+      "nWaveFormBins" : 128
     },
 
     "expectedValues": {
