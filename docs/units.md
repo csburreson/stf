@@ -2,13 +2,13 @@
 
 ## Units
 
-Units are based on OpenHTF units:
+Units are based on OpenHTF units.
 
-Github link to units file:
-[https://github.com/google/openhtf/blob/master/openhtf/util/units.py](OpenHTF Units)
+It might be easiest to view the OpenHTF units.py file on Github:
+https://github.com/google/openhtf/blob/master/openhtf/util/units.py
 
 
-Python inpsection
+Or, inspect in python
 ```
 >>> import openhtf
 >>> openhtf.units.PICOFARAD
