@@ -15,10 +15,8 @@ HV_STABILIZATION_DELAY = 0.2
 # For HV loopback cable, limit input to SLO_ADC to be less than 1V max input.
 DAC_PRESET_HW_LIMIT = 400.0
 
-@stf.measures(stf.M('HVMonV').expectRange('{HVMin}','{HVMax}',type=float))
+@stf.measures(stf.M('HVmonV').expectRange('{HVmin}','{HVmax}',type=float))
 def run_test(test, session, channel, dacPreset):
-    stf._PRINT('FIXME channel %d dacPreset %f' % (channel, dacPreset))
-
     # Validate inputs
     if (channel < 0 or channel > 1):
         raise stf.STFException('invalid channel %d' % (channel))
