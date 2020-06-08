@@ -35,7 +35,7 @@
         "results": "{stf_home}/results",
         "testconfig": "{data}/testconfig",
         "setconfig": "{data}/setconfig",
-        "fwfile_name": "degg_fw_v{config.iceboot.fw_version}.rbf",
+        "fwfile_name": "degg_fw_v{config.iceboot.fw_version}.rbf.gz",
         "fwfile": "{config.paths.data}/{fwfile_name}",
         "json_results": "{stf_home}/results/",
         "tmp": "{stf_home}/tmp/"
@@ -45,7 +45,7 @@
         connection string business
     */
     "iceboot": {
-        "fw_version": "0x103",
+        "fw_version": "0x108",
         "host": "localhost",
         "port": 5012,
         "debug": false
