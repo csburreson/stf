@@ -1,0 +1,8 @@
+{
+    "args": {
+    	"channel" : 0,
+      "HVstart" : 0,
+      "HVend" : 1400,
+      "HVincrement" : 200
+    }
+}
