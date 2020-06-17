@@ -12,8 +12,6 @@ import stf
 import time
 import numpy as np
 
-HVenabled = None # HV enabled state cache
-
 def r2(x, y, model):
     """ Calculate linear regression Coefficient of determination or "R Squared".
         Essentially a quality of fit: (worse) 0 <= r2 <= 1.0 (better)
@@ -32,31 +30,13 @@ def r2(x, y, model):
 
 def readHVmonitors(test, session, channel, delay, HV):
     """ Return HV monitor values in volts, muA """
-    global HVenabled
-    if HV is None:
-        if HVenabled is None or HVenabled:
-            session.disableHV(channel)
-            HVenabled = False
-        session.setDEggHV(channel, 0)
-    else:
-        if HVenabled is None or not HVenabled:
-            session.enableHV(channel)
-            HVenabled = True
-        session.setDEggHV(channel, HV)
- 
-    time.sleep(delay); # voltage change stabilization
-
+    session.setDEggHV(channel, HV)
+    if delay > 0.0:
+        time.sleep(delay); # voltage change stabilization
     v = session.sloAdcReadChannel(8+channel*2)
     muA = session.sloAdcReadChannel(9+channel*2)
 
     return v, muA
-
-
-def cleanup(session):
-    """ Cleanup hardware config, session """
-    session.disableHV(0)
-    session.disableHV(1)
-    HVenabled = False
 
 
 @stf.measures(stf.M('HVS_Monitors'),
@@ -70,7 +50,7 @@ def cleanup(session):
                   '{HVS_IMon_max}', type=float)
              )
 def run_test(   test, session, channel, HVstart, HVend, HVincrement,
-                HVStabilizationDelay, plot=False):
+                HVStartDelay, HVStabilizationDelay, plot=False):
     """ Main test driver. """
 
     HVInterlock = session.readHVInterlock()
@@ -84,27 +64,30 @@ def run_test(   test, session, channel, HVstart, HVend, HVincrement,
     HVS_V_Mon = []
     HVS_I_Mon = []
 
-    cleanup(session)
+    # ensure HV is only enabled in this context
+    with session.enableDEggHVContext(channel):
 
-    v, muA = readHVmonitors(test, session, channel, HVStabilizationDelay, None)
-    session.enableHV(channel)
-    HVenabled = True
+        # Extra time to bleed off initial voltage present when HV was enabled.
+        if HVStartDelay > 0.0:
+            session.setDEggHV(channel, 0)
+            time.sleep(HVStartDelay)
 
-    for hv in range(HVstart, HVend+1, HVincrement):
-        v, muA = readHVmonitors(test, session, channel, HVStabilizationDelay,hv)
-        HVS_V_Cmd.append(hv)
-        HVS_V_Mon.append(v)
-        HVS_I_Mon.append(muA)
-
-    cleanup(session)
+        for hv in range(HVstart, HVend+1, HVincrement):
+            v, muA = readHVmonitors(    test, session, channel,
+                                        HVStabilizationDelay, hv)
+            HVS_V_Cmd.append(hv)
+            HVS_V_Mon.append(v)
+            HVS_I_Mon.append(muA)
 
     # Stop if V monitors are all zero. This can happen if HV board is not
     # installed
     if not np.any(HVS_V_Mon):
         raise stf.STFException('HV V monitors are 0.0')
 
+    # Simple linear regression fit to HV V monitor data. The associated I
+    # monitor data is essentially random.
     HV_V_Coef = np.polyfit(HVS_V_Cmd, HVS_V_Mon, 1)
-    HV_V_Fn = np.poly1d(HV_V_Coef)
+    HV_V_Fn = np.poly1d(HV_V_Coef) # modeled fit, using coeficients
     HV_V_r2 = r2(HVS_V_Cmd, HVS_V_Mon, HV_V_Fn)
 
     if plot:
@@ -112,7 +95,7 @@ def run_test(   test, session, channel, HVstart, HVend, HVincrement,
         plt.xlabel("HV Command, V")
         plt.plot(HVS_V_Cmd, HVS_V_Mon, 'bo', label='voltage monitor, v')
         plt.plot(HVS_V_Cmd, HV_V_Fn(HVS_V_Cmd), 'b:', label='voltage fit, v')
-        plt.plot(HVS_V_Cmd, HVS_I_Mon, 'ro', label='current monitor, muA')
+        plt.plot(HVS_V_Cmd, HVS_I_Mon, 'r*', label='current monitor, muA')
         plt.legend()
         plt.show()
 

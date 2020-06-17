@@ -6,6 +6,7 @@
       "HVstart" : 200, // units v
       "HVend" : 1400, // units v
       "HVincrement" : 50, // units v
+      "HVStartDelay" : 0.0, // units s
       "HVStabilizationDelay" : 0.2 // units s
     },
 
