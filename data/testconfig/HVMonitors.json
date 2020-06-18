@@ -1,0 +1,22 @@
+{
+    "args": {
+      "plot" : 0, // development only: enable local plot display
+    	"channel" : 0,
+      // Voltage monitor is nonlinear before 200 v
+      "HVstart" : 200, // units v
+      "HVend" : 1400, // units v
+      "HVincrement" : 50, // units v
+      "HVStartDelay" : 0.0, // units s
+      "HVStabilizationDelay" : 0.2 // units s
+    },
+
+    "expectedValues": {
+      // R2=0.9999 requires HVStabilizationDelay=0.02
+      "HVS_VMon_Fit_R2_min": 0.9999,
+      "HVS_VMon_Fit_R2_max": 1.0,
+      "HVS_VMon_Fit_Slope_min": 0.98, // units v/v
+      "HVS_VMon_Fit_Slope_max": 1.02, // units v/v
+      "HVS_IMon_min": 0.0, // units muA
+      "HVS_IMon_max": 50.0 // units muA
+    }
+}
