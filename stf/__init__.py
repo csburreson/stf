@@ -1,9 +1,11 @@
 from __future__ import print_function
 from collections import OrderedDict
+import subprocess as sp
 
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 FRAMEWORK_VERSION = __version__
 FRAMEWORK_VERSIONNAME = 'Chernobyl'
+GIT = 'git'
 
 # exception class for folks to throw known exceptions
 # NOTE: move to util/exceptions.py and include other STF-based exceptions that
@@ -38,6 +40,42 @@ def getRegisteredClassesByName():
 
 def getRegisteredClass(name):
     return TESTABLE_CLASSES[name]
+
+def versionStatus():
+    """ Return git workspace status:
+    '?' : unknown or not a git workspace
+    '!' : valid git workspace is modified
+    ''  : valid git workspace is prisine
+    """
+
+    status = '?'
+    try:
+        git = [ GIT, 'diff-index', '--quiet', 'HEAD']
+        modified = sp.call(git, stderr=sp.DEVNULL)
+        if modified == 0:
+            status = ''
+        elif modified == 1:
+            status = '!'
+    except:
+        pass
+
+    return status
+
+def versionHash():
+    """ Return git commit hash associated with workspace:
+    'xxxxxx' 6-character hash string or
+    '?' unknown
+    """
+    hash = '?'
+    try:
+        git = [ GIT, 'log', '-1', '--pretty=format:%h']
+        hash = sp.check_output(git, stderr=sp.DEVNULL).decode("utf-8")
+    except:
+        pass
+
+    return hash
+
+
 
 import sys
 import os

@@ -333,7 +333,8 @@ class MainboardTest(object):
             },
             user_metadata=self.meta,
             # custom metadata fields
-            stf_version=stf.FRAMEWORK_VERSION,
+            stf_version=stf.FRAMEWORK_VERSION + stf.versionStatus(),
+            stf_versionHash = stf.versionHash(),
             stf_config=stf.config.settings.dict(),
             device=device,
             conn=config.get('iceboot', {})
