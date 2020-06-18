@@ -1,0 +1,26 @@
+{
+    "tests": [
+       "AccelerometerSensor",
+       "ADCComms",
+       "ADCNoiseLevel",
+       "ADCTestPatterns",
+       "BaselineStability",
+       "CameraComms",
+       "DACScan",
+       "DPRAM",
+       "FEPulserCharge",
+       "FEPulserHeight",
+       "FEPulserLinearity",
+       "FEPulserWidth",
+       "Flash",
+       "FPGAMemTest",
+       "FPGATimestamping",
+       "Interlock",
+       "MagnetometerSensor",
+       "PressureSensor",
+       "SLO_ADC",
+       "TempAccelerometerSensor",
+       "TempMagnetometerSensor",
+       "TempPressureSensor"
+    ]
+}

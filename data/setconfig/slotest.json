@@ -1,0 +1,9 @@
+{
+    "tests": {
+        "SLO_ADC": [
+            {"instance": "foo"}
+
+        ],
+        "Interlock": [{"instance": "base"}]
+    }
+}

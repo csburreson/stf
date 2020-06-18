@@ -1,4 +1,7 @@
 *.swp
 *.swo
 *.pyc
+stfconfig.local.json
 results/*
+tmp/*
+!*/.placeholder.txt

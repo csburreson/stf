@@ -1,0 +1,16 @@
+{
+    "tests": {
+        "g1": [{
+            "instance": "a1",
+            "args": { "foo": "goo", "bar": "car" } 
+        }, {
+            "instance": "a2",
+            "args": { "foo": "blah" } 
+
+        }],
+        "g2": [{
+            "instance": "b1",
+            "args": { "foo": "bar2", "xxx": "error", "nar": "err2" }
+        }]
+    }
+}

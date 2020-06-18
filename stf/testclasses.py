@@ -1,302 +1,378 @@
 import json
+import socket
+import time
 import openhtf as htf
 from openhtf.output.callbacks.json_factory import OutputToJSON as JSON
-from .core import dbg, getIcebootSession
-from .core import FRAMEWORK_VERSION
-#from .decorators test as testify
+from openhtf.output.callbacks import console_summary
+from .core import getIcebootSession
+from .validators import *
 import stf
+from .util.colors import termcolor as clr
+from .util import files, misc, exceptions
 FAKE_ICEBOOT = False
 
-class TestSet(object):
-    def __init(self, version):
-        pass
-
-@htf.util.validators.register
-def equalsParam(pname, type=None):
-    if not (pname.startswith('{') and pname.endswith('}')):
-        pname = '{' + pname + '}'
-    return EqualsParam(pname, type=type)
+# class TestSet(object):
 
 
-class EqualsParam(htf.util.validators.ValidatorBase):
-    def __init__(self, pvalue, type=None):
-        self.paramValue = pvalue
-        self._type = type
 
-    def __call__(self, value):
-        return self.paramValue == value
-        
-    def __str__(self):
-        '''use in output'''
-        return 'x == {}'.format(self.paramValue)
-
-    def with_args(self, **kw):
-        return type(self)(
-            pvalue=htf.util.format_string(self.paramValue, kw),
-            type=kw.get('type', None),
-        )
 
 class Common(object):
     # default test config options
+
     TEST_CONFIG = {
         'timeout_s': 10
     }
-    @stf.measures(stf.M('fw_vnum').equalsParam('expected_fw_vnum'))
+    @stf.measures(
+        stf.M('fpgaVersion').equals(stf.config.settings.iceboot.fw_version),
+        stf.M('fpgaChipID'),
+        stf.M('softwareId'),
+        stf.M('softwareVersion')
+    )
+    #XXX: need long timeout for localhost from crappy inet cnxn
+    @stf.options(timeout_s=30, repeat_limit=5)
     def checkCommsAndFirmware(test, session, **kw):
-        stf.dbg('running framework FW test')
-        test.logger.debug('FOO')
+        gINFO = stf.ginfo(['framework', 'iceboot'])
+        vn = session.fpgaVersion()
 
-        test.measurements.fw_vnum = hex(session.fpgaVersion())
+        paths = stf.config.settings.paths
 
+        flash = session.flashLS()
 
-    def setupIceboot(test, session):
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {})
-        )
+        try:
+            fwfile_status = misc.check_mainboard_fwfile(flash)
+        except FileNotFoundError as e:
+            gINFO(f'FW File does not exist: {e}. Cannot proceed.')
+            return stf.STOP
+
+        #gINFO(f'checking flash for {paths.fwfile} ... status={fwfile_status})')
+
+        if fwfile_status == 'ok':
+            stf.dbg(f'checkCommsAndFirmware -> configuring fw file from flash: {paths.fwfile_name})')
+        elif fwfile_status == 'skip':
+            stf.dbg(f'checkCommsAndFirmware -> SKIPPING fw file upload, configuring: {paths.fwfile_name}')
+        else:
+            stf.dbg(f'checkCommsAndFirmware -> uploading fw file to flash: {paths.fwfile}... \n\t(this could take a while)')
+            session.ymodemFlashUpload(paths.fwfile_name, paths.fwfile)
+
+        resp = session.flashConfigureCycloneFPGA(paths.fwfile_name)
+        vn = session.fpgaVersion()
+        stf.dbg(f'checkComms: vn={hex(vn)}; flashConfigure says "{resp}"')
+        # XXX: check with jim; fpgaVersion should now wait for flashConfigure
+        # to complete (or flashConfigure blocks until configured and
+        # fpgaVersion will return proper val? so we don't need a sleep?
+        time.sleep(1)
+
+        # XXX: might not need to check comms repeatedly anymore, and 
+        # if we do need to should refactor with try_repeat
+        commsOk = False
+        commsChecks = 5
+        while commsChecks > 0:
+            vn = session.fpgaVersion()
+            test.measurements.fpgaVersion = hex(vn)
+            if vn == 0xFFFF:
+                commsChecks -= 1
+                stf.dbg('!!! comms error !!! sleeping for 2')
+                time.sleep(2)
+                resp = session.flashConfigureCycloneFPGA(paths.fwfile_name)
+                stf.dbg(f'checkComms {5 - commsChecks}: flashConfigure says {resp}')
+            else:
+                commsOk = True
+                break
+
+        if commsOk is False:
+            test.logger.error('unable to configure firmware. quitting.')
+            #gINFO('unable to configure firmware. quitting.')
+            return stf.REPEAT
+
+        test.measurements.softwareId = session.softwareId()
+        test.measurements.softwareVersion = session.softwareVersion()
+        # FIXME: this try/except can likely go away?
+        try:
+            test.measurements.fpgaChipID = session.fpgaChipID()
+        except AttributeError:
+            test.measurements.fpgaChipID = 'unset'
+
+        x = test.measurements
+        evn = kw['expectedValues']['expected_fw_vnum']
+        stf.debug(f'FPGA v{hex(vn)} Configured (expecting={evn}). IceBoot v{x.softwareVersion} git: {x.softwareId} FPGA ID: {x.fpgaChipID}')
+        stf.debug('Starting main test phase...')
+
 
 class MainboardTest(object):
     def __init__(self, version, test_name, test_fn=None, **kw):
-        dbg('creating MainboardTest class for: {}'.format(test_name))
         self.tests = []
+        self.group = kw.get('group', '')
+        self.group_timeslug = kw.get('group_timeslug', '')
 
-        # not needed? 
-        # used for connecting to device
-        self.config = kw.get('config', {})
+        # optional description
+        self.desc = kw.get('test_desc') or 'n/a; see test file: {}'.format(test_name)
 
         # test_params is a map of fn name = list of varnames
-        self.test_params = kw.get('params', {})
+        #self.test_params = kw.get('params', {})
         self.test_name = test_name
         if not callable(test_fn):
-            raise Exception('Invalid "test_fn" parameter. Expecting callable')
+            raise stf.util.exceptions.RefuseToRun('Invalid "test_fn" parameter. Expecting callable')
         self.test_fn = test_fn
         self.version = version
         # instance can be none
-        self.instance = kw.get('instance')
+        self.instance = kw.get('instance', 'base')
 
+        #stf.dbg('creating MainboardTest class for: {}:{}'.format(test_name, self.instance))
+
+        # production id (i.e. serial number)
+        self.prodid = kw.get('dut_serial', None)
+
+        #self.session = None
         # XXX: move to init or "configure" step or something
+        self.config = Common.TEST_CONFIG
         conf_file = kw['conf_file']
-        with open(conf_file, 'r') as f:
-            dbg("(@configure) loaded {}".format(conf_file))
-            self._PARAMS = json.load(f)
-            self._PARAM_CONF_FILE = conf_file
-            dbg("(@configure) {}".format(self._PARAMS))
 
-        self.session = None
+        self.meta = kw.get('meta', {})
 
-        # XXX:
-        # create iceboot session here?
-        # or as a test phase?
+        # for instance derivations, args and evs are already figured out from base instance
+        # and passed directly here
+        if self.instance != 'base':
+            self._PARAMS = {
+                'args': kw.get('instance_args', {}),
+                'expectedValues': kw.get('instance_expectedValues', {})
+            }
+            return
+
+        # skip loading config (note that instance derivations use stf.NOCONFIG)
+        if conf_file == stf.NOCONFIG:
+            self._PARAMS = {'args': {}, 'expectedValues': {}}
+            self._PARAM_CONF_FILE = None
+            return
+
+
+        # load config (base instances only)
+        conf_file_path = files.getFilePath(conf_file)
+        if not conf_file_path:
+            # TODO: STFException -> STFTestConfigException
+            raise exceptions.STFInvalidTestConfig('TestConfigException: config file not found {conf_file}')
+
+        with open(conf_file_path, 'r') as f:
+            try:
+                self._PARAMS = stf.parse.json_load(f)
+            except json.decoder.JSONDecodeError:
+                exceptions.STFInvalidTestConfig('Invalid test configuration file! Is this valid JSON?')
+            self._PARAM_CONF_FILE = conf_file_path
+            #if 'config' in self._PARAMS:
+            #    cfg = self._PARAMS['config']
+                #stf.dbg('configure: config overrides: {}'.format(cfg))
+                # XXX: should we do this anymore? for test timeouts maybe?
+            #    self.config.update(cfg)
+                #stf.dbg('configure: full config: {}'.format(self.config))
+
+        if not 'args' in self._PARAMS:
+            self._PARAMS['args'] = {}
+
+        if not 'expectedValues' in self._PARAMS:
+            self._PARAMS['expectedValues'] = {}
+
+    def __del__(self):
+        #if self.session:
+        #    del self.session
+        #    time.sleep(3)
+        pass
+
+    # create iceboot session here? or as a test phase?
     def setupIceboot(self, test):
-        self.session = stf.getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {
-                'host': 'localhost',
-                'port': 5012
-            })
-        )
+        #if session:
+        #    INFO("HERE")
+        #    del self.session
+        #    import time
+        #    time.sleep(5)
+        self.session = getIcebootSession()
+        #self.session = IcebootSessionWrapper()
 
     def setup(self, test):
         # placeholder for OpenHTF setup phase
+        #self.session.flashLS()
+        #if self.session
         pass
 
+    # Process any queued MCU internal logging records
+    def logOutput(self, test):
+        '''may throw UnicodeDecodeError'''
+        logOutputLines = self.session.printLogOutput()
+        if len(logOutputLines) == 0:
+            return
+        logOutput = logOutputLines.split('\r\n')
+        for logLine in logOutput:
+            if len(logLine) == 0:
+                # Weird: split of empty multiline string produces nonzero number of strings
+                continue;
+            word = logLine.split()
+            logFn = test.logger.error
+            # Map MCU logging level to test logging level
+            if len(word) == 0:
+                continue
+            if word[0] == 'DEBUG':
+                logFn = test.logger.info
+            elif word[0] == 'INFO':
+                logFn = test.logger.info
+            logFn('MCU log: ' + logLine)
+
+
+    @misc.try_repeat(exc_cls=(UnicodeDecodeError, OSError, IOError),fail_exception=None)
     def tearDown(self, test):
-        # placeholder for OpenHTF tearDown phase
-        pass
+        if self.session:
+            if hasattr(self.session, 'FAKE'):
+                return
+            stf.debug('tearing down test/iceboot ... initiating device reboot()')
+            self.logOutput(test)
+            self.session.reboot()
+            stf.debug('attempting to shutdown and close socket comms...')
+            self.session.close()
+            del self.session
+            stf.debug('teardown complete')
+        
 
-    # DEPRECATED
-    def addTest(self, testCallable):
-        self.tests.append(testCallable)
+    # used for test sets
+    def reconfigure(self, name, group, args, evs, timeslug='', config={}):
+        self.instance = name
+        self._PARAMS['args'] = args
+        self._PARAMS['expectedValues'] = evs
+        self.group = group
+        # used for output
+        self.group_timeslug = timeslug
+        # ugh... don't wipe out testconfig settings stored in self.config
+        #self.config = stf.parse.update(self.config, config)
+        stf.debug(f'reconfigure: {config}')
+
+    def deriveInstance(self, name, group, args, evs, timeslug='', config={}):
+        if (name == 'base'):
+            self.group = group
+            self.group_timeslug = timeslug
+            return self
+
+        return type(self)(self.version, self.test_name, self.test_fn, 
+            test_desc=self.desc, group=group, group_timeslug=timeslug,
+            instance=name, instance_args=args, instance_expectedValues=evs,
+            conf_file=stf.NOCONFIG
+        )
 
     def getTestParams(self):
-        '''
-        pname = "test name" but should probably be thought of as "phase name"
-
-        self._PARAMS is dict of {
-            "test (phase) name": {
-                "varname": "value"
-            }
-        }
-        '''
-        # XXX: this requires @configure deco
         if hasattr(self, '_PARAMS'):
             return self._PARAMS
 
-        # deprecated (bwloe)
-        if not getattr(self, 'test_params') or not self.test_params:
-            return {} 
-
-        #pname = func
-        if pname not in self.test_params:
-            return {}
-
-        # lookup param values
-        plist = self.test_params[pname]
-        get_db()
-        return ParamDB.getTestParams(pname, plist)
+        #return ParamDB.getTestParams(pname, plist)
+        return {}
     
     def get_session(self):
         return self.session
 
-    def execute(self, device):
+    ### TODO: implement option to ignore test "config" key? or at least iceboot
+    def execute(self, device, config={}, timeslug=None, json_path=stf.config.get_path('json_results')):
         # could we get params from the fn itself and possibly declare them with
         # defaults with a decorator, eliminating the need for a testconfig
         # file? if so, would it buy us much? probably not
-        ps = self.getTestParams()
-
-        # could get device config here:
-        # dev_conf = getDeviceConfig(device)
-
-        # TODO: get test desc (or keep this in DB and link to test name)
-        desc = 'todo'
-
-        # get test arguments (from json file)
-        test_args = ps.get('args', {})
-        dbg('test args: {}'.format(test_args))
-        test_args.update(ps.get('expectedValues', {}))
-        dbg('test args: {}'.format(test_args))
-
-        # get test configuration options (defaults hardcoded, override in test config file
-        # with "conf" top-level key
-        #defaults = testclasses.Common.TEST_CONFIG
-        defaults = Common.TEST_CONFIG
-        test_conf = defaults.update(ps.get('conf', {}))
-
-        # XXX: debug flag
-        if stf.DEBUG.SKIP_FW:
-            fw_file = None
+        # NOTE: timeslug is intended to be used ONLY for running single tests
+        inst = config.get('instance', {})
+        if inst:
+            test_args = inst.get('args', {})
+            expected_values = inst.get('expectedValues', {})
+            group = inst['group']
+            group_timeslug = inst['group_timeslug']
+            instance_name = inst['instance']
         else:
-            fw_file = stf.ENV.FIRMWARE_FILE_PATH
-        
-        self.session = stf.getIcebootSession(fake=stf.DEBUG.FAKE_ICEBOOT,
-            **self.config.get('iceboot', {
-                'host': 'localhost',
-                'port': 5012,
-                'fpgaConfigurationFile': fw_file
-            })
-        )
+            ps = self.getTestParams()
+            test_args = ps.get('args', {})
+            expected_values = ps.get('expectedValues', {})
+            group = ''
+            # hack: use group timeslug
+            # XXX: timeslug is none for individual tests
+            group_timeslug = timeslug
+            instance_name = 'base'
 
-        #ib_session = self.setupIceboot(None)
+        x = config.get('iceboot', {})
+        dut_host = x.get('host') or stf.config.settings.iceboot.host
+        dut_port = x.get('port') or stf.config.settings.iceboot.port
+
+        stf.debug(f"Running... {self.test_name}:{instance_name}")
+        stf.dbg('  test args: {}'.format(test_args))
+        stf.dbg('  expected values: {}'.format(expected_values))
+
+        self.session = getIcebootSession(host=dut_host, port=dut_port)
+
+        # add expectedValues directly to the measurement validator class
+        for m in self.test_fn.measurements:
+            for v in m.validators:
+                setattr(v, 'expectedValues', expected_values)
+
+
         phases = [
-            #stf.test(self.setupIceboot),
-            #setup_iceboot.with_args(session=self.session),
-            Common.checkCommsAndFirmware.with_args(session=self.session, expected_fw_vnum='0x6a'),
+            Common.checkCommsAndFirmware.with_args(session=self.session, 
+                expectedValues={'expected_fw_vnum':stf.config.settings.iceboot.fw_version}),
             self.test_fn.with_args(session=self.session, **test_args)
-            #run_test.with_plugs(session=IcebootSession).with_args(**test_args)
+            # THIS is how to apply PhaseOptions to a phase called with "with_args":
+            #stf.options(timeout_s=1)(self.test_fn.with_args(session=self.session, **test_args))
+
+            # probably need to wrap this in stf.options to apply timeout as well
+            #run_test.with_plugs(session=IcebootSession).with_args(**test_args))
         ]
 
         T = htf.Test(htf.PhaseGroup(
-                #setup=[self.setupIceboot],
-                setup=[self.setup]
                 main=phases,
-                teardown=[self.tearDown]
-                # openhtf fields
+                teardown=[self.tearDown],
             ),
-            test_name=self.test_name,
-            test_version=self.version,
-            test_desc=desc or 'no description',
-            # custom metadata fields
-            framework_version=FRAMEWORK_VERSION,
-            device=device,
-            testOptions={
-                'params': test_args
-            }
-        )
-
-        T.add_output_callbacks(
-            JSON(stf.ENV.JSONFILE_NAME, indent=4, default=str)
-        )
-
-        # get session here???
-        #T.session = getIcebootSession(fake=FAKE_ICEBOOT,
-        #    self.CONFIG.get)
-        T.execute(test_start=lambda: device['id'])
-
-        stf.dbg("finished execute for test: {}".format(self.test_name))
-
-
-
-
-    def executeOLD(self, device):
-        # test disco?
-        try:
-            self.tests = self.TESTS
-        except AttributeError:
-            print( "Error! No TESTS property found")
-            # not a Runnable test
-            return
-
-        #self.test.logger.info('executing test')
-        #device = self.config.get('device', {})
-        cls = str(self.__class__).split('.')[1]
-        #test_name = '{}-v{}'.format(cls, self.version)
-        test_name = cls
-
-        desc = getattr(self, 'DESC', self.__doc__)
-
-        phases = []
-        test_args = {}
-        for x in self.tests:
-            # check for params
-            try:
-                #qualified_testname = '{}.{}'.format(
-                #    self.__class__.__name__, 
-                #    x.func.__name__
-                #)
-                #args = self.getTestParams(qualified_testname)
-                fn_name = x.func.__name__
-                if fn_name == '_checkpoint':
-                    dbg('CHECKPOINT')
-                    phases.append(x)
-                    continue
-                args = self.getTestParams()
-                test_args[fn_name] = args
-
-                dbg(fn_name)
-                #dbg('{}.{}'.format(self.__class__.name, fn_name))
-                dbg('optname: {}'.format(x.options.name))
-                phases.append(x.with_args(session=self.session, **args))
-            except AttributeError:
-                # XXX
-                dbg('AttrErr')
-                #x = test(x)
-                phases.append(x)
-
-#.with_args(T, T.meta, T.measurements, {}),
-
-        #phases = [test_fn]
-        T = htf.Test(
-            *phases,
             # openhtf fields
             test_name=self.test_name,
             test_version=self.version,
-            test_desc=desc or 'no description',
+            # XXX: self.desc could be mentioned in setconfig
+            test_desc=self.desc,
+            test_instance=instance_name,
+            # HEY: test_group is referenced by config
+            # HEY: test_group is referenced by runset/scripts
+            test_group=group,
+            test_group_id=group_timeslug,
+            test_config={
+                'args': test_args,
+                'expectedValues': expected_values
+            },
+            user_metadata=self.meta,
             # custom metadata fields
-            framework_version=FRAMEWORK_VERSION,
+            stf_version=stf.FRAMEWORK_VERSION + stf.versionStatus(),
+            stf_versionHash = stf.versionHash(),
+            stf_config=stf.config.settings.dict(),
             device=device,
-            type=device['type'],
-            testOptions={
-                'params': test_args
-            }
-            #self.config.get('device', {})
+            conn=config.get('iceboot', {})
+        )
+        T.configure(
+            #teardown_function=self.tearDown
+            failure_exceptions=[stf.STFException]
         )
 
-        T.add_output_callbacks(
-            JSON(OUTPUT_JSONFILE, indent=4, default=str)
-        )
+        output = stf.config.settings.output
+        if output.json.enabled:
+            # issue X: support timeSlugs in path 
+            p = files.join(json_path, output.json.filename)
+            stf.debug(f"ADDING callback for {p} ")
+            '''
+            p = files.join(
+                stf.config.get_path('json_results'),
+                # this can be empty str
+                group,
+                group_timeslug,
+                output.json.filename
+            )
+            '''
+            T.add_output_callbacks(
+                JSON(p, indent=4, default=str)
+            )
 
-        # get session here???
-        #T.session = getIcebootSession(fake=FAKE_ICEBOOT,
-        #    self.CONFIG.get)
+        if output.console.enabled:
+            T.add_output_callbacks(
+                console_summary.ConsoleSummary()
+            )
+
         T.execute(test_start=lambda: device['id'])
-        
+        stf.debug(f"FINISHED {self.test_name}:{instance_name}")
+        '''
+        INFO(f'{dir(T)}')
+        T.descriptor.metadata['board_fpgaVersion'] = session.fpgaVersion
+        T.descriptor.metadata['board_softwareVersion'] = session.fpgaVersion
+        T.descriptor.metadata['board_softwareId'] = session.fpgaVersion
+        '''
 
-'''
-class MainboardTestOLD(Test):
-    def __init__(self, version, **kw):
-        Test.__init__(self, version, **kw)
-        self.config['test'] = {}
-        self.config['device'] = {}
-        self.session = getIcebootSession(fake=FAKE_ICEBOOT,
-            **self.config.get('iceboot', {})
-        )
-        self.version = self.VERSION
-'''

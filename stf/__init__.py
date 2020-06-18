@@ -1,36 +1,163 @@
-__version__ = '0.2'
+from __future__ import print_function
+from collections import OrderedDict
+import subprocess as sp
 
-#from I3Test import *
-from .core import *
-from .decorators import *
+__version__ = '1.3.2'
+FRAMEWORK_VERSION = __version__
+FRAMEWORK_VERSIONNAME = 'Chernobyl'
+GIT = 'git'
+
+# exception class for folks to throw known exceptions
+# NOTE: move to util/exceptions.py and include other STF-based exceptions that
+# are common across tests (if there are any)
+class STFException(Exception):
+    pass
+
+
+global TESTABLE_CLASSES
+TESTABLE_CLASSES = OrderedDict() 
+global CLASS_CONTEXT 
+CLASS_CONTEXT = {}
+
+def addTestClass(name, cls, test_locals, test_globals, code_obj=None):
+    global TESTABLE_CLASSES
+    TESTABLE_CLASSES[name] = cls
+    CLASS_CONTEXT[name] = (code_obj, test_globals, test_locals)
+
+
+def getClassContext(name):
+    return CLASS_CONTEXT[name]
+
+def delClassContext(name):
+    del CLASS_CONTEXT[name]
+#def delTestClass
+
+def getRegisteredClasses():
+    return TESTABLE_CLASSES.values()
+
+def getRegisteredClassesByName():
+    return TESTABLE_CLASSES
+
+def getRegisteredClass(name):
+    return TESTABLE_CLASSES[name]
+
+def versionStatus():
+    """ Return git workspace status:
+    '?' : unknown or not a git workspace
+    '!' : valid git workspace is modified
+    ''  : valid git workspace is prisine
+    """
+
+    status = '?'
+    try:
+        git = [ GIT, 'diff-index', '--quiet', 'HEAD']
+        modified = sp.call(git, stderr=sp.DEVNULL)
+        if modified == 0:
+            status = ''
+        elif modified == 1:
+            status = '!'
+    except:
+        pass
+
+    return status
+
+def versionHash():
+    """ Return git commit hash associated with workspace:
+    'xxxxxx' 6-character hash string or
+    '?' unknown
+    """
+    hash = '?'
+    try:
+        git = [ GIT, 'log', '-1', '--pretty=format:%h']
+        hash = sp.check_output(git, stderr=sp.DEVNULL).decode("utf-8")
+    except:
+        pass
+
+    return hash
+
+
+
+import sys
+import os
+
+# directories:
+#STF_HOME = os.path.dirname(os.path.realpath(__file__))
+#sys.path.append(os.path.join(STF_HOME, 'tools', 'python'))
+# directories:
+__TMP = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(__TMP, 'tools', 'python'))
+STF_HOME = os.path.realpath(os.path.join(__TMP, '..'))
+
+
+try:
+    import builtins as __builtins__
+except ImportError:
+    pass
+
+# save ref to original print fn
+try:
+    _PRINT = __builtins__.print
+except AttributeError:
+    _PRINT = __builtins__['print']
+    PYTHON2 = True
+    PYTHON3 = False
+else:
+    PYTHON3 = True
+    PYTHON2 = False
+
+
+from .debug import dbg, DEBUG
+
+from stf.util.misc import INFO, get_InfoWithGroups as ginfo
+
+
+if PYTHON3:
+    def printToInfo(*args, **ignored):
+        try:
+            # get test object
+            test = sys._getframe(1).f_locals["test"]
+            s = 'print: ' + ' '.join([str(a) for a in args])
+            test.logger.info(s)
+        except:
+            # _PRINT(*args) here? or ignore?
+            if DEBUG.ALLOW_PRINT:
+                _PRINT(*args)
+            else:
+                dbg('Error! BAD PRINT {}'.format(args))
+    __builtins__.print = printToInfo
+
+
+debug = dbg
+from .util.config import get_config
+config = get_config(f'{STF_HOME}/stfconfig.json', f'{STF_HOME}/stfconfig.local.json')
+from .core import run, run_set
+from . import parse
+from . import util
+
+# core aliases
+Measurement = M = core.htf.Measurement
+
+FAIL_AND_DIE = core.htf.PhaseResult.STOP
+STOP = core.htf.PhaseResult.STOP
+
+CONTINUE = core.htf.PhaseResult.CONTINUE
+PASS = core.htf.PhaseResult.CONTINUE
+
+FAIL = core.htf.PhaseResult.FAIL_AND_CONTINUE
+
+REPEAT = core.htf.PhaseResult.REPEAT
+options = core.htf.PhaseOptions
+measures = core.htf.measures
+
+# just an option to explicitly state you won't be loading a config
+# (this should probably be discouraged)
+NOCONFIG = '__skip_stf_config__'
+
+from .decorators import register
+# for stf.test decorator
+from .decorators import make_test as test
 #register, equalsParam
 #from .decorators import *
 from . import testclasses
 
-global TESTABLE_CLASSES
-TESTABLE_CLASSES = []
 
-def addTestClass(cls):
-    global TESTABLE_CLASSES
-    TESTABLE_CLASSES.append(cls)
-
-import os
-# directories:
-STF_HOME = os.path.dirname(os.path.realpath(__file__))
-
-class env():
-    def __dir(*args):
-        return os.path.join(STF_HOME, '..', *args)
-
-    DATA_DIR = __dir('data')
-    TEST_DIR = __dir('tests')
-    TEST_CONFIG_DIR = __dir(DATA_DIR, 'testconfig')
-    DB_DIR = DATA_DIR
-
-    __DIR = __dir('results')
-    __FMT_STRING = '{metadata[test_name]}-v{metadata[test_version]}-degg-{dut_id}.json'
-    JSONFILE_NAME = __dir(__DIR, __FMT_STRING)
-
-    FIRMWARE_FILE_PATH = __dir(DATA_DIR, 'fw_0x6a.rbf')
-
-ENV = env

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "iceboot": {
+            //"host": "10.25.120.10"
+	    "host": "localhost"
+        }
+    },
+    // HV supply per-channel voltage monitor pass/fail range, EU = Volts
+    "expectedValues": {
+        "expected_degghvsupply_min": 150.0,
+        "expected_degghvsupply_max": 300.0
+    }
+}

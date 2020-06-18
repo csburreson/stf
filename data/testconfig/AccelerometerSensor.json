@@ -1,0 +1,20 @@
+{
+    // Setting values > 1 allows test to discard excessive read values,
+    // presumably to local vibrations.
+    "args": {
+        // Max number of accelerometer read attempts
+        "max_reads" : 20,
+        // Min required valid read samples
+        "samples_min" : 9
+    },
+
+    "expectedValues": {
+      // Allowable acceleration range, m/s^2
+      "accel_mag_min": 9.0,
+      "accel_mag_max": 11.0,
+
+      // Max inclination, degrees. Set _max to 180.0 to disable.
+      "inclination_min":  0.0,
+      "inclination_max": 15.0
+    }
+}

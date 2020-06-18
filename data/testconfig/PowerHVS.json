@@ -1,0 +1,19 @@
+{
+    "config":{
+    },
+
+    "args":{
+    },
+
+    // Currents are not yet characterized. Initially set a wide range, but
+    // disallow value of zero, as this may indicate a read error. Expect to
+    // tighten these values later.
+    // Range of values from ADC 0.015625 μA <= x <= 1024 μA
+    "expectedValues": {
+        "channel 09 SLO_HVS0_IMON_MIN":   0.16,
+        "channel 09 SLO_HVS0_IMON_MAX":  1000,
+
+        "channel 11 SLO_HVS1_IMON_MIN":   0.16,
+        "channel 11 SLO_HVS1_IMON_MAX":  1000
+    }
+}

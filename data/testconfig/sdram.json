@@ -1,5 +1,5 @@
 {
-    "run_test": {
+    "args": {
         "dpram_nums": [0, 1]
     }
 }

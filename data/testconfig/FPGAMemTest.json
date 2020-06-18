@@ -1,0 +1,11 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+    },
+    "args": {
+    }
+}

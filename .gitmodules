@@ -1,0 +1,4 @@
+[submodule "stf/tools"]
+	path = stf/tools
+	url = ../STM32Tools
+	branch = master

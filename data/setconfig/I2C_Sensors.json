@@ -1,0 +1,11 @@
+// Run all I2C sensors tests
+{
+    "tests": [
+       "AccelerometerSensor",
+       "MagnetometerSensor",
+       "PressureSensor",
+       "TempAccelerometerSensor",
+       "TempMagnetometerSensor",
+       "TempPressureSensor"
+    ]
+}

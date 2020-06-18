@@ -3,12 +3,13 @@ import openhtf as htf
 import stf
 
 def __valid_test_name(x):
-    # XXX: define valid test name (a-zA-Z0-9 and "-", ".", "_")
+    # XXX: define valid test name (a-zA-Z0-9 and "-", ".", "_")?
     return x is not None
 
+# XXX: no longer a decorator... should be in core?
 def register(**kw):
     '''
-    this decorator registers a given test with the framework
+    this function registers a given test with the framework
 
     required kwargs:
         version 
@@ -26,7 +27,7 @@ def register(**kw):
         config_file 
             by default, the framework will look for a a "testconfig"
             directory containing the tests config file:
-            i.e. os.join(stf.ENV.DATA_DIR, 'testconfig', '<test_name>.json')
+            i.e. os.join(<data dir>, 'testconfig', '<test_name>.json')
             or "$STF_HOME/data/testconfig/test_name.json" where STF_HOME
             is the location of the stf package
 
@@ -34,20 +35,38 @@ def register(**kw):
             by default, the framework will use 'stf.tests.MainboardTest' as the
             testClass
     '''
-    name = kw.get('test_name')
-    if not name:
-        import inspect
-        frame = inspect.stack()[1]
-        name = frame[0].f_code.co_filename.split('.')[0].split('/')[-1]
-        stf.dbg('test_name not provided, using: {}'.format(name))
+    import inspect
+    frame = inspect.stack()[1]
+    # stf.dbg(frame)
+    from .util.files import getNameFromPath
+    fname = getNameFromPath(frame[0].f_code.co_filename)
+
+    name = kw.get('test_name', fname)
+
     if not __valid_test_name(name):
         raise Exception('Misconfigured test, invalid or missing `test_name`. Can not run')
+    #stf.dbg('registering test: name={} filename={}'.format(name, fname))
+
+    try :
+        frame = inspect.stack()[2]
+        testLocals = frame[0].f_locals
+        testGlobals = frame[0].f_globals
+        code_obj = frame[0].f_code
+    except IndexError:
+        testLocals = {}
+        testGlobals = {}
+        code_obj = None
+        pass
+    #stf.dbg('testLocals: {}'.format(testLocals))
+
+    if '__STF_TEST_OVERRIDES' in testLocals:
+        stf.dbg('TEST OVERRIDES FOUND')
 
     conf_file = kw.get('config_file')
     if not conf_file:
-        stf.dbg('config_file not provided for test: ' + name)
-        conf_file = '{}/{}.json'.format(stf.ENV.TEST_CONFIG_DIR, name)
-        stf.dbg('trying {}'.format(conf_file))
+        conf_file = '{}/{}.json'.format(stf.config.get_path('testconfig'), name)
+        #stf.dbg(f'config_file not provided test "{name}"; trying {conf_file}')
+        # XXX: validate config here?, raise Exception
 
     version = kw.get('version')
     if not version:
@@ -58,24 +77,77 @@ def register(**kw):
     _cls = kw.get('test_class', testclasses.MainboardTest)
     # test_function? or just run?
     func = kw.get('run')
-    cls = _cls(version, name, test_fn=func, conf_file=conf_file)
+    if not hasattr(func, 'measurements'):
+        func = make_test(func)
+    # XXX: func.func.__globals?
+    #testLocals['STF_RUN_TEST'] = func
+    #func.func.__globals__.update(testLocals)
+    #stf.dbg('testLocals {}'.format(testLocals.keys()))
+    #stf.dbg('testGlobals{}'.format(testGlobals.keys()))
+    #func.func.__locals__.update(testLocals)
 
-    stf.addTestClass(cls)
+    args, extra = stf.util.misc.get_run_args() 
+    meta = {}
+
+    dut_serial = None
+    if args.testconfig:
+        stf.debug(f'OVERRIDE config file: {args.testconfig}')
+        conf_file = args.testconfig[0]
+    if args.metafile:
+        stf.debug('XXX: NOT IMPLEMENTED')
+    if args.mbsnum:
+        dut_serial = args.mbsnum[0]
+    if args.meta:
+        try:
+            for x in args.meta:
+                if '=' in x:
+                    key, val = x.split('=')
+                    meta[key] = val
+                    continue
+                if not x.startswith('-'):
+                    # warning!
+                    stf.debug(f'WARNING: skipping meta arg "{x}"')
+        except (AttributeError, ValueError):
+            raise stf.util.exceptions.STFInvalidArgs('Invalid META args')
+    if extra:
+        meta['_stf_unused_args'] = extra
+
+
+    desc = kw.get('test_desc')
+
+    # get test description from the function's docstring if test_desc is not present
+    #desc = desc or func.__doc__
+    cls = _cls(version, name, test_fn=func, conf_file=conf_file, test_desc=desc, meta=meta, dut_serial=dut_serial)
+
+    stf.addTestClass(fname, cls, testLocals, testGlobals, code_obj=code_obj)
 
     return True
 
 # allows @stf.test decorator
-def test(f):
-    @htf.TestPhase()
+def make_test(f):
+    @stf.options()
     def deco(*args, **kw):
         return f(*args, **kw)
     # preserve original test name
     # XXX: functools here?
     try:
         deco.func.__name__ = f.__name__
+        deco.func.__doc__ = f.__doc__
+        deco.registered = True
         #deco.options.name = f.__name__
     except AttributeError:
+        stf.debug('here')
         pass
     return deco
 
 
+'''
+# XXX: why can't we wrap OpenHTF phases with something like this?
+        def foo(f):
+            def wrap(*args, **kw):
+                try:
+                    return f(*args, **kw)
+                except OSError:
+                    return stf.REPEAT
+            return wrap
+'''

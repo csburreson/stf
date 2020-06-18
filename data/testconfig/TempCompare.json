@@ -1,0 +1,15 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    "expectedValues": {
+	"expected_diffacc_min": -10.0,
+	"expected_diffacc_max": 10.0,
+	"expected_diffmag_min": -7.0,
+	"expected_diffmag_max": 7.0,
+	"expected_diffpres_min": -7.0,
+	"expected_diffpres_max": 7.0
+    }
+}

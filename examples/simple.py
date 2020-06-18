@@ -1,21 +1,24 @@
 import stf
+import numpy as np
 
-@stf.test
+@stf.measures(
+    stf.M('foo'),
+    stf.M('nar').expect('{foo}', type=int),
+    #stf.M('bar').in_range('{foo}', '{bar}', type=int)
+)
 def run_test(test, session):
-    pass
+    test.measurements.foo = [1,2,3]
+    test.measurements.nar = 42
+    #test.measurements.bar = 42
+
+    return stf.PASS
 
 # register decorator accepts version and config file
-@stf.register(version='1.0')
-class Simple(stf.MainboardTest):
-    '''
-    Docstring is included in test results as the
-    test description
-    '''
-    TESTS = [run_test]
+stf.register(
+    version='1.0',
+    run=run_test,
+)
 
 
 if __name__ == '__main__':
     stf.run()
-
-
-

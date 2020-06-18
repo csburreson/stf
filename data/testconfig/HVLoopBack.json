@@ -1,0 +1,15 @@
+{
+    "args": {
+        // channel: 0, 1
+        "channel": 1,
+        // Commanded DAC setpoint voltate, EU = Volts
+        "dacPreset": 320.0
+    },
+
+    // HV supply dual channel voltage monitor pass/fail range, EU = Volts
+    "expectedValues": {
+        "HVmin": 1400.0,
+        "HVmax": 1800.0
+    }
+}
+

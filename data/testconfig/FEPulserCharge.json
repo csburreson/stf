@@ -1,0 +1,19 @@
+{
+    "config": {
+        "iceboot": {
+            "host": "localhost"
+        }
+    },
+    // default values for HV board not installed
+    "expectedValues": {
+      "exp_x": 640,
+      "exp_y": 760
+    },
+    "args": {
+    	"channel" : 0,
+      "dac_val" : 30000,
+      "dac_val_fepulser" : 30000,
+      "bins_before_peak" : 4,
+      "bins_after_peak" : 8
+    }
+}
